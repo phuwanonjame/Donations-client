@@ -1,0 +1,293 @@
+'use client';
+import React, { createContext, useContext, useState } from 'react';
+
+const translations = {
+  en: {
+    // Header
+    nav: {
+      features: 'Features',
+      pricing: 'Pricing',
+      support: 'Support',
+      login: 'Log In',
+      getStarted: 'Get Started',
+    },
+    // Hero
+    hero: {
+      badge: 'Trusted by 50,000+ Streamers Worldwide',
+      headline1: 'Maximize Your Income.',
+      headline2: 'Simplify Donations.',
+      subheadline: 'The all-in-one monetization platform designed for modern streamers. Accept donations globally, engage your audience with stunning alerts, and get paid faster than ever.',
+      startTrial: 'Start Free Trial',
+      watchDemo: 'Watch Demo',
+      signUpWith: 'Or sign up quickly with',
+      donationAlert: {
+        title: 'New Donation!',
+        user: 'GamerPro2024',
+        donated: 'donated',
+        message: 'Keep up the amazing streams! 🔥',
+      },
+    },
+    // Features
+    features: {
+      badge: 'Powerful Features',
+      title1: 'Everything You Need to',
+      title2: 'Grow Your Stream',
+      subtitle: 'Built by streamers, for streamers. Every feature is designed to help you monetize smarter and engage your audience deeper.',
+      learnMore: 'Learn more',
+      items: [
+        {
+          title: 'Real-time Alerts & Widgets',
+          description: 'Captivate your audience with stunning, customizable donation alerts, goal trackers, and event notifications that pop on screen instantly.',
+          alertTitle: 'New Donation!',
+          alertDesc: 'StreamFan donated $10',
+        },
+        {
+          title: 'Secure Global Payouts',
+          description: 'Get paid your way with flexible payout options. We support PayPal, Stripe, direct bank transfers, and more in 150+ countries.',
+        },
+        {
+          title: 'In-Depth Analytics',
+          description: 'Understand your audience like never before. Track donation trends, viewer engagement, peak times, and revenue growth with powerful dashboards.',
+        },
+        {
+          title: 'Full Customization',
+          description: 'Make it yours. Design alerts, overlays, and widgets that match your brand with our intuitive drag-and-drop editor. No coding required.',
+        },
+      ],
+    },
+    // Pricing
+    pricing: {
+      badge: 'Simple Pricing',
+      title1: 'Choose Your',
+      title2: ' Plan',
+      subtitle: 'Transparent pricing with no hidden fees. Start free and upgrade as you grow.',
+      monthly: 'Monthly',
+      annual: 'Annual',
+      save: 'Save 20%',
+      perDonation: 'per donation',
+      startFree: 'Start Free',
+      choosePlan: 'Choose Plan',
+      mostPopular: 'Most Popular',
+      forever: 'forever',
+      month: '/month',
+      year: '/year',
+      plans: [
+        {
+          name: 'Starter',
+          description: 'Perfect for new streamers just getting started',
+          features: [
+            'Basic donation alerts',
+            'Standard widgets',
+            'PayPal payouts',
+            'Community support',
+            'Up to $500/month',
+            'Basic analytics',
+          ],
+        },
+        {
+          name: 'Pro',
+          description: 'For growing streamers who want more control',
+          features: [
+            'Custom animated alerts',
+            'Premium widgets library',
+            'PayPal, Stripe & Bank',
+            'Priority email support',
+            'Unlimited donations',
+            'Advanced analytics dashboard',
+            'Custom branding',
+            'Goal trackers & overlays',
+          ],
+        },
+        {
+          name: 'Enterprise',
+          description: 'For professional creators and organizations',
+          features: [
+            'Everything in Pro',
+            'White-label solution',
+            'API access',
+            'Dedicated account manager',
+            'Same-day payouts',
+            'Custom integrations',
+            'Team collaboration',
+            'SLA guarantee',
+          ],
+        },
+      ],
+      trust: 'Trusted payment processing',
+      badges: ['SSL Secured', '256-bit Encryption', 'PCI Compliant', 'GDPR Ready'],
+    },
+    // Footer
+    footer: {
+      cta: {
+        title: 'Ready to Supercharge Your Stream?',
+        subtitle: 'Join thousands of streamers already using StreamFlow to grow their income.',
+        button: 'Get Started for Free',
+      },
+      brand: 'The modern monetization platform built for streamers who want to focus on content, not payments.',
+      links: {
+        Product: ['Features', 'Pricing', 'Integrations', 'API', 'Changelog'],
+        Company: ['About', 'Blog', 'Careers', 'Press Kit', 'Partners'],
+        Resources: ['Documentation', 'Help Center', 'Community', 'Status', 'Contact'],
+        Legal: ['Privacy Policy', 'Terms of Service', 'Cookie Policy', 'GDPR'],
+      },
+      copyright: '© 2024 StreamFlow. All rights reserved.',
+    },
+  },
+  th: {
+    // Header
+    nav: {
+      features: 'ฟีเจอร์',
+      pricing: 'ราคา',
+      support: 'ช่วยเหลือ',
+      login: 'เข้าสู่ระบบ',
+      getStarted: 'เริ่มต้นใช้งาน',
+    },
+    // Hero
+    hero: {
+      badge: 'ได้รับความไว้วางใจจากสตรีมเมอร์กว่า 50,000 คนทั่วโลก',
+      headline1: 'เพิ่มรายได้ของคุณ',
+      headline2: 'รับบริจาคง่ายขึ้น',
+      subheadline: 'แพลตฟอร์มสร้างรายได้ครบวงจรที่ออกแบบมาสำหรับสตรีมเมอร์ยุคใหม่ รับบริจาคจากทั่วโลก ดึงดูดผู้ชมด้วยการแจ้งเตือนที่สวยงาม และรับเงินได้เร็วกว่าที่เคย',
+      startTrial: 'เริ่มทดลองฟรี',
+      watchDemo: 'ดูตัวอย่าง',
+      signUpWith: 'หรือสมัครด่วนผ่าน',
+      donationAlert: {
+        title: 'บริจาคใหม่!',
+        user: 'GamerPro2024',
+        donated: 'บริจาค',
+        message: 'สตรีมดีมากครับ สู้ๆ! 🔥',
+      },
+    },
+    // Features
+    features: {
+      badge: 'ฟีเจอร์ทรงพลัง',
+      title1: 'ทุกสิ่งที่คุณต้องการเพื่อ',
+      title2: 'พัฒนาสตรีมของคุณ',
+      subtitle: 'สร้างโดยสตรีมเมอร์ เพื่อสตรีมเมอร์ ทุกฟีเจอร์ออกแบบมาเพื่อช่วยคุณสร้างรายได้อย่างชาญฉลาดและดึงดูดผู้ชมได้ดีขึ้น',
+      learnMore: 'เรียนรู้เพิ่มเติม',
+      items: [
+        {
+          title: 'แจ้งเตือนและวิดเจ็ตแบบเรียลไทม์',
+          description: 'ดึงดูดผู้ชมด้วยการแจ้งเตือนบริจาคที่สวยงาม ปรับแต่งได้ ตัวติดตามเป้าหมาย และการแจ้งเตือนกิจกรรมที่แสดงบนหน้าจอทันที',
+          alertTitle: 'บริจาคใหม่!',
+          alertDesc: 'StreamFan บริจาค $10',
+        },
+        {
+          title: 'จ่ายเงินทั่วโลกอย่างปลอดภัย',
+          description: 'รับเงินในแบบที่คุณต้องการ รองรับ PayPal, Stripe, โอนเข้าบัญชีธนาคารโดยตรง และอื่นๆ ในกว่า 150 ประเทศ',
+        },
+        {
+          title: 'วิเคราะห์เชิงลึก',
+          description: 'เข้าใจผู้ชมอย่างที่ไม่เคยมาก่อน ติดตามแนวโน้มการบริจาค การมีส่วนร่วมของผู้ชม ช่วงเวลาพีค และการเติบโตของรายได้ด้วยแดชบอร์ดที่ทรงพลัง',
+        },
+        {
+          title: 'ปรับแต่งได้เต็มที่',
+          description: 'ทำให้เป็นของคุณ ออกแบบการแจ้งเตือน โอเวอร์เลย์ และวิดเจ็ตที่ตรงกับแบรนด์ของคุณด้วยเครื่องมือลากวางที่ใช้ง่าย ไม่ต้องเขียนโค้ด',
+        },
+      ],
+    },
+    // Pricing
+    pricing: {
+      badge: 'ราคาเรียบง่าย',
+      title1: 'เลือก',
+      title2: 'แพ็คเกจของคุณ',
+      subtitle: 'ราคาโปร่งใส ไม่มีค่าใช้จ่ายแอบแฝง เริ่มต้นฟรีและอัพเกรดตามการเติบโต',
+      monthly: 'รายเดือน',
+      annual: 'รายปี',
+      save: 'ประหยัด 20%',
+      perDonation: 'ต่อการบริจาค',
+      startFree: 'เริ่มต้นฟรี',
+      choosePlan: 'เลือกแพ็คเกจ',
+      mostPopular: 'ยอดนิยม',
+      forever: 'ตลอดไป',
+      month: '/เดือน',
+      year: '/ปี',
+      plans: [
+        {
+          name: 'Starter',
+          description: 'เหมาะสำหรับสตรีมเมอร์มือใหม่ที่เพิ่งเริ่มต้น',
+          features: [
+            'แจ้งเตือนบริจาคพื้นฐาน',
+            'วิดเจ็ตมาตรฐาน',
+            'ถอนเงินผ่าน PayPal',
+            'ซัพพอร์ตจากชุมชน',
+            'สูงสุด $500/เดือน',
+            'วิเคราะห์พื้นฐาน',
+          ],
+        },
+        {
+          name: 'Pro',
+          description: 'สำหรับสตรีมเมอร์ที่กำลังเติบโตและต้องการควบคุมมากขึ้น',
+          features: [
+            'แจ้งเตือนแบบแอนิเมชันกำหนดเอง',
+            'คลังวิดเจ็ตพรีเมียม',
+            'PayPal, Stripe และธนาคาร',
+            'ซัพพอร์ตอีเมลลำดับความสำคัญ',
+            'บริจาคไม่จำกัด',
+            'แดชบอร์ดวิเคราะห์ขั้นสูง',
+            'แบรนด์ดิ้งกำหนดเอง',
+            'ตัวติดตามเป้าหมายและโอเวอร์เลย์',
+          ],
+        },
+        {
+          name: 'Enterprise',
+          description: 'สำหรับครีเอเตอร์มืออาชีพและองค์กร',
+          features: [
+            'ทุกอย่างใน Pro',
+            'โซลูชัน White-label',
+            'เข้าถึง API',
+            'ผู้จัดการบัญชีเฉพาะ',
+            'ถอนเงินภายในวันเดียวกัน',
+            'การผสานรวมกำหนดเอง',
+            'การทำงานร่วมกันเป็นทีม',
+            'รับประกัน SLA',
+          ],
+        },
+      ],
+      trust: 'การประมวลผลการชำระเงินที่เชื่อถือได้',
+      badges: ['SSL ปลอดภัย', 'เข้ารหัส 256-bit', 'เป็นไปตาม PCI', 'พร้อม GDPR'],
+    },
+    // Footer
+    footer: {
+      cta: {
+        title: 'พร้อมยกระดับสตรีมของคุณหรือยัง?',
+        subtitle: 'เข้าร่วมกับสตรีมเมอร์หลายพันคนที่ใช้ StreamFlow เพื่อเพิ่มรายได้',
+        button: 'เริ่มต้นใช้งานฟรี',
+      },
+      brand: 'แพลตฟอร์มสร้างรายได้ยุคใหม่ที่สร้างมาสำหรับสตรีมเมอร์ที่ต้องการโฟกัสที่คอนเทนต์ ไม่ใช่การชำระเงิน',
+      links: {
+        ผลิตภัณฑ์: ['ฟีเจอร์', 'ราคา', 'การผสานรวม', 'API', 'บันทึกการเปลี่ยนแปลง'],
+        บริษัท: ['เกี่ยวกับ', 'บล็อก', 'ร่วมงาน', 'Press Kit', 'พันธมิตร'],
+        แหล่งข้อมูล: ['เอกสาร', 'ศูนย์ช่วยเหลือ', 'ชุมชน', 'สถานะ', 'ติดต่อ'],
+        กฎหมาย: ['นโยบายความเป็นส่วนตัว', 'ข้อกำหนดการให้บริการ', 'นโยบายคุกกี้', 'GDPR'],
+      },
+      copyright: '© 2024 StreamFlow. สงวนลิขสิทธิ์',
+    },
+  },
+};
+
+const LanguageContext = createContext();
+
+export function LanguageProvider({ children }) {
+  const [language, setLanguage] = useState('en');
+
+  const t = translations[language];
+
+  const toggleLanguage = () => {
+    setLanguage(prev => prev === 'en' ? 'th' : 'en');
+  };
+
+  return (
+    <LanguageContext.Provider value={{ language, setLanguage, toggleLanguage, t }}>
+      {children}
+    </LanguageContext.Provider>
+  );
+}
+
+export function useLanguage() {
+  const context = useContext(LanguageContext);
+  if (!context) {
+    throw new Error('useLanguage must be used within a LanguageProvider');
+  }
+  return context;
+}

@@ -1,5 +1,7 @@
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { LanguageProvider } from "../contexts/LanguageContext";
+import LayoutClient from "../components/landing/LayoutClient";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -19,10 +21,15 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        {children}
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <LanguageProvider>
+
+          {/* ⭐ ใช้ Client Wrapper แยก */}
+          <LayoutClient>
+            {children}
+          </LayoutClient>
+
+        </LanguageProvider>
       </body>
     </html>
   );
