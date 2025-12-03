@@ -12,7 +12,7 @@ const t = {
     passwordLabel: "Password",
     forgotPassword: "Forgot Password?",
     loginButton: "Sign In Securely",
-    orSeparator: "OR CONTINUE WITH",
+    orSeparator: "",
     twitchButton: "Twitch",
     youtubeButton: "YouTube",
     signupPrompt: "Don't have an account?",
@@ -114,7 +114,7 @@ export default function App() {
             </div>
 
             {/* Social Login Buttons */}
-            <div className="flex flex-col gap-3">
+            {/* <div className="flex flex-col gap-3">
               <button className="group flex items-center justify-center gap-3 w-full px-6 py-3 rounded-xl bg-[#9147FF]/10 border border-[#9147FF]/30 hover:bg-[#9147FF]/20 hover:border-[#9147FF]/50 transition-all">
                 <svg className="w-6 h-6" viewBox="0 0 24 24" fill="#9147FF">
                   <path d="M11.571 4.714h1.715v5.143H11.57zm4.715 0H18v5.143h-1.714zM6 0L1.714 4.286v15.428h5.143V24l4.286-4.286h3.428L22.286 12V0zm14.571 11.143l-3.428 3.428h-3.429l-3 3v-3H6.857V1.714h13.714z"/>
@@ -127,7 +127,7 @@ export default function App() {
                 </svg>
                 <span className="text-red-500 font-medium text-base">{t.login.youtubeButton}</span>
               </button>
-            </div>
+            </div> */}
 
             {/* Separator */}
             <div className="flex items-center">
