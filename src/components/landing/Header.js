@@ -2,15 +2,17 @@
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Zap } from "lucide-react";
+import { Menu, X, Zap, User } from "lucide-react"; // Import 'User' icon
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "../../contexts/LanguageContext";
 import LanguageSwitcher from "../../providers/LanguageProvider";
+import { useAuth } from "../../contexts/AuthContext"; // Import useAuth
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { t } = useLanguage();
+  const { user, isAuthenticated, isLoading } = useAuth(); // Use the auth context
 
   useEffect(() => {
     const handleScroll = () => {
@@ -25,6 +27,38 @@ export default function Header() {
     { name: t.nav.pricing, href: "#pricing" },
     { name: t.nav.support, href: "#support" },
   ];
+
+  const UserProfileOrLogin = (
+    // Show a loading state or nothing while checking auth
+    isLoading ? (
+      <div className="w-20 h-8 rounded animate-pulse bg-gray-700"></div>
+    ) : 
+    // If logged in, show user name and a profile link
+    isAuthenticated ? (
+      <Link href="/profile" className="flex items-center gap-4 group">
+        {/* Separator line for desktop */}
+        <div className="hidden md:block h-6 w-px bg-cyan-500/30"></div> 
+        <Button
+          variant="ghost"
+          className="text-white cursor-pointer hover:bg-white/5 flex items-center gap-2"
+        >
+          <User className="w-4 h-4 text-cyan-400" />
+          <span className="font-semibold">{user.name || "Profile"}</span> {/* Display user's name */}
+        </Button>
+      </Link>
+    ) : (
+      // If logged out, show the Login button
+      <Link href="/login">
+        <Button
+          variant="ghost"
+          className="text-gray-300 cursor-pointer hover:text-white hover:bg-white/5"
+        >
+          {t.nav.login}
+        </Button>
+      </Link>
+    )
+  );
+
 
   return (
     <motion.header
@@ -68,14 +102,7 @@ export default function Header() {
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
             <LanguageSwitcher />
-            <Link href="/login">
-              <Button
-                variant="ghost"
-                className="text-gray-300 cursor-pointer hover:text-white hover:bg-white/5"
-              >
-                {t.nav.login}
-              </Button>
-            </Link>
+            {UserProfileOrLogin} {/* Use the new conditional component */}
             <Link href="/dashboard/Dashboard">
               <Button className="bg-gradient-to-r cursor-pointer from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-[#0A1628] font-semibold shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all">
                 {t.nav.getStarted}
@@ -97,7 +124,7 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu (Updated Login/Profile Link) */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
@@ -121,17 +148,29 @@ export default function Header() {
                 <div className="flex justify-center">
                   <LanguageSwitcher />
                 </div>
-                <Link href="/login">
+                
+                {/* Mobile Login/Profile Link */}
+                <Link href={isAuthenticated ? "/profile" : "/login"}>
                   <Button
                     variant="ghost"
-                    className="w-full text-gray-300 hover:text-white hover:bg-white/5"
+                    className="w-full text-gray-300 hover:text-white hover:bg-white/5 flex items-center justify-center gap-2"
                   >
-                    {t.nav.login}
+                    {isAuthenticated ? (
+                       <>
+                        <User className="w-4 h-4 text-cyan-400" />
+                        <span className="font-semibold">{user.name || "Profile"}</span>
+                      </>
+                    ) : (
+                      t.nav.login
+                    )}
                   </Button>
                 </Link>
-                <Button className="w-full bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-[#0A1628] font-semibold">
-                  {t.nav.getStarted}
-                </Button>
+
+                <Link href="/dashboard/Dashboard">
+                    <Button className="w-full bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-[#0A1628] font-semibold">
+                        {t.nav.getStarted}
+                    </Button>
+                </Link>
               </div>
             </div>
           </motion.div>

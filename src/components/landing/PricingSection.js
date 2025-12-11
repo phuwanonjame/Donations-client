@@ -2,17 +2,20 @@
 import React, { useState } from 'react';
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Check, Sparkles, Zap, Crown, ArrowRight } from "lucide-react";
+import { Check, Sparkles, Zap, Crown, Star, ArrowRight } from "lucide-react";
 import { useLanguage } from '../../contexts/LanguageContext';
 
-const planIcons = [Zap, Sparkles, Crown];
+const planIcons = [Zap, Sparkles, Crown, Star];
+
 const planStyles = [
   { color: "from-gray-500 to-gray-400", borderColor: "border-gray-600/30", highlighted: false },
-  { color: "from-cyan-500 to-cyan-400", borderColor: "border-cyan-500/50", highlighted: true },
+  { color: "from-cyan-500 to-cyan-400", borderColor: "border-cyan-500/50", highlighted: false },
   { color: "from-amber-500 to-orange-400", borderColor: "border-amber-500/30", highlighted: false },
+  { color: "from-purple-500 to-fuchsia-400", borderColor: "border-purple-500/30", highlighted: true },
 ];
-const planPrices = ["Free", "$9", "$29"];
-const planFees = ["5% Fee", "3% Fee", "1% Fee"];
+
+const planPrices = ["Free", "฿49", "฿199", "฿399"];
+const planFees   = ["5% Fee", "3% Fee", "1% Fee", "0% Fee"];
 
 export default function PricingSection() {
   const [isAnnual, setIsAnnual] = useState(false);
@@ -20,13 +23,15 @@ export default function PricingSection() {
 
   return (
     <section id="pricing" className="relative py-32 bg-gradient-to-b from-[#0A1628] via-[#0D1B2A] to-[#0A1628] overflow-hidden">
-      {/* Background Elements */}
+
+      {/* Background Glow */}
       <div className="absolute inset-0">
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-cyan-500/5 rounded-full blur-3xl" />
       </div>
 
       <div className="relative z-10 max-w-7xl mx-auto px-6 lg:px-8">
-        {/* Section Header */}
+
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -37,15 +42,17 @@ export default function PricingSection() {
           <span className="inline-block px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-400 text-sm font-medium mb-6">
             {t.pricing.badge}
           </span>
+
           <h2 className="text-4xl md:text-5xl font-bold text-white mb-6">
             {t.pricing.title1}
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-teal-400">{t.pricing.title2}</span>
           </h2>
+
           <p className="text-xl text-gray-400 max-w-2xl mx-auto mb-10">
             {t.pricing.subtitle}
           </p>
 
-          {/* Billing Toggle */}
+          {/* Monthly / Annual Toggle */}
           <div className="inline-flex items-center gap-4 p-1.5 rounded-full bg-[#1E3A5F]/50 border border-cyan-500/20">
             <button
               onClick={() => setIsAnnual(false)}
@@ -57,6 +64,7 @@ export default function PricingSection() {
             >
               {t.pricing.monthly}
             </button>
+
             <button
               onClick={() => setIsAnnual(true)}
               className={`px-6 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
@@ -74,13 +82,13 @@ export default function PricingSection() {
         </motion.div>
 
         {/* Pricing Cards */}
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="grid lg:grid-cols-4 gap-8">
           {t.pricing.plans.map((plan, index) => {
             const Icon = planIcons[index];
             const style = planStyles[index];
             const price = planPrices[index];
             const fee = planFees[index];
-            
+
             return (
               <motion.div
                 key={plan.name}
@@ -90,17 +98,20 @@ export default function PricingSection() {
                 transition={{ duration: 0.6, delay: index * 0.1 }}
                 className={`relative group ${style.highlighted ? 'lg:-mt-4 lg:mb-4' : ''}`}
               >
-                {/* Highlighted Glow */}
+
+                {/* Highlight glow */}
                 {style.highlighted && (
                   <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-teal-500 rounded-3xl blur opacity-30 group-hover:opacity-50 transition-opacity" />
                 )}
 
-                <div className={`relative h-full p-8 rounded-3xl border ${style.borderColor} ${
-                  style.highlighted 
-                    ? 'bg-gradient-to-b from-[#1E3A5F]/80 to-[#0D1B2A]/90 backdrop-blur-xl' 
-                    : 'bg-[#1E3A5F]/30 backdrop-blur-sm'
-                } transition-all duration-300 hover:border-cyan-500/50`}>
-                  
+                <div
+                  className={`relative h-full p-8 rounded-3xl border flex flex-col ${style.borderColor} ${
+                    style.highlighted
+                      ? 'bg-gradient-to-b from-[#1E3A5F]/80 to-[#0D1B2A]/90 backdrop-blur-xl'
+                      : 'bg-[#1E3A5F]/30 backdrop-blur-sm'
+                  } transition-all duration-300 hover:border-cyan-500/50`}
+                >
+
                   {/* Badge */}
                   {style.highlighted && (
                     <div className="absolute -top-4 left-1/2 -translate-x-1/2">
@@ -110,7 +121,7 @@ export default function PricingSection() {
                     </div>
                   )}
 
-                  {/* Plan Header */}
+                  {/* Header */}
                   <div className="text-center mb-8">
                     <div className={`inline-flex p-3 rounded-2xl bg-gradient-to-r ${style.color} mb-4`}>
                       <Icon className="w-6 h-6 text-white" />
@@ -123,24 +134,25 @@ export default function PricingSection() {
                   <div className="text-center mb-6">
                     <div className="flex items-baseline justify-center gap-1">
                       <span className="text-5xl font-bold text-white">
-                        {price === 'Free' 
-                          ? price 
-                          : isAnnual 
-                            ? `$${parseInt(price.slice(1)) * 10}` 
+                        {price === 'Free'
+                          ? price
+                          : isAnnual
+                            ? `฿${parseInt(price.slice(1)) * 10}`
                             : price}
                       </span>
                       {price !== 'Free' && (
                         <span className="text-gray-400">{isAnnual ? t.pricing.year : t.pricing.month}</span>
                       )}
                     </div>
+
                     <div className="mt-3 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20">
                       <span className="text-cyan-400 font-bold">{fee}</span>
                       <span className="text-gray-400 text-sm">{t.pricing.perDonation}</span>
                     </div>
                   </div>
 
-                  {/* Features */}
-                  <ul className="space-y-4 mb-8">
+                  {/* Features – FLEX GROW เพื่อดันปุ่มลงล่าง */}
+                  <ul className="space-y-4 mb-8 flex-grow">
                     {plan.features.map((feature) => (
                       <li key={feature} className="flex items-start gap-3">
                         <div className={`flex-shrink-0 w-5 h-5 rounded-full bg-gradient-to-r ${style.color} flex items-center justify-center mt-0.5`}>
@@ -151,7 +163,7 @@ export default function PricingSection() {
                     ))}
                   </ul>
 
-                  {/* CTA Button */}
+                  {/* Button – ตำแหน่งเท่ากันทุแพลน */}
                   <Button
                     className={`w-full py-6 font-semibold text-lg group/btn ${
                       style.highlighted
@@ -162,6 +174,7 @@ export default function PricingSection() {
                     {price === 'Free' ? t.pricing.startFree : t.pricing.choosePlan}
                     <ArrowRight className="ml-2 w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
                   </Button>
+
                 </div>
               </motion.div>
             );
@@ -186,6 +199,7 @@ export default function PricingSection() {
             ))}
           </div>
         </motion.div>
+
       </div>
     </section>
   );

@@ -7,16 +7,21 @@ import Footer from "./Footer";
 export default function LayoutClient({ children }) {
   const pathname = usePathname();
 
-  // ⭐ พาธที่ต้องซ่อน Layout แบบ match ตรง
-  const exactHideRoutes = ["/register", "/login"];
+  // ⭐ ซ่อนเมื่อตรงพอดี
+  const exactHideRoutes = ["/login", "/verify"];
 
-  // ⭐ ถ้าตรงพอดีกับ /register หรือ /login → ซ่อน
   const isExactHide = exactHideRoutes.includes(pathname);
 
-  // ⭐ ถ้าพาธขึ้นต้นด้วย /dashboard → ซ่อน
+  // ⭐ ซ่อนทุกหน้าใต้ /register เช่น
+  // /register
+  // /register/verify
+  // /register/otp
+  const isRegister = pathname.startsWith("/register");
+
+  // ⭐ ซ่อนทุกหน้าใน dashboard
   const isDashboard = pathname.startsWith("/dashboard");
 
-  const shouldHideLayout = isExactHide || isDashboard;
+  const shouldHideLayout = isExactHide || isRegister || isDashboard;
 
   return (
     <>
