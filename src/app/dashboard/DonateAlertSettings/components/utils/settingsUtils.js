@@ -45,7 +45,7 @@ export const defaultSettings = {
     ttsVolume: 50,
     useCustomSound: false,
     customSound: null,
-    alertImage: "https://media.tenor.com/k_UsDt9xfWIAAAAM/i-will-eat-you-cat.gif",
+    alertImage: "https://i0.wp.com/images.onwardstate.com/uploads/2015/05/oie_14175751vZSQRLEn.gif?fit=650%2C408&ssl=1",
     effect: "realistic_look",
     useRanges: false,
     ranges: [],

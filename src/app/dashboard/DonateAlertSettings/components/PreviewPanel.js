@@ -1,14 +1,14 @@
-// PreviewPanel.js (แก้ไข)
 "use client";
 import React from "react";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Bell, Eye } from "lucide-react";
-import AlertPreview from "./AlertPreview";
+import AlertPreview from "./AlertPreview"; // สมมติว่าคอมโพเนนต์นี้มีอยู่
 
 export default function PreviewPanel({ settings, handleSave }) {
   return (
-    <div className="space-y-6">
+    // ✅ องค์ประกอบนี้ถูกตั้งค่าให้เป็น sticky แล้ว
+    <div className="space-y-6 sticky top-4 w-full"> 
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -21,19 +21,19 @@ export default function PreviewPanel({ settings, handleSave }) {
           </h3>
         </div>
 
-        {/* ส่วนแสดงผล Preview - ต้องไม่มี pointer-events-none ที่นี่ */}
+        {/* Preview Display */}
         <div className="bg-gradient-to-br from-slate-950 to-slate-900 rounded-xl p-6 min-h-[300px] flex items-center justify-center">
           <AlertPreview settings={settings} />
         </div>
 
-        {/* ปุ่ม Save Settings - เพิ่ม z-index และ cursor-pointer เพื่อความชัวร์ */}
+        {/* Save Button */}
         <Button
           onClick={handleSave}
           className="w-full bg-gradient-to-r from-cyan-500 to-blue-500 
             hover:from-cyan-400 hover:to-blue-400 
             text-white font-semibold py-6 rounded-xl 
             shadow-lg shadow-cyan-500/25
-            z-50 cursor-pointer relative" // <--- เพิ่ม Z-index, Cursor, และ Relative
+            relative z-10"
         >
           <Bell className="w-5 h-5 mr-2" />
           Save Settings

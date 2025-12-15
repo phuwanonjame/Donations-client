@@ -1,14 +1,50 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { Button } from "@/components/ui/button";
+
+// Import utilities
+// ⭐⭐⭐ แก้ไขตรงนี้: ต้อง Import จาก audioUtils ไม่ใช่ audioSources ⭐⭐⭐
+import { playAlertSound } from "../../../../../utils/audioUtils"; 
+
+// Component Imports (assuming these are correctly configured, e.g., shadcn/ui)
+import { Button } from "@/components/ui/button"; 
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Music, Upload } from "lucide-react";
+import { Music, Upload, Volume2 } from "lucide-react";
 
 export default function SoundTab({ settings, updateSetting }) {
+
+  // ⭐ ทำให้ค่าทั้งหมดเป็น Number เสมอ ป้องกัน .toFixed พัง
+  const currentVolume = Number(
+    Array.isArray(settings.volume) ? settings.volume[0] : settings.volume ?? 50
+  );
+
+  const currentTtsRate = Number(settings.ttsRate ?? 1.0);
+  const currentTtsPitch = Number(settings.ttsPitch ?? 1.0);
+  const currentTtsVolume = Number(settings.ttsVolume ?? 50);
+
+  // Function to handle sound change and immediate testing
+  const handleAlertSoundChange = (newSoundKey) => {
+    // เพิ่มเงื่อนไข: เล่นเสียงและอัปเดตการตั้งค่า เมื่อมีการเปลี่ยนค่าเท่านั้น
+    if (settings.alertSound !== newSoundKey) { 
+        updateSetting("alertSound", newSoundKey);
+        // ทดสอบเล่นเสียงทันทีที่ผู้ใช้เลือก
+        playAlertSound(newSoundKey, currentVolume); 
+    }
+  };
+    
+  // Function to handle engine volume change and immediate testing
+  const handleVolumeChange = (newVolumeArray) => {
+    const newVolume = newVolumeArray[0];
+    updateSetting("volume", newVolume);
+    
+    // ทดสอบเล่นเสียงปัจจุบันทันทีที่ผู้ใช้ปรับระดับเสียง
+    playAlertSound(settings.alertSound, newVolume);
+  };
+
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -19,8 +55,8 @@ export default function SoundTab({ settings, updateSetting }) {
         <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
           <Music className="w-5 h-5 text-cyan-400" /> Text to Speech Settings
         </h3>
-        
-        {/* Custom Sound Toggle */}
+
+        {/* Custom sound toggle */}
         <div className="space-y-3">
           <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
             <div>
@@ -35,16 +71,16 @@ export default function SoundTab({ settings, updateSetting }) {
           </div>
         </div>
 
-        {/* เสียง */}
+        {/* Notification sound */}
         <div className="space-y-3 mt-4">
           <Label className="text-slate-300 text-base">เสียง</Label>
           <p className="text-slate-500 text-sm">เสียงจากเสริมเอ็นจิน</p>
           <Select
             value={settings.alertSound}
-            onValueChange={(v) => updateSetting("alertSound", v)}
+            onValueChange={handleAlertSoundChange} // <-- ใช้ฟังก์ชันใหม่
           >
             <SelectTrigger className="bg-slate-800/80 border-slate-700 text-white h-12">
-              <SelectValue />
+              <SelectValue placeholder="Select a sound" />
             </SelectTrigger>
             <SelectContent className="bg-slate-800 border-slate-700">
               <SelectItem value="bb_spirit" className="text-white hover:bg-slate-700">BB Spirit</SelectItem>
@@ -56,7 +92,7 @@ export default function SoundTab({ settings, updateSetting }) {
           </Select>
         </div>
 
-        {/* Custom Sound Upload */}
+        {/* Custom sound upload */}
         {settings.useCustomSound && (
           <div className="space-y-3 mt-4">
             <Label className="text-slate-300 text-base">Custom Sound Upload</Label>
@@ -64,40 +100,64 @@ export default function SoundTab({ settings, updateSetting }) {
               <Upload className="w-8 h-8 text-slate-500 mx-auto mb-2" />
               <p className="text-white text-sm mb-1">Upload MP3 or WAV file</p>
               <p className="text-slate-500 text-xs">Max file size: 2MB</p>
+
               <Button
                 variant="outline"
                 size="sm"
                 className="mt-2 border-slate-700 text-slate-300 hover:bg-slate-800"
+                onClick={() => document.getElementById("custom-sound-upload").click()}
               >
                 Choose File
               </Button>
+
+              <Input
+                id="custom-sound-upload"
+                type="file"
+                accept=".mp3,.wav"
+                className="hidden"
+                onChange={(e) => {
+                  if (e.target.files.length > 0) {
+                    console.log(`Selected custom sound: ${e.target.files[0].name}`);
+                    // NOTE: ต้องเพิ่ม logic ในการอัพโหลด/จัดเก็บไฟล์ที่นี่
+                  }
+                }}
+              />
             </div>
           </div>
         )}
 
-        {/* ระดับเสียงเสริมเอ็นจิน */}
+        {/* Engine volume */}
         <div className="space-y-3 mt-6">
           <div className="flex items-center justify-between">
-            <Label className="text-slate-300 text-base">ระดับเสียงเสริมเอ็นจิน ({settings.volume[0]}%)</Label>
+            <Label className="text-slate-300 text-base">ระดับเสียงเสริมเอ็นจิน ({currentVolume}%)</Label>
+            {/* ปุ่มทดสอบเสียงปัจจุบัน */}
+            <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => playAlertSound(settings.alertSound, currentVolume)}
+                className="border-slate-700 text-slate-300 hover:bg-slate-800 h-8 px-3"
+            >
+                <Volume2 className="w-4 h-4 mr-1" /> ทดสอบ
+            </Button>
           </div>
           <Slider
-            value={settings.volume}
-            onValueChange={(v) => updateSetting("volume", v)}
+            value={[currentVolume]}
+            onValueChange={handleVolumeChange} // <-- ใช้ฟังก์ชันใหม่
             max={100}
             step={1}
             className="w-full"
           />
         </div>
 
-        {/* เสียงคนพูด Text to Speech */}
+        {/* TTS Voice */}
         <div className="space-y-3 mt-6">
           <Label className="text-slate-300 text-base">เสียงคนพูด Text to Speech</Label>
           <Select
-            value={settings.ttsVoice || "female"}
+            value={settings.ttsVoice}
             onValueChange={(v) => updateSetting("ttsVoice", v)}
           >
             <SelectTrigger className="bg-slate-800/80 border-slate-700 text-white h-12">
-              <SelectValue />
+              <SelectValue placeholder="Select TTS Voice" />
             </SelectTrigger>
             <SelectContent className="bg-slate-800 border-slate-700">
               <SelectItem value="female" className="text-white hover:bg-slate-700">ผู้หญิง (Female)</SelectItem>
@@ -106,37 +166,41 @@ export default function SoundTab({ settings, updateSetting }) {
           </Select>
         </div>
 
-        {/* ความเร็วในการพูด (Rate) */}
+        {/* TTS Rate */}
         <div className="space-y-3 mt-6">
           <div className="flex items-center justify-between">
-            <Label className="text-slate-300 text-base">ความเร็วในการพูด (Rate) ({settings.ttsRate || 0.5})</Label>
+            <Label className="text-slate-300 text-base">
+              ความเร็วในการพูด (Rate) ({currentTtsRate.toFixed(1)})
+            </Label>
           </div>
           <Slider
-            value={[settings.ttsRate || 0.5]}
-            onValueChange={(v) => updateSetting("ttsRate", v[0])}
-            min={0}
+            value={[currentTtsRate]}
+            onValueChange={(v) => updateSetting("ttsRate", v)}
+            min={0.1}
             max={2}
             step={0.1}
             className="w-full"
           />
         </div>
 
-        {/* ระดับเสียงสูงต่ำ (Pitch) */}
+        {/* TTS Pitch */}
         <div className="space-y-3 mt-6">
           <div className="flex items-center justify-between">
-            <Label className="text-slate-300 text-base">ระดับเสียงสูงต่ำ (Pitch) ({settings.ttsPitch || 0.5})</Label>
+            <Label className="text-slate-300 text-base">
+              ระดับเสียงสูงต่ำ (Pitch) ({currentTtsPitch.toFixed(1)})
+            </Label>
           </div>
           <Slider
-            value={[settings.ttsPitch || 0.5]}
-            onValueChange={(v) => updateSetting("ttsPitch", v[0])}
-            min={0}
+            value={[currentTtsPitch]}
+            onValueChange={(v) => updateSetting("ttsPitch", v)}
+            min={0.1}
             max={2}
             step={0.1}
             className="w-full"
           />
         </div>
 
-        {/* พูดชื่อและจำนวนเงิน */}
+        {/* TTS Say Title Enabled */}
         <div className="space-y-3 mt-6">
           <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
             <div>
@@ -144,36 +208,38 @@ export default function SoundTab({ settings, updateSetting }) {
               <p className="text-slate-500 text-sm mt-1">แปลงชื่อและจำนวนเงินเป็นเสียงพูด</p>
             </div>
             <Switch
-              checked={settings.ttsTitleEnabled || true}
+              checked={settings.ttsTitleEnabled}
               onCheckedChange={(v) => updateSetting("ttsTitleEnabled", v)}
               className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-cyan-500 data-[state=checked]:to-blue-500"
             />
           </div>
         </div>
 
-        {/* พูดชื่อความ */}
+        {/* TTS Say Message */}
         <div className="space-y-3 mt-4">
           <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
             <div>
-              <Label className="text-slate-300 text-base">พูดชื่อความ</Label>
-              <p className="text-slate-500 text-sm mt-1">แปลงชื่อความเป็นเสียงพูด</p>
+              <Label className="text-slate-300 text-base">พูดข้อความ</Label>
+              <p className="text-slate-500 text-sm mt-1">แปลงข้อความที่ส่งมาเป็นเสียงพูด</p>
             </div>
             <Switch
-              checked={settings.ttsMessageEnabledField || true}
+              checked={settings.ttsMessageEnabledField}
               onCheckedChange={(v) => updateSetting("ttsMessageEnabledField", v)}
               className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-cyan-500 data-[state=checked]:to-blue-500"
             />
           </div>
         </div>
 
-        {/* ระดับเสียง Text to Speech */}
+        {/* TTS Volume */}
         <div className="space-y-3 mt-6">
           <div className="flex items-center justify-between">
-            <Label className="text-slate-300 text-base">ระดับเสียง Text to Speech ({settings.ttsVolume || 50}%)</Label>
+            <Label className="text-slate-300 text-base">
+              ระดับเสียง Text to Speech ({currentTtsVolume}%)
+            </Label>
           </div>
           <Slider
-            value={[settings.ttsVolume || 50]}
-            onValueChange={(v) => updateSetting("ttsVolume", v[0])}
+            value={[currentTtsVolume]}
+            onValueChange={(v) => updateSetting("ttsVolume", v)}
             max={100}
             step={1}
             className="w-full"

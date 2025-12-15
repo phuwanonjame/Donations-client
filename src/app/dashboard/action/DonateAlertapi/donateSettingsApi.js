@@ -6,31 +6,30 @@ export const fetchDonateSettings = async () => {
     const res = await fetch(API_URL, {
       method: "GET",
       headers: { "Content-Type": "application/json" },
-      credentials: "include",
+      credentials: "include", // token cookie ส่งไปให้เอง
     });
+
     if (!res.ok) throw new Error(`Error: ${res.status}`);
-    const data = await res.json();
-    return data.settings || {}; // ป้องกัน null
+    return await res.json();
   } catch (err) {
     console.error("Failed to fetch donate settings:", err);
     return null;
   }
 };
 
-// SAVE / UPDATE settings
+// SAVE settings
 export const saveDonateSettings = async (settings) => {
-    console.log(settings);
-    
   try {
     const res = await fetch(API_URL, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      credentials: "include",
-      body: JSON.stringify({ settings }), // ห่อด้วย key settings
+      credentials: "include",  // token cookie ส่งไปให้เอง
+      body: JSON.stringify(settings), // ส่ง settings ตรงๆ
     });
+
     if (!res.ok) throw new Error(`Error: ${res.status}`);
-    const data = await res.json();
-    return data;
+
+    return await res.json();
   } catch (err) {
     console.error("Failed to save donate settings:", err);
     return null;

@@ -8,6 +8,8 @@ import {
   Zap, 
   RotateCcw 
 } from "lucide-react";
+
+// Import Tabs ลูกย่อยๆ
 import MediaTab from "./tabs/MediaTab";
 import SoundTab from "./tabs/SoundTab";
 import TextTab from "./tabs/TextTab";
@@ -18,78 +20,41 @@ import TemplateTab from "./tabs/TemplateTab";
 export default function SettingsTabs({ 
   settings, 
   updateSetting,
-  handleReset,
-  handleCopyJSON 
+  handleReset,     // ✅ รับมา
+  handleCopyJSON   // ✅ รับมา
 }) {
   return (
-    <Tabs defaultValue="text" className="w-full">
-      <TabsList className="w-full bg-slate-800/80 p-1 rounded-xl grid grid-cols-6">
-        <TabsTrigger
-          value="media"
-          className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500"
-        >
-          <Image className="w-4 h-4 mr-2" /> Media
-        </TabsTrigger>
-        <TabsTrigger
-          value="sound"
-          className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500"
-        >
-          <Volume2 className="w-4 h-4 mr-2" /> Sound
-        </TabsTrigger>
-        <TabsTrigger
-          value="text"
-          className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500"
-        >
-          <Type className="w-4 h-4 mr-2" /> Text
-        </TabsTrigger>
-        <TabsTrigger
-          value="display"
-          className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500"
-        >
-          <Sparkles className="w-4 h-4 mr-2" /> Display
-        </TabsTrigger>
-        <TabsTrigger
-          value="effects"
-          className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500"
-        >
-          <Zap className="w-4 h-4 mr-2" /> Effects
-        </TabsTrigger>
-        <TabsTrigger
-          value="template"
-          className="flex-1 data-[state=active]:bg-gradient-to-r data-[state=active]:from-cyan-500 data-[state=active]:to-blue-500"
-        >
-          <RotateCcw className="w-4 h-4 mr-2" /> Template
-        </TabsTrigger>
+    <Tabs defaultValue="template" className="w-full">
+      <TabsList className="w-full bg-slate-800/80 p-1 rounded-xl grid grid-cols-6 mb-6">
+        <TabsTrigger value="media" className="data-[state=active]:bg-cyan-500 data-[state=active]:text-white"><Image className="w-4 h-4 mr-2" /> Media</TabsTrigger>
+        <TabsTrigger value="sound" className="data-[state=active]:bg-cyan-500 data-[state=active]:text-white"><Volume2 className="w-4 h-4 mr-2" /> Sound</TabsTrigger>
+        <TabsTrigger value="text" className="data-[state=active]:bg-cyan-500 data-[state=active]:text-white"><Type className="w-4 h-4 mr-2" /> Text</TabsTrigger>
+        <TabsTrigger value="display" className="data-[state=active]:bg-cyan-500 data-[state=active]:text-white"><Sparkles className="w-4 h-4 mr-2" /> Display</TabsTrigger>
+        <TabsTrigger value="effects" className="data-[state=active]:bg-cyan-500 data-[state=active]:text-white"><Zap className="w-4 h-4 mr-2" /> Effects</TabsTrigger>
+        <TabsTrigger value="template" className="data-[state=active]:bg-cyan-500 data-[state=active]:text-white"><RotateCcw className="w-4 h-4 mr-2" /> Template</TabsTrigger>
       </TabsList>
 
-      {/* Media Tab */}
-      <TabsContent value="media" className="mt-6">
-        <MediaTab settings={settings} updateSetting={updateSetting} />
-      </TabsContent>
+      <TabsContent value="media"><MediaTab settings={settings} updateSetting={updateSetting} /></TabsContent>
+      <TabsContent value="sound"><SoundTab settings={settings} updateSetting={updateSetting} /></TabsContent>
+      <TabsContent value="text"><TextTab settings={settings} updateSetting={updateSetting} /></TabsContent>
+      <TabsContent value="display"><DisplayTab settings={settings} updateSetting={updateSetting} /></TabsContent>
+      <TabsContent value="effects"><EffectsTab settings={settings} updateSetting={updateSetting} /></TabsContent>
 
-      {/* Sound Tab */}
-      <TabsContent value="sound" className="mt-6">
-        <SoundTab settings={settings} updateSetting={updateSetting} />
-      </TabsContent>
-
-      {/* Text Tab */}
-      <TabsContent value="text" className="mt-6">
-        <TextTab settings={settings} updateSetting={updateSetting} />
-      </TabsContent>
-
-      {/* Display Tab */}
-      <TabsContent value="display" className="mt-6">
-        <DisplayTab settings={settings} updateSetting={updateSetting} />
-      </TabsContent>
-
-      {/* Effects Tab */}
-      <TabsContent value="effects" className="mt-6">
-        <EffectsTab settings={settings} updateSetting={updateSetting} />
-      </TabsContent>
-
-      {/* Template Tab */}
-      <TabsContent value="template" className="mt-6">
-        <TemplateTab handleReset={handleReset} handleCopyJSON={handleCopyJSON} />
+      {/* ✅ ส่วนที่แก้ไขสำคัญ */}
+      <TabsContent value="template">
+        <TemplateTab 
+          currentTemplate={settings.templateId || "basic"} // ส่ง templateId ปัจจุบันไปด้วย (ถ้ามีเก็บใน settings)
+          handleReset={handleReset} 
+          handleCopyJSON={handleCopyJSON}
+          
+          // 👇 Logic สำหรับอัปเดต settings เมื่อเลือก Template
+          onTemplateSelect={(newTemplateSettings) => {
+            // วนลูปอัปเดตค่าทุกตัวที่อยู่ใน Template นั้นๆ เข้าสู่ State หลัก
+            Object.entries(newTemplateSettings).forEach(([key, value]) => {
+              updateSetting(key, value);
+            });
+          }}
+        />
       </TabsContent>
     </Tabs>
   );

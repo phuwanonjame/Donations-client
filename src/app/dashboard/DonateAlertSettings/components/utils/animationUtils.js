@@ -1,4 +1,4 @@
-// src/utils/animationUtils.js (แก้ไข)
+// src/utils/animationUtils.js 
 
 /**
  * Mapping function เพื่อแปลงชื่อ Animation จาก DisplayTab เป็น Framer Motion Variants
@@ -12,13 +12,16 @@ export const getMotionVariants = (inAnimationName, outAnimationName, inDuration,
     
     // Transition สำหรับขาเข้า
     const inTransition = { type: "tween", duration: inDuration };
-    // Transition สำหรับขาออก
+    // Transition สำหรับขาออก (สำหรับ exit prop)
     const outTransition = { type: "tween", duration: outDuration };
 
     // ------------------ IN (Initial -> Animate) ------------------
     let inVariants = {
         initial: { opacity: 0 },
+        // เนื่องจาก AlertPreview.jsx เรียกใช้ animate={animationStep} และ step=display
+        // เราจึงต้องเพิ่ม variant ชื่อ 'display' ให้เหมือนกับ 'animate'
         animate: { opacity: 1, transition: inTransition },
+        display: { opacity: 1, transition: { duration: 0 } }, // สถานะแสดงผลคงที่
     };
 
     switch (inAnimationName) {
@@ -69,8 +72,9 @@ export const getMotionVariants = (inAnimationName, outAnimationName, inDuration,
     }
     
     // ------------------ OUT (Exit) ------------------
+    // AnimatePresence จะรัน variant ชื่อ 'exit' เมื่อคอมโพเนนต์ถูก Unmount
     let exitVariant = {};
-    switch (outAnimationName) { // 📌 เปลี่ยนมาใช้ outAnimationName
+    switch (outAnimationName) { 
         case "fadeOut":
             exitVariant = { opacity: 0, transition: outTransition };
             break;
@@ -81,7 +85,8 @@ export const getMotionVariants = (inAnimationName, outAnimationName, inDuration,
             exitVariant = { opacity: 0, y: 50, transition: outTransition };
             break;
         case "bounceOut": 
-            exitVariant = { opacity: 0, scale: 0.5, transition: outTransition };
+            // อาจจะเพิ่ม transition type เป็น spring เพื่อให้ bounce
+            exitVariant = { opacity: 0, scale: 0.5, transition: outTransition }; 
             break;
         case "zoomOut":
             exitVariant = { opacity: 0, scale: 0.5, transition: outTransition };
@@ -91,10 +96,11 @@ export const getMotionVariants = (inAnimationName, outAnimationName, inDuration,
             break;
     }
 
-    // รวม In และ Out Variants
+    // รวม In, Display และ Exit Variants
     return {
         initial: inVariants.initial,
-        animate: inVariants.animate,
-        exit: exitVariant,
+        animate: inVariants.animate, // ใช้สำหรับสถานะ 'in'
+        display: inVariants.display, // ใช้สำหรับสถานะ 'display'
+        exit: exitVariant,          // ใช้สำหรับสถานะ 'out' (โดย AnimatePresence)
     };
 };
