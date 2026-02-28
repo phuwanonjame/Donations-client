@@ -9,12 +9,26 @@ import { MessageSquare } from "lucide-react";
 // ✅ Import รายการ Font ที่แยกออกมา
 import { thaiGoogleFonts, fontWeights } from "../utils/fontUtils";
 
-
 export default function TextTab({ settings, updateSetting }) {
   
-  // Helper functions
-  const currentTextSize = Array.isArray(settings.textSize) ? settings.textSize[0] : settings.textSize;
-  const currentMessageFontSize = settings.messageFontSize || currentTextSize || 24;
+  // Helper functions - แก้ไขการจัดการ textSize
+  const getTextSize = () => {
+    if (!settings.textSize) return 32;
+    if (Array.isArray(settings.textSize)) {
+      return settings.textSize[0] || 32;
+    }
+    return parseInt(settings.textSize) || 32;
+  };
+
+  const getMessageFontSize = () => {
+    if (settings.messageFontSize) {
+      return parseInt(settings.messageFontSize) || 24;
+    }
+    return 24;
+  };
+
+  const currentTextSize = getTextSize();
+  const currentMessageFontSize = getMessageFontSize();
 
   // ค่า Default Color/Value
   const defaultTextColor = settings.textColor || '#FFFFFF';
@@ -24,7 +38,6 @@ export default function TextTab({ settings, updateSetting }) {
   
   const defaultMessageColor = settings.messageColor || defaultTextColor;
   const defaultMessageBorderColor = settings.messageBorderColor || defaultBorderColor;
-
 
   return (
     <motion.div
@@ -115,21 +128,24 @@ export default function TextTab({ settings, updateSetting }) {
           </div>
         </div>
 
-        {/* Text Size Slider */}
-        <div className="flex items-center justify-between mt-4 mb-4">
-          <Label className="text-slate-300">Text Size</Label>
-          <span className="text-cyan-400 font-medium">
-            {currentTextSize || 0}px
-          </span>
+        {/* Text Size Slider - สำหรับชื่อและจำนวนเงิน */}
+        <div className="space-y-2 mt-4">
+          <div className="flex items-center justify-between">
+            <Label className="text-slate-300">Name & Amount Size</Label>
+            <span className="text-cyan-400 font-medium">
+              {currentTextSize}px
+            </span>
+          </div>
+          <Slider
+            value={[currentTextSize]}
+            onValueChange={(v) => updateSetting("textSize", v[0])}
+            min={12}
+            max={72}
+            step={1}
+            className="w-full"
+          />
+          <p className="text-slate-500 text-sm text-right">ขนาดตัวอักษรของชื่อและจำนวนเงิน</p>
         </div>
-        <Slider
-          value={[currentTextSize || 24]}
-          onValueChange={(v) => updateSetting("textSize", v[0])}
-          min={12}
-          max={72}
-          step={1}
-          className="w-full"
-        />
 
         {/* Text Color */}
         <div className="space-y-2 mt-4">
@@ -257,7 +273,12 @@ export default function TextTab({ settings, updateSetting }) {
 
         {/* Message Font Size */}
         <div className="space-y-2 mt-4">
-          <Label className="text-slate-300">Message Font Size ({currentMessageFontSize}px)</Label>
+          <div className="flex items-center justify-between">
+            <Label className="text-slate-300">Message Font Size</Label>
+            <span className="text-cyan-400 font-medium">
+              {currentMessageFontSize}px
+            </span>
+          </div>
           <Slider
             value={[currentMessageFontSize]}
             onValueChange={(v) => updateSetting("messageFontSize", v[0])}

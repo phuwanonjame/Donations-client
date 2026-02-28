@@ -1,5 +1,5 @@
 import React from "react";
-import { Image as ImageIcon } from "lucide-react"; 
+import { Image as ImageIcon } from "lucide-react";
 import { motion } from "framer-motion";
 
 // =================================================================
@@ -122,7 +122,7 @@ const EasyDonateTheme = ({
   const displayMessage = settings.messageText ? settings.messageText.replace('{{user}}', displayName) : defaultMessage;
   
   // ใช้ imageUrl ที่ส่งมาเป็น Prop ก่อน
-  const alertImage = imageUrl || settings.image || ""; 
+  const alertImage = imageUrl || settings.image || "https://media.tenor.com/k_UsDt9xfWIAAAAM/i-will-eat-you-cat.gif"; 
   
   // 3. คำนวณ Style & Shadow Utilities
   const strokeColor = settings.borderColor || settings.titleStrokeColor || "#000";
@@ -130,10 +130,52 @@ const EasyDonateTheme = ({
   const messageStrokeColor = settings.messageBorderColor || settings.messageStrokeColor || "#000";
   const messageStrokeWidth = settings.messageBorderWidth || settings.messageStrokeWidth || 2;
 
+  // 4. กำหนดสีและขนาดตัวอักษร
+  const nameColor = settings.donorNameColor || settings.textColor || "#FF9500";
+  const amountColor = settings.amountColor || "#0EA5E9";
+  const suffixText = settings.suffixText || "โดเนทมา";
+  
+  // 5. จัดการ Font Weight
+  const mainFontWeight = getFontWeight(settings.fontWeight || "700");
+  const nameFontWeight = getFontWeight(settings.fontWeight || "700");
+
+  // แก้ไขการจัดการ textSize ให้ใช้งานได้
+  const getTextSize = () => {
+    if (!settings.textSize) return 32;
+    if (Array.isArray(settings.textSize)) {
+      return settings.textSize[0] || 32;
+    }
+    if (typeof settings.textSize === 'string') {
+      return parseInt(settings.textSize) || 32;
+    }
+    return settings.textSize || 32;
+  };
+
+  const getMessageFontSize = () => {
+    if (!settings.messageFontSize) return 24;
+    if (Array.isArray(settings.messageFontSize)) {
+      return settings.messageFontSize[0] || 24;
+    }
+    if (typeof settings.messageFontSize === 'string') {
+      return parseInt(settings.messageFontSize) || 24;
+    }
+    return settings.messageFontSize || 24;
+  };
+
+  const getAmountText = () => {
+    if (!amountText) return "500";
+    // ลบตัวอักษรที่ไม่ใช่ตัวเลขออก
+    const numbers = amountText.replace(/[^0-9]/g, '');
+    return numbers || "500";
+  };
+
+  const currentTextSize = getTextSize();
+  const currentMessageFontSize = getMessageFontSize();
+  const cleanAmount = getAmountText();
+
   const getTextStroke = (color, width) => {
     if (!width || width === 0) return "none";
     const w = parseFloat(width);
-    // ใช้ text-shadow 4 ทิศทาง
     return `
       ${-w}px ${-w}px 0 ${color},
       ${w}px ${-w}px 0 ${color},
@@ -143,7 +185,7 @@ const EasyDonateTheme = ({
   };
   
   const getAmountShadow = (color, isShine) => {
-    const shineColor = color || "#FF6B00";
+    const shineColor = color || "#0EA5E9";
     const stroke = getTextStroke(strokeColor, strokeWidth); 
     const type = settings.effect || "realistic_look";
 
@@ -165,183 +207,147 @@ const EasyDonateTheme = ({
 
   const getImageShadow = () => {
     if (settings.imageGlow || ["glow", "neon"].includes(settings.effect)) {
-      const c = settings.amountColor || "#FF6B00";
+      const c = settings.amountColor || "#0EA5E9";
       return `0 0 10px ${c}, 0 0 15px ${c}80`;
     }
     if (settings.effect === "shadow") return "0 5px 15px rgba(0,0,0,0.5)";
     return settings.imageShadow ? "0 0 10px rgba(255,107,0,0.3)" : "none";
   };
-  
-  const currentTextSize = Array.isArray(settings.textSize) ? settings.textSize[0] : settings.textSize || 32;
-  const currentMessageFontSize = settings.messageFontSize || (currentTextSize * 0.75);
+
+  // Animation classes based on animationStep
+  const imageAnimationClass = animationStep === "in" ? "animate__animated animate__fadeInUp" : 
+                              animationStep === "out" ? "animate__animated animate__fadeOutUp" : "";
+  const textContainerAnimationClass = animationStep === "in" ? "animate__animated animate__fadeInUp" : 
+                                      animationStep === "out" ? "animate__animated animate__fadeOutUp" : "";
 
   return (
     <motion.div
-      className="relative w-full flex flex-col items-center"
-      style={{ fontFamily: mainFontFamily }} 
+      className="relative w-full flex flex-col items-center justify-center"
+      style={{ 
+        fontFamily: mainFontFamily,
+        minHeight: "500px",
+        width: "100%"
+      }} 
       variants={mainVariants}
       initial="initial"
       animate={animationStep === "in" || animationStep === "display" ? "animate" : animationStep} 
       exit="exit"
     >
-      {/* ✅ แก้ไข: ใช้ settings แทน effectiveSettings */}
+      {/* Confetti Layer */}
       {settings.showConfetti && (animationStep === "in" || animationStep === "display") && <ConfettiLayer settings={settings} />} 
 
-      {/* Background Motion Effects (Decorative) */}
-      <motion.div
-        className="absolute inset-0 overflow-hidden pointer-events-none opacity-20"
-        style={{
-          background: "linear-gradient(180deg, transparent 0%, rgba(138,43,226,0.2) 50%, transparent 100%)",
-        }}
-        animate={{ opacity: [0.1, 0.3, 0.1] }}
-        transition={{ duration: 4, repeat: Infinity }}
-      />
-      
-      {/* Bats */}
-      {[...Array(5)].map((_, i) => (
-        <motion.div
-          key={i}
-          className="absolute text-3xl"
-          style={{
-            top: `${20 + i * 15}%`,
-            left: `${10 + i * 20}%`,
+      {/* Main Content Container */}
+      <div className="flex flex-col items-center justify-center gap-4 text-center">
+        {/* Image with animation */}
+        <motion.img 
+          className={`h-[200px] w-auto rounded-2xl ${imageAnimationClass}`}
+          src={alertImage}
+          alt="img"
+          style={{ 
+            animationDuration: "1000ms",
+            filter: `drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6))`,
+            boxShadow: getImageShadow()
           }}
-          animate={{
-            x: [0, 50, 0],
-            y: [0, -20, 0],
-            rotate: [-10, 10, -10],
-          }}
-          transition={{
-            duration: 3 + i,
-            repeat: Infinity,
-            delay: i * 0.5,
-          }}
-        >
-          🦇
-        </motion.div>
-      ))}
-
-      <div className="w-full flex flex-col items-center relative  z-20">
-        {/* Pumpkin Top */}
-        <motion.div
-          className="absolute -top-10 left-1/2 transform -translate-x-1/2 text-5xl"
           animate={{ 
-            rotate: [-5, 5, -5],
-            scale: [1, 1.1, 1],
+            scale: [1, 1.05, 1],
           }}
           transition={{ duration: 2, repeat: Infinity }}
-        >
-          🎃
-        </motion.div>
+        />
 
-        {/* Image Display Block */}
-        <div className="flex justify-center mb-[-10px]">
-          {/* ส่วนแสดงผลรูปภาพ: alertImage ต้องมีค่าเป็น URL ที่ถูกต้อง */}
-          {alertImage ? (
-            <motion.img
-              src={alertImage}
-              alt="Alert"
-              className=" w-36 h-36 rounded-lg object-cover z-10" 
-              style={{ boxShadow: getImageShadow() }}
-              animate={{ 
-                scale: [1, 1.05, 1],
-                rotate: [-2, 2, -2],
+        {/* Text Container with animation */}
+        <motion.div 
+          className={`flex flex-col items-center ${textContainerAnimationClass}`}
+          style={{ animationDuration: "1000ms" }}
+        >
+          {/* Name and Amount Row */}
+          <div className="mb-2 flex items-end justify-center gap-3">
+            <h1 
+              style={{ 
+                fontFamily: mainFontFamily, 
+                fontWeight: mainFontWeight, // ใช้ค่าจาก settings
+                fontSize: `${currentTextSize}px`,
+                lineHeight: `${currentTextSize * 1.2}px`, 
+                color: '#FFFFFF',
+                filter: `url(#stroke-filter) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6))`
               }}
-              transition={{ duration: 2, repeat: Infinity }}
-            />
-          ) : (
-            // Fallback เมื่อไม่มีรูปภาพ
-            <div className="w-24 h-24 flex items-center justify-center bg-gradient-to-br from-orange-600 to-purple-900 rounded-lg"> 
-              <ImageIcon className="w-8 h-8 text-orange-200" />
-            </div>
-          )}
-        </div>
-
-        {/* Text Container Box */}
-        <div
-          className="relative z-0 p-5 pt-8 rounded-2xl flex flex-col items-center"
-          style={{
-            background: settings.backgroundColor || "linear-gradient(135deg, rgba(25,0,51,0.85) 0%, rgba(51,17,0,0.85) 100%)",
-            minWidth: "350px",
-            maxWidth: "100%",
-            paddingBottom: settings.showMessage && displayMessage ? "20px" : "5px",
-            backdropFilter: "blur(10px)", 
-            border: "none", 
-            boxShadow: "0 5px 20px rgba(0,0,0,0.5), inset 0 0 10px rgba(138,43,226,0.1)",
-          }}
-        >
-          {/* Decorative Emojis and Effects */}
-          <div className="absolute top-0 left-0 text-3xl opacity-50">🕸️</div>
-          <div className="absolute top-0 right-0 text-3xl opacity-50 transform scale-x-[-1]">🕸️</div>
-          <motion.div className="absolute top-1/2 left-2 text-2xl" animate={{ y: [0, -10, 0] }} transition={{ duration: 2, repeat: Infinity }}>👻</motion.div>
-          <motion.div className="absolute top-1/2 right-2 text-2xl" animate={{ y: [0, -10, 0] }} transition={{ duration: 2, repeat: Infinity, delay: 1 }}>👻</motion.div>
-          
-          <motion.div
-            className="absolute inset-0 rounded-2xl pointer-events-none"
-            style={{ background: "rgba(255,107,0,0.1)" }}
-            animate={{ opacity: [0, 0.2, 0, 0.1, 0] }}
-            transition={{ duration: 0.3, repeat: Infinity, repeatDelay: 3 }}
-          />
-
-          {/* Main Text Content */}
-          <div className="text-center w-full relative z-10">
-            {settings.showName && (
-              <span
-                style={{
-                  color: settings.donorNameColor || settings.textColor,
-                  fontSize: `${currentTextSize}px`, 
-                  fontWeight: getFontWeight(settings.fontWeight || "700"), 
-                  textShadow: getTextStroke(strokeColor, strokeWidth),
-                }}
-              >
-                {displayName}
-              </span>
-            )}
-            {settings.showName && settings.suffixText && (
-              <span
-                className="ml-2"
-                style={{
-                  color: settings.textColor,
-                  fontSize: `${currentTextSize}px`, 
-                  fontWeight: getFontWeight(settings.fontWeight || "700"),
-                  textShadow: getTextStroke(strokeColor, strokeWidth),
-                }}
-              >
-                {settings.suffixText}
-              </span>
-            )}
+            >
+              <span></span>
+              {settings.showName && (
+                <span style={{ 
+                  color: nameColor,
+                  fontWeight: nameFontWeight // ใช้ค่าเดียวกับ main
+                }}>
+                  {displayName}
+                </span>
+              )}
+              <span> {suffixText}</span>
+            </h1>
+            
             {settings.showAmount && (
-              <span
-                className="ml-2"
-                style={{
-                  color: settings.amountColor || "#FF6B00",
-                  fontSize: `${currentTextSize}px`, 
-                  fontWeight: getFontWeight(settings.fontWeight || "700"), 
-                  textShadow: getAmountShadow(settings.amountColor, settings.amountShine),
+              <h1 
+                className="w-fit shine-effect top-1"
+                style={{ 
+                  fontFamily: mainFontFamily, 
+                  fontWeight: mainFontWeight, // ใช้ค่าจาก settings
+                  fontSize: `${currentTextSize * 1.33}px`,
+                  lineHeight: `${currentTextSize * 1.33}px`, 
+                  color: amountColor,
+                  filter: `url(#stroke-filter) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6))`,
+                  textShadow: getAmountShadow(amountColor, settings.amountShine)
                 }}
               >
-                {amountText} 
-              </span>
+                <span></span>
+                <span>{cleanAmount}</span>
+                <span>฿</span>
+              </h1>
             )}
           </div>
 
+          {/* Message */}
           {settings.showMessage && displayMessage && (
-            <div
-              className="mt-1 text-center w-full relative z-10"
-              style={{
-                fontFamily: messageFontFamily,
+            <p 
+              className="w-[400px]"
+              style={{ 
+                fontFamily: messageFontFamily, 
                 fontWeight: messageFontWeight,
-                color: settings.messageColor || settings.textColor || "#FFF",
-                fontSize: `${currentMessageFontSize}px`, 
-                lineHeight: 1.4,
-                textShadow: getTextStroke(messageStrokeColor, messageStrokeWidth),
+                color: settings.messageColor || settings.textColor || '#FFFFFF', 
+                fontSize: `${currentMessageFontSize}px`,
+                lineHeight: `${currentMessageFontSize * 1.4}px`,
+                filter: `url(#message-stroke-filter) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6))`
               }}
             >
               {displayMessage}
-            </div>
+            </p>
           )}
-        </div>
+        </motion.div>
       </div>
+
+      {/* SVG filters for stroke effects */}
+      <svg style={{ position: 'absolute', width: 0, height: 0 }}>
+        <defs>
+          <filter id="stroke-filter">
+            <feMorphology operator="dilate" radius={strokeWidth} in="SourceAlpha" result="thicken" />
+            <feFlood floodColor={strokeColor} floodOpacity="1" result="flood" />
+            <feComposite in="flood" in2="thicken" operator="in" result="stroke" />
+            <feMerge>
+              <feMergeNode in="stroke" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <filter id="message-stroke-filter">
+            <feMorphology operator="dilate" radius={messageStrokeWidth} in="SourceAlpha" result="thicken" />
+            <feFlood floodColor={messageStrokeColor} floodOpacity="1" result="flood" />
+            <feComposite in="flood" in2="thicken" operator="in" result="stroke" />
+            <feMerge>
+              <feMergeNode in="stroke" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+      </svg>
+
+      {/* Canvas for confetti */}
+      <canvas id="preview-confetti-canvas" className="pointer-events-none absolute inset-0 z-10 h-full w-full"></canvas>
     </motion.div>
   );
 };
