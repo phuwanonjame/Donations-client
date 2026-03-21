@@ -32,7 +32,7 @@ import { defaultSettings } from "./components/utils/settingsUtils";
 import {
   saveDonateSettings,
   fetchDonateSettings,
-} from "../action/DonateAlertapi/donateSettingsApi";
+} from "../../../actions/DonateAlertapi/donateSettingsApi";
 
 export default function DonateAlertSettings() {
   const [settings, setSettings] = useState(defaultSettings);

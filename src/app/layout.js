@@ -2,7 +2,11 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "../contexts/LanguageContext";
 import LayoutClient from "../components/landing/LayoutClient";
-import { AuthProvider } from '../contexts/AuthContext';
+import { AuthProvider } from "../contexts/AuthContext";
+
+import { Toaster } from "sonner";
+
+
 const geistSans = Geist({
   variable: "--font-geist-sans",
   subsets: ["latin"],
@@ -21,14 +25,15 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+      >
         <LanguageProvider>
-<AuthProvider>
-          {/* ⭐ ใช้ Client Wrapper แยก */}
-          <LayoutClient>
-            {children}
-          </LayoutClient>
-</AuthProvider>
+          <AuthProvider>
+            {/* ⭐ ใช้ Client Wrapper แยก */}
+            <LayoutClient>{children}</LayoutClient>
+            <Toaster richColors />;
+          </AuthProvider>
         </LanguageProvider>
       </body>
     </html>

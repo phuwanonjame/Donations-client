@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 
 // Import utilities
 // ⭐⭐⭐ แก้ไขตรงนี้: ต้อง Import จาก audioUtils ไม่ใช่ audioSources ⭐⭐⭐
-import { playAlertSound } from "../../../../../utils/audioUtils"; 
+import { playAlertSound } from "@/utils/audioUtils"; 
 
 // Component Imports (assuming these are correctly configured, e.g., shadcn/ui)
 import { Button } from "@/components/ui/button"; 

@@ -29,6 +29,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import SocialForm from '@/components/dashboard/account/social-form';
 
 export default function ManageAccount() {
   const [profile, setProfile] = useState({
@@ -51,14 +52,7 @@ export default function ManageAccount() {
     setProfile(prev => ({ ...prev, [key]: value }));
   };
 
-  const socialLinks = [
-    { key: 'facebook', label: 'Facebook', icon: Facebook, placeholder: 'facebook.com/username', color: 'from-blue-600 to-blue-700' },
-    { key: 'youtube', label: 'YouTube', icon: Youtube, placeholder: 'youtube.com/@channel', color: 'from-red-600 to-red-700' },
-    { key: 'tiktok', label: 'TikTok', icon: Globe, placeholder: 'tiktok.com/@username', color: 'from-slate-800 to-slate-900' },
-    { key: 'twitter', label: 'Twitter / X', icon: Twitter, placeholder: 'twitter.com/username', color: 'from-sky-500 to-sky-600' },
-    { key: 'instagram', label: 'Instagram', icon: Instagram, placeholder: 'instagram.com/username', color: 'from-pink-500 to-purple-600' },
-    { key: 'website', label: 'Website', icon: Globe, placeholder: 'yourwebsite.com', color: 'from-emerald-500 to-teal-600' },
-  ];
+  
 
   return (
     <div className="space-y-8">
@@ -198,44 +192,8 @@ export default function ManageAccount() {
         </motion.div>
 
         {/* Social Media Links */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2 }}
-          className="rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl p-6"
-        >
-          <div className="flex items-center gap-4 mb-6">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-purple-500 to-pink-500">
-              <Globe className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-white">Social Media</h3>
-              <p className="text-slate-400 text-sm">Connect your social profiles</p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            {socialLinks.map((social, index) => (
-              <motion.div
-                key={social.key}
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.3 + index * 0.05 }}
-                className="flex items-center gap-3"
-              >
-                <div className={`p-2.5 rounded-xl bg-gradient-to-br ${social.color}`}>
-                  <social.icon className="w-5 h-5 text-white" />
-                </div>
-                <Input
-                  value={profile[social.key]}
-                  onChange={(e) => updateProfile(social.key, e.target.value)}
-                  placeholder={social.placeholder}
-                  className="flex-1 bg-slate-800/80 border-slate-700 text-white placeholder:text-slate-500"
-                />
-              </motion.div>
-            ))}
-          </div>
-        </motion.div>
+        <SocialForm />
+        
       </div>
 
       {/* Security Section */}

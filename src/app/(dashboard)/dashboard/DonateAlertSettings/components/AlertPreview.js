@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import EasyDonateTheme from "./EasyDonateTheme"; 
 import { getMotionVariants } from "./utils/animationUtils"; 
 import { getFontFamilyCss, getFontWeight, getDisplayName, getAmountText } from "./utils/fontUtils";
-import { playAlertSound } from "../../../../utils/audioUtils"; 
+import { playAlertSound } from "../../../../../utils/audioUtils"; 
 
 const AlertPreview = forwardRef(({ 
   settings, 

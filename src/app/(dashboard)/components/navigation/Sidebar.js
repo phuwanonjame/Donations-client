@@ -24,14 +24,14 @@ const menuSections = [
   {
     title: 'Overview',
     items: [
-      { name: 'Dashboard', icon: LayoutDashboard, page: 'Dashboard' },
-      { name: 'All Widgets', icon: Grid3X3, page: 'Widgets' },
+      { name: 'Dashboard', icon: LayoutDashboard, page: '' },
+      { name: 'All Widgets', icon: Grid3X3, page: 'widgets' },
     ]
   },
   {
     title: 'Account',
     items: [
-      { name: 'Manage Account', icon: User, page: 'ManageAccount' },
+      { name: 'Manage Account', icon: User, page: 'account' },
       { name: 'My Package', icon: Package, page: 'SubscriptionHistory' },
       { name: 'Plan History', icon: Crown, page: 'SubscriptionHistory' },
     ]
