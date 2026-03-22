@@ -11,7 +11,7 @@ const FormWrapper = ({
   onSubmit,
   children,
   className = "",
-  successMessage = "บันทึกสำเร็จ 🎉",
+  successMessage = "บันทึกสำเร็จ",
 }) => {
   const [loading, setLoading] = useState(false);
 

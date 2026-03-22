@@ -18,18 +18,10 @@ import {
   Key
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+
 import SocialForm from '@/components/dashboard/account/social-form';
+import ProfileDetailFrom from '@/components/dashboard/account/profile-detail-form';
 
 export default function ManageAccount() {
   const [profile, setProfile] = useState({
@@ -97,99 +89,7 @@ export default function ManageAccount() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Personal Information */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
-          className="rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl p-6"
-        >
-          <div className="flex items-center gap-4 mb-6">
-            <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500">
-              <User className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h3 className="text-xl font-bold text-white">Personal Information</h3>
-              <p className="text-slate-400 text-sm">Update your personal details</p>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-slate-300">Display Name</Label>
-                <Input
-                  value={profile.displayName}
-                  onChange={(e) => updateProfile('displayName', e.target.value)}
-                  className="bg-slate-800/80 border-slate-700 text-white"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-slate-300">Full Name</Label>
-                <Input
-                  value={profile.fullName}
-                  onChange={(e) => updateProfile('fullName', e.target.value)}
-                  placeholder="Your full name"
-                  className="bg-slate-800/80 border-slate-700 text-white placeholder:text-slate-500"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-slate-300">Email Address</Label>
-              <Input
-                value={profile.email}
-                disabled
-                className="bg-slate-800/80 border-slate-700 text-slate-400"
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-slate-300">Phone Number</Label>
-                <Input
-                  value={profile.phone}
-                  onChange={(e) => updateProfile('phone', e.target.value)}
-                  placeholder="+66 XX XXX XXXX"
-                  className="bg-slate-800/80 border-slate-700 text-white placeholder:text-slate-500"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label className="text-slate-300">Date of Birth</Label>
-                <Input
-                  type="date"
-                  value={profile.birthDate}
-                  onChange={(e) => updateProfile('birthDate', e.target.value)}
-                  className="bg-slate-800/80 border-slate-700 text-white"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-slate-300">Country / Region</Label>
-              <Select value={profile.country} onValueChange={(v) => updateProfile('country', v)}>
-                <SelectTrigger className="bg-slate-800/80 border-slate-700 text-white">
-                  <SelectValue placeholder="Select your country" />
-                </SelectTrigger>
-                <SelectContent className="bg-slate-800 border-slate-700">
-                  <SelectItem value="th" className="text-white hover:bg-slate-700">🇹🇭 Thailand</SelectItem>
-                  <SelectItem value="us" className="text-white hover:bg-slate-700">🇺🇸 United States</SelectItem>
-                  <SelectItem value="jp" className="text-white hover:bg-slate-700">🇯🇵 Japan</SelectItem>
-                  <SelectItem value="kr" className="text-white hover:bg-slate-700">🇰🇷 South Korea</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-slate-300">Bio / About</Label>
-              <Textarea
-                value={profile.bio}
-                onChange={(e) => updateProfile('bio', e.target.value)}
-                placeholder="Tell your supporters about yourself..."
-                className="bg-slate-800/80 border-slate-700 text-white placeholder:text-slate-500 min-h-[100px]"
-              />
-            </div>
-          </div>
-        </motion.div>
+        <ProfileDetailFrom />
 
         {/* Social Media Links */}
         <SocialForm />

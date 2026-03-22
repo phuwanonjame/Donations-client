@@ -1,9 +1,18 @@
 "use client";
 
 import { useFormContext } from "react-hook-form";
-
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 const FormField = ({
   name,
+  className = "",
   type = "text", // text | textarea | select | switch
   placeholder,
   options = [],
@@ -19,41 +28,51 @@ const FormField = ({
   const value = watch(name);
 
   return (
-    <div className="space-y-1">
+    <>
       {/* TEXT */}
-      {type === "text" && (
-        <input
+      {(type === "text" || type === "date") && (
+        <Input
+          type={type}
           {...register(name)}
           placeholder={placeholder}
           disabled={loading}
-          className="border p-2 w-full disabled:opacity-50 text-white"
+          className={className}
         />
       )}
 
       {/* TEXTAREA */}
       {type === "textarea" && (
-        <textarea
+        <Textarea
           {...register(name)}
           placeholder={placeholder}
           disabled={loading}
-          className="border p-2 w-full disabled:opacity-50 text-white"
+          className={className}
         />
       )}
 
       {/* SELECT */}
       {type === "select" && (
-        <select
-          {...register(name)}
+        <Select
+          value={value || ""} // ✅ bind ค่า
+          onValueChange={(val) => setValue(name, val, { shouldDirty: true })} // ✅ update form
           disabled={loading}
-          className="border p-2 w-full disabled:opacity-50 text-white"
         >
-          <option value="">เลือก...</option>
-          {options.map((opt) => (
-            <option key={opt.value} value={opt.value}>
-              {opt.label}
-            </option>
-          ))}
-        </select>
+          <SelectTrigger className="bg-slate-800/80 border-slate-700 text-white">
+            <SelectValue placeholder={placeholder} />
+          </SelectTrigger>
+
+          <SelectContent className="bg-slate-800 border-slate-700">
+            {options.map((opt) => (
+              <SelectItem
+                key={opt.value}
+                value={opt.value}
+                className="text-white"
+              >
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       )}
 
       {/* SWITCH */}
@@ -71,11 +90,9 @@ const FormField = ({
 
       {/* ERROR */}
       {errors[name] && (
-        <p className="text-red-500 text-sm">
-          {errors[name].message}
-        </p>
+        <p className="text-red-500 text-sm">{errors[name].message}</p>
       )}
-    </div>
+    </>
   );
 };
 

@@ -1,14 +1,18 @@
-const FormButton = ({ loading, isDirty, children }) => {
+import { Button } from "@/components/ui/button";
+import { LoaderCircle } from "lucide-react";
+
+
+const FormButton = ({ loading, isDirty, children, className="" }) => {
   const disabled = loading || !isDirty;
 
   return (
-    <button
+    <Button
       type="submit"
       disabled={disabled}
-      className="bg-blue-500 text-white px-4 py-2 w-full disabled:opacity-50"
+      className={className}
     >
-      {loading ? "Saving..." : children}
-    </button>
+      {loading ? <><LoaderCircle className="animate-spin"/> Saving...</> : children}
+    </Button>
   );
 };
 
