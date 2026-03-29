@@ -17,7 +17,8 @@ import {
   ChevronLeft,
   ChevronRight,
   PanelLeftClose,
-  PanelLeftOpen
+  PanelLeftOpen,
+  Edit3
 } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
@@ -26,7 +27,12 @@ import { toast } from 'react-hot-toast';
 import SettingsHeader from "./components/SettingsHeader";
 import SettingsTabs from "./components/SettingsTabs";
 import PreviewPanel from "./components/PreviewPanel";
-import { defaultSettings } from "./components/utils/settingsUtils";
+import FullscreenVisualEditor from "./components/FullscreenVisualEditor";
+import { 
+  defaultSettings, 
+  transformToFlatStructure, 
+  transformToGroupedStructure 
+} from "./components/utils/settingsUtils";
 
 // API
 import {
@@ -35,7 +41,7 @@ import {
 } from "../../../../actions/DonateAlertapi/donateSettingsApi";
 
 export default function DonateAlertSettings() {
-  const [settings, setSettings] = useState(defaultSettings);
+  const [settings, setSettings] = useState(() => transformToFlatStructure(defaultSettings));
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
@@ -44,6 +50,9 @@ export default function DonateAlertSettings() {
   const [showSaveNotification, setShowSaveNotification] = useState(false);
   const [copied, setCopied] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  
+  // ✅ State สำหรับ Fullscreen Visual Editor
+  const [showFullscreenEditor, setShowFullscreenEditor] = useState(false);
 
   // Load settings on mount
   useEffect(() => {
@@ -53,14 +62,12 @@ export default function DonateAlertSettings() {
         const res = await fetchDonateSettings();
         if (!res || !res.settings) {
           console.log("⚠ No data, using default");
-          setSettings(defaultSettings);
+          setSettings(transformToFlatStructure(defaultSettings));
           toast.success("Using default settings");
         } else {
           console.log("📥 Loaded:", res.settings);
-          setSettings({
-            ...defaultSettings,
-            ...res.settings,
-          });
+          const flatSettings = transformToFlatStructure(res.settings);
+          setSettings(flatSettings);
           setLastSaved(new Date());
           toast.success("Settings loaded successfully");
         }
@@ -103,7 +110,7 @@ export default function DonateAlertSettings() {
 
   const handleResetSettings = () => {
     if (window.confirm("Are you sure you want to reset all settings to default?")) {
-      setSettings(defaultSettings);
+      setSettings(transformToFlatStructure(defaultSettings));
       setHasChanges(true);
       toast.success("Settings reset to default");
     }
@@ -111,7 +118,8 @@ export default function DonateAlertSettings() {
 
   const handleCopyJSON = async () => {
     try {
-      const jsonString = JSON.stringify(settings, null, 2);
+      const groupedData = transformToGroupedStructure(settings);
+      const jsonString = JSON.stringify(groupedData, null, 2);
       await navigator.clipboard.writeText(jsonString);
       setCopied(true);
       toast.success("Settings copied to clipboard!");
@@ -124,7 +132,15 @@ export default function DonateAlertSettings() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      const res = await saveDonateSettings(settings);
+      const groupedData = transformToGroupedStructure(settings);
+      console.log("groupedData", groupedData);
+      
+      const dataToSave = {
+        ...groupedData,
+        updatedAt: new Date().toISOString(),
+      };
+      
+      const res = await saveDonateSettings(dataToSave);
       if (!res) {
         throw new Error("Failed to save");
       }
@@ -143,10 +159,20 @@ export default function DonateAlertSettings() {
     }
   };
 
+  // ✅ เปิด Fullscreen Visual Editor
+  const openFullscreenEditor = () => {
+    setShowFullscreenEditor(true);
+  };
+
+  // ✅ ปิด Fullscreen Visual Editor
+  const closeFullscreenEditor = () => {
+    setShowFullscreenEditor(false);
+  };
+
   // Loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
+      <div className="h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -185,180 +211,183 @@ export default function DonateAlertSettings() {
         )}
       </AnimatePresence>
 
-      <div className="space-y-4 px-3 sm:px-4 lg:px-6 py-4 max-w-[1400px] mx-auto">
-        {/* Header with status - ปรับให้กระชับ */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col sm:flex-row sm:items-center justify-between gap-3"
-        >
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-xl hidden sm:block">
-              <MonitorSmartphone className="w-6 h-6 text-cyan-400" />
-            </div>
-            <div>
-              <h1 className="text-lg sm:text-xl font-bold text-white">Donation Alert Settings</h1>
-              <p className="text-slate-400 text-xs flex items-center gap-2">
-                Customize your donation alert
-                {lastSaved && (
-                  <span className="text-xs text-slate-500">
-                    • {lastSaved.toLocaleTimeString()}
-                  </span>
-                )}
-              </p>
-            </div>
-          </div>
-
-          {/* Status badges - ปรับขนาดเล็กลง */}
-          <div className="hidden sm:flex items-center gap-2">
-            {hasChanges && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 rounded-full text-xs flex items-center gap-1 border border-yellow-500/30"
-              >
-                <div className="w-1.5 h-1.5 bg-yellow-400 rounded-full animate-pulse" />
-                Unsaved
-              </motion.div>
-            )}
-            {saveSuccess && (
-              <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
-                animate={{ opacity: 1, scale: 1 }}
-                exit={{ opacity: 0 }}
-                className="px-2 py-0.5 bg-green-500/20 text-green-400 rounded-full text-xs flex items-center gap-1 border border-green-500/30"
-              >
-                <Check className="w-3 h-3" />
-                Saved
-              </motion.div>
-            )}
-          </div>
-
-          {/* Mobile status indicator */}
-          <div className="sm:hidden flex items-center gap-2">
-            {hasChanges && (
-              <span className="text-xs bg-yellow-500/20 text-yellow-400 px-2 py-0.5 rounded-full">
-                Unsaved
-              </span>
-            )}
-          </div>
-        </motion.div>
-
-        {/* Header Component - ปรับ margin */}
-        <div className="mb-2">
-          <SettingsHeader settings={settings} updateSetting={updateSetting} />
-        </div>
-
-        {/* Main content grid - ปรับสัดส่วนสำหรับ 1366px */}
-        <div className="grid grid-cols-1 xl:grid-cols-12 gap-4">
-          {/* Left Column: Tabs - 8 คอลัมน์ */}
-          <motion.div 
-            className="xl:col-span-8 space-y-4"
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
+      {/* Main content */}
+      <div className="h-full w-full overflow-y-auto">
+        <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+          {/* Header */}
+          <motion.div
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6"
           >
-            <SettingsTabs
-              settings={settings}
-              updateSetting={updateSetting}
-              handleReset={handleResetSettings}
-              handleCopyJSON={handleCopyJSON}
-            />
-
-            {/* Quick actions bar - ปรับให้กะทัดรัด */}
-            <motion.div 
-              className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 bg-slate-900/50 rounded-xl border border-slate-800/50 backdrop-blur-sm"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-            >
-              <div className="flex items-center gap-2 text-xs text-slate-400">
-                <AlertCircle className="w-3.5 h-3.5" />
-                <span>Auto-saved to preview</span>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-xl flex-shrink-0 hidden sm:block">
+                <MonitorSmartphone className="w-6 h-6 text-cyan-400" />
               </div>
-              
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCopyJSON}
-                  className="h-8 px-3 bg-slate-800/50 border-slate-700 hover:bg-slate-700/50 text-slate-300 text-xs"
-                  disabled={copied}
-                >
-                  {copied ? (
-                    <>
-                      <Check className="w-3 h-3 mr-1 text-green-400" />
-                      Copied
-                    </>
-                  ) : (
-                    <>
-                      <Copy className="w-3 h-3 mr-1" />
-                      Copy
-                    </>
+              <div>
+                <h1 className="text-xl sm:text-2xl font-bold text-white">Donation Alert Settings</h1>
+                <p className="text-slate-400 text-sm flex items-center gap-2 flex-wrap">
+                  Customize your donation alert
+                  {lastSaved && (
+                    <span className="text-xs text-slate-500">
+                      • Last saved: {lastSaved.toLocaleTimeString()}
+                    </span>
                   )}
-                </Button>
-                
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleResetSettings}
-                  className="h-8 px-3 bg-slate-800/50 border-slate-700 hover:bg-slate-700/50 text-slate-300 text-xs"
+                </p>
+              </div>
+            </div>
+
+            {/* Status badges */}
+            <div className="flex items-center gap-2">
+              {/* ✅ Fullscreen Visual Editor Button */}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={openFullscreenEditor}
+                className="border-slate-700 text-slate-400 hover:text-white hover:border-slate-600 transition-all duration-200"
+              >
+                <Edit3 className="w-4 h-4 mr-2" />
+                Visual Editor
+              </Button>
+
+              {hasChanges && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm flex items-center gap-2 border border-yellow-500/30"
                 >
-                  <RotateCcw className="w-3 h-3 mr-1" />
-                  Reset
-                </Button>
+                  <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
+                  Unsaved Changes
+                </motion.div>
+              )}
+              {saveSuccess && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm flex items-center gap-2 border border-green-500/30"
+                >
+                  <Check className="w-4 h-4" />
+                  Saved
+                </motion.div>
+              )}
+            </div>
+          </motion.div>
+
+          {/* Settings Header */}
+          <div className="mb-6">
+            <SettingsHeader settings={settings} updateSetting={updateSetting} />
+          </div>
+
+          {/* Main grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            {/* Left Column */}
+            <motion.div 
+              className="lg:col-span-8 space-y-6"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <SettingsTabs
+                settings={settings}
+                updateSetting={updateSetting}
+                handleReset={handleResetSettings}
+                handleCopyJSON={handleCopyJSON}
+                onOpenVisualEditor={openFullscreenEditor}  // ✅ เพิ่มตรงนี้
+              />
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center justify-between gap-3 p-4 bg-slate-900/50 rounded-xl border border-slate-800">
+                <div className="flex items-center gap-2 text-sm text-slate-400">
+                  <AlertCircle className="w-4 h-4" />
+                  <span>Changes are automatically reflected in preview</span>
+                </div>
+                
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={handleCopyJSON}
+                    className="bg-slate-800/50 border-slate-700 hover:bg-slate-700/50 text-slate-300"
+                    disabled={copied}
+                  >
+                    {copied ? (
+                      <>
+                        <Check className="w-4 h-4 mr-2" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-4 h-4 mr-2" />
+                        Copy JSON
+                      </>
+                    )}
+                  </Button>
+                  
+                  <Button
+                    variant="outline"
+                    onClick={handleResetSettings}
+                    className="bg-slate-800/50 border-slate-700 hover:bg-slate-700/50 text-slate-300"
+                  >
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Reset All
+                  </Button>
+                </div>
               </div>
             </motion.div>
 
-            {/* Reduced spacer */}
-            <div className="h-4 lg:h-8" />
-          </motion.div>
-
-          {/* Right Column: Preview - 4 คอลัมน์ */}
-          <motion.div 
-            className="xl:col-span-4"
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-          >
-            <div className="sticky top-4 space-y-4">
-              <PreviewPanel 
-                settings={settings} 
-                handleSave={handleSave}
-                isSaving={saving}
-                hasChanges={hasChanges}
-              />
-              
-              {/* Quick tips - Compact version */}
-              <motion.div 
-                className="hidden xl:block p-3 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 rounded-xl border border-cyan-500/20"
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                transition={{ delay: 0.3 }}
-              >
-                <h4 className="text-xs font-medium text-cyan-400 mb-2 flex items-center gap-1">
-                  <Sparkles className="w-3 h-3" />
-                  Tips
-                </h4>
-                <ul className="space-y-1.5 text-xs text-slate-400">
-                  <li className="flex items-start gap-1.5">
-                    <div className="w-1 h-1 rounded-full bg-cyan-500 mt-1.5" />
-                    <span>Test on mobile screens</span>
-                  </li>
-                  <li className="flex items-start gap-1.5">
-                    <div className="w-1 h-1 rounded-full bg-cyan-500 mt-1.5" />
-                    <span>Save to apply changes</span>
-                  </li>
-                  <li className="flex items-start gap-1.5">
-                    <div className="w-1 h-1 rounded-full bg-cyan-500 mt-1.5" />
-                    <span>Copy JSON as backup</span>
-                  </li>
-                </ul>
-              </motion.div>
-            </div>
-          </motion.div>
+            {/* Right Column */}
+            <motion.div 
+              className="lg:col-span-4"
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              <div className="sticky top-6 space-y-6">
+                <PreviewPanel 
+                  settings={settings} 
+                  handleSave={handleSave}
+                  isSaving={saving}
+                  hasChanges={hasChanges}
+                />
+                
+                {/* Tips Card */}
+                <div className="p-4 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 rounded-xl border border-cyan-500/20">
+                  <h4 className="text-sm font-medium text-cyan-400 mb-3 flex items-center gap-2">
+                    <Sparkles className="w-4 h-4" />
+                    Quick Tips
+                  </h4>
+                  <ul className="space-y-2 text-sm text-slate-400">
+                    <li className="flex items-start gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 mt-1.5" />
+                      <span>Test your alert on different screen sizes</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 mt-1.5" />
+                      <span>Click Save to apply changes permanently</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 mt-1.5" />
+                      <span>Try Visual Editor for click-to-edit experience</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+            </motion.div>
+          </div>
         </div>
       </div>
+
+      {/* Fullscreen Visual Editor Modal */}
+      <AnimatePresence>
+        {showFullscreenEditor && (
+          <FullscreenVisualEditor
+            settings={settings}
+            updateSetting={updateSetting}
+            onClose={closeFullscreenEditor}
+            onSave={handleSave}
+          />
+        )}
+      </AnimatePresence>
     </>
   );
 }

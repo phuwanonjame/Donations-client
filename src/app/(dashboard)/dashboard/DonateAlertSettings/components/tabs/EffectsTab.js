@@ -1,13 +1,22 @@
 import React from "react";
 import { motion } from "framer-motion";
+import PropTypes from 'prop-types';
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Zap, Sparkles, Layers, Image, Droplet, Ghost } from "lucide-react";
+import { Zap, Sparkles, Layers, Image, Droplet, Ghost, AlertCircle } from "lucide-react";
 
 export default function EffectsTab({ settings, updateSetting }) {
+  // Safe value access with fallbacks
+  const effect = settings?.effect ?? "realistic_look";
+  const imageGlow = settings?.imageGlow ?? false;
+  const amountShine = settings?.amountShine ?? false;
+  const showConfetti = settings?.showConfetti ?? false;
+  const confettiEffect = settings?.confettiEffect ?? "fountain";
+  const useRanges = settings?.useRanges ?? false;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
@@ -22,18 +31,18 @@ export default function EffectsTab({ settings, updateSetting }) {
       <div className="space-y-2">
         <Label className="text-slate-300 text-base">Text/Amount Effect</Label>
         <Select
-          value={settings.effect || "realistic_look"}
+          value={effect}
           onValueChange={(v) => updateSetting("effect", v)}
         >
           <SelectTrigger className="bg-slate-800/80 border-slate-700 text-white h-12">
-            <SelectValue />
+            <SelectValue placeholder="Select effect" />
           </SelectTrigger>
           <SelectContent className="bg-slate-800 border-slate-700">
             <SelectItem value="realistic_look" className="text-white hover:bg-slate-700">
               Realistic Look
             </SelectItem>
             <SelectItem value="glow" className="text-white hover:bg-slate-700">
-              Glow Effect (Amount)
+              Glow Effect
             </SelectItem>
             <SelectItem value="shadow" className="text-white hover:bg-slate-700">
               Shadow Effect
@@ -46,6 +55,13 @@ export default function EffectsTab({ settings, updateSetting }) {
             </SelectItem>
           </SelectContent>
         </Select>
+        <p className="text-slate-500 text-xs mt-1">
+          {effect === "realistic_look" && "Natural look with subtle depth"}
+          {effect === "glow" && "Soft glow around text and amount"}
+          {effect === "shadow" && "Drop shadow for depth"}
+          {effect === "neon" && "Bright neon light effect"}
+          {effect === "none" && "No text effect applied"}
+        </p>
       </div>
 
       {/* --- Image Glow --- */}
@@ -55,11 +71,11 @@ export default function EffectsTab({ settings, updateSetting }) {
             <Image className="w-5 h-5 text-fuchsia-400" />
             <div>
               <Label className="text-slate-300 text-base">Image Glow</Label>
-              <p className="text-slate-500 text-sm mt-1">Adds a glow around the alert image/GIF.</p>
+              <p className="text-slate-500 text-sm mt-1">Adds a glow around the alert image/GIF</p>
             </div>
           </div>
           <Switch
-            checked={settings.imageGlow}
+            checked={imageGlow}
             onCheckedChange={(v) => updateSetting("imageGlow", v)}
             className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-fuchsia-500 data-[state=checked]:to-pink-500"
           />
@@ -67,7 +83,7 @@ export default function EffectsTab({ settings, updateSetting }) {
       </div>
 
       {/* --- Amount Shine (เฉพาะ Realistic Look) --- */}
-      {settings.effect === "realistic_look" && (
+      {effect === "realistic_look" && (
         <div className="space-y-3">
           <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
             <div className="flex items-center gap-3">
@@ -78,7 +94,7 @@ export default function EffectsTab({ settings, updateSetting }) {
               </div>
             </div>
             <Switch
-              checked={settings.amountShine}
+              checked={amountShine}
               onCheckedChange={(v) => updateSetting("amountShine", v)}
               className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-cyan-500 data-[state=checked]:to-blue-500"
             />
@@ -94,17 +110,17 @@ export default function EffectsTab({ settings, updateSetting }) {
             Confetti Animation
           </h4>
           <Switch
-            checked={settings.showConfetti}
+            checked={showConfetti}
             onCheckedChange={(v) => updateSetting("showConfetti", v)}
             className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-indigo-500 data-[state=checked]:to-purple-500"
           />
         </div>
 
-        {settings.showConfetti && (
+        {showConfetti && (
           <div className="space-y-2">
             <Label className="text-slate-300 text-base">Confetti Effect Type</Label>
             <Select
-              value={settings.confettiEffect || "fountain"}
+              value={confettiEffect}
               onValueChange={(v) => updateSetting("confettiEffect", v)}
             >
               <SelectTrigger className="bg-slate-800/80 border-slate-700 text-white h-12">
@@ -112,16 +128,16 @@ export default function EffectsTab({ settings, updateSetting }) {
               </SelectTrigger>
               <SelectContent className="bg-slate-800 border-slate-700">
                 <SelectItem value="fountain" className="text-white hover:bg-slate-700">
-                  Fountain (พลุยิงขึ้น)
+                  Fountain (Shooting upward)
                 </SelectItem>
                 <SelectItem value="rain" className="text-white hover:bg-slate-700">
-                  Rain (ฝนตกจากบน)
+                  Rain (Falling from top)
                 </SelectItem>
                 <SelectItem value="spiral" className="text-white hover:bg-slate-700">
-                  Spiral (หมุนวน)
+                  Spiral (Spinning around)
                 </SelectItem>
                 <SelectItem value="blast" className="text-white hover:bg-slate-700">
-                  Blast (ระเบิดรอบทิศ)
+                  Blast (Explosive burst)
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -137,30 +153,45 @@ export default function EffectsTab({ settings, updateSetting }) {
             Donation Ranges
           </h4>
           <Switch
-            checked={settings.useRanges}
+            checked={useRanges}
             onCheckedChange={(v) => updateSetting("useRanges", v)}
             className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-cyan-500 data-[state=checked]:to-blue-500"
           />
         </div>
 
-        {settings.useRanges ? (
+        {useRanges ? (
           <div className="space-y-4">
-            <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
-              <p className="text-white font-medium mb-2">Range 1: 1 - 100฿</p>
-              <p className="text-slate-400 text-sm">Default settings will be used</p>
+            <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-cyan-500/30 transition-colors cursor-pointer">
+              <div className="flex items-center justify-between">
+                <p className="text-white font-medium">Range 1: 1 - 100 THB</p>
+                <Button variant="ghost" size="sm" className="text-cyan-400 hover:text-cyan-300">
+                  Edit
+                </Button>
+              </div>
+              <p className="text-slate-400 text-sm mt-1">Default settings will be used</p>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
-              <p className="text-white font-medium mb-2">Range 2: 101 - 500฿</p>
-              <p className="text-slate-400 text-sm">Special effect and sound</p>
+            <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-cyan-500/30 transition-colors cursor-pointer">
+              <div className="flex items-center justify-between">
+                <p className="text-white font-medium">Range 2: 101 - 500 THB</p>
+                <Button variant="ghost" size="sm" className="text-cyan-400 hover:text-cyan-300">
+                  Edit
+                </Button>
+              </div>
+              <p className="text-slate-400 text-sm mt-1">Special effect and sound</p>
             </div>
 
-            <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
-              <p className="text-white font-medium mb-2">Range 3: 501฿+</p>
-              <p className="text-slate-400 text-sm">Premium alert with custom image</p>
+            <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-cyan-500/30 transition-colors cursor-pointer">
+              <div className="flex items-center justify-between">
+                <p className="text-white font-medium">Range 3: 501 THB+</p>
+                <Button variant="ghost" size="sm" className="text-cyan-400 hover:text-cyan-300">
+                  Edit
+                </Button>
+              </div>
+              <p className="text-slate-400 text-sm mt-1">Premium alert with custom image</p>
             </div>
 
-            <Button variant="outline" className="w-full border-slate-700 text-slate-300 hover:bg-slate-800">
+            <Button variant="outline" className="w-full border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white">
               <Layers className="w-4 h-4 mr-2" /> Add New Range
             </Button>
           </div>
@@ -177,3 +208,16 @@ export default function EffectsTab({ settings, updateSetting }) {
     </motion.div>
   );
 }
+
+// PropTypes for type checking
+EffectsTab.propTypes = {
+  settings: PropTypes.shape({
+    effect: PropTypes.string,
+    imageGlow: PropTypes.bool,
+    amountShine: PropTypes.bool,
+    showConfetti: PropTypes.bool,
+    confettiEffect: PropTypes.string,
+    useRanges: PropTypes.bool,
+  }).isRequired,
+  updateSetting: PropTypes.func.isRequired,
+};

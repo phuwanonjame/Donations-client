@@ -1,5 +1,7 @@
-import React from "react";
-import { Image as ImageIcon } from "lucide-react";
+// ============================================
+// ไฟล์: ./components/EasyDonateTheme.js
+// ============================================
+import React, { forwardRef, useRef, useImperativeHandle } from "react";
 import { motion } from "framer-motion";
 
 // =================================================================
@@ -8,7 +10,22 @@ import { motion } from "framer-motion";
 const ConfettiLayer = ({ settings }) => {
     const emojis = ["🎃", "👻", "🦇", "🕷️", "💀", "🕸️", "🍬", "🍭"];
     const count = 50;
-    const effectType = settings.confettiEffect || "fountain";
+    
+    const getEffectType = () => {
+        if (settings.metadata) {
+            return settings.metadata.effect || "fountain";
+        }
+        return settings.confettiEffect || settings.effect || "fountain";
+    };
+    
+    const getAmountColor = () => {
+        if (settings.metadata) {
+            return settings.metadata.title?.amountColor || "#FF6B00";
+        }
+        return settings.amountColor || "#FF6B00";
+    };
+    
+    const effectType = getEffectType();
 
     const getConfettiVariants = (i) => {
         const angle = Math.random() * Math.PI * 2;
@@ -53,7 +70,7 @@ const ConfettiLayer = ({ settings }) => {
                         transition: { duration: 1.8 + Math.random() * 1, ease: "easeInOut", delay: Math.random() * 0.2 },
                     },
                 };
-            default: // fountain
+            default:
                 const horizontalRange = (Math.random() - 0.5) * 400;
                 const initialUp = -(200 + Math.random() * 150);
                 const finalDown = 500 + Math.random() * 200;
@@ -92,7 +109,7 @@ const ConfettiLayer = ({ settings }) => {
                     variants={getConfettiVariants(i)}
                     initial="initial"
                     animate="animate"
-                    style={{ ...initialStyle, color: settings.amountColor || "#FF6B00" }}
+                    style={{ ...initialStyle, color: getAmountColor() }}
                 >
                     {emojis[i % emojis.length]}
                 </motion.div>
@@ -102,7 +119,28 @@ const ConfettiLayer = ({ settings }) => {
 };
 // =================================================================
 
-const EasyDonateTheme = ({
+const extractSetting = (settings, flatPath, groupedPath, defaultValue) => {
+    if (!settings) return defaultValue;
+    
+    if (settings.metadata) {
+        const paths = groupedPath.split('.');
+        let value = settings.metadata;
+        for (const p of paths) {
+            if (value && typeof value === 'object' && p in value) {
+                value = value[p];
+            } else {
+                return defaultValue;
+            }
+        }
+        return value !== undefined && value !== null ? value : defaultValue;
+    }
+    
+    return settings[flatPath] !== undefined && settings[flatPath] !== null 
+        ? settings[flatPath] 
+        : defaultValue;
+};
+
+const EasyDonateTheme = forwardRef(({
   settings,
   displayName,
   amountText, 
@@ -111,94 +149,136 @@ const EasyDonateTheme = ({
   imageUrl, 
   getFontFamilyCss, 
   getFontWeight,
-}) => {
-  // 1. คำนวณ Font
-  const mainFontFamily = getFontFamilyCss(settings.font);
-  const messageFontFamily = getFontFamilyCss(settings.messageFont || settings.font);
-  const messageFontWeight = getFontWeight(settings.messageFontWeight || settings.fontWeight);
+}, ref) => {
+  // Refs สำหรับแต่ละ element
+  const donorNameRef = useRef(null);
+  const amountRef = useRef(null);
+  const suffixTextRef = useRef(null);
+  const messageRef = useRef(null);
+  const messageColorRef = useRef(null);
+  const fontSizeRef = useRef(null);
+  const fontRef = useRef(null);
+  const imageRef = useRef(null);
+  const showNameRef = useRef(null);
+  const showAmountRef = useRef(null);
+  const showMessageRef = useRef(null);
+  const soundRef = useRef(null);
+  const animationRef = useRef(null);
+  const borderRef = useRef(null);
+
+  useImperativeHandle(ref, () => ({
+    getElementPositions: () => ({
+      donorName: donorNameRef.current?.getBoundingClientRect(),
+      amount: amountRef.current?.getBoundingClientRect(),
+      suffixText: suffixTextRef.current?.getBoundingClientRect(),
+      message: messageRef.current?.getBoundingClientRect(),
+      messageColor: messageColorRef.current?.getBoundingClientRect(),
+      fontSize: fontSizeRef.current?.getBoundingClientRect(),
+      font: fontRef.current?.getBoundingClientRect(),
+      image: imageRef.current?.getBoundingClientRect(),
+      showName: showNameRef.current?.getBoundingClientRect(),
+      showAmount: showAmountRef.current?.getBoundingClientRect(),
+      showMessage: showMessageRef.current?.getBoundingClientRect(),
+      sound: soundRef.current?.getBoundingClientRect(),
+      animation: animationRef.current?.getBoundingClientRect(),
+      border: borderRef.current?.getBoundingClientRect(),
+    })
+  }));
+
+  const getSetting = (flatPath, groupedPath, defaultValue) => {
+    return extractSetting(settings, flatPath, groupedPath, defaultValue);
+  };
+
+  // Title settings
+  const font = getSetting('font', 'title.fontFamily', 'ibmplex');
+  const fontWeight = getSetting('fontWeight', 'title.fontWeight', '700');
+  const textSize = getSetting('textSize', 'title.fontSize', 36);
+  const textColor = getSetting('textColor', 'title.mainColor', '#FFFFFF');
+  const donorNameColor = getSetting('donorNameColor', 'title.usernameColor', '#FF9500');
+  const amountColor = getSetting('amountColor', 'title.amountColor', '#0EA5E9');
+  const borderWidth = getSetting('borderWidth', 'title.strokeWidth', 2.5);
+  const borderColor = getSetting('borderColor', 'title.strokeColor', '#000000');
+  const amountShine = getSetting('amountShine', 'title.amountShine', true);
+  const suffixText = getSetting('suffixText', 'title.suffixText', 'โดเนทมา');
   
-  // 2. ข้อมูลข้อความและรูปภาพ
+  const showName = getSetting('showName', 'title.showName', true);
+  const showAmount = getSetting('showAmount', 'title.showAmount', true);
+  
+  // Message settings
+  const messageFont = getSetting('messageFont', 'message.fontFamily', 'ibmplex');
+  const messageFontWeight = getSetting('messageFontWeight', 'message.fontWeight', '500');
+  const messageFontSize = getSetting('messageFontSize', 'message.fontSize', 24);
+  const messageColor = getSetting('messageColor', 'message.color', '#FFFFFF');
+  const messageBorderWidth = getSetting('messageBorderWidth', 'message.strokeWidth', 2.5);
+  const messageBorderColor = getSetting('messageBorderColor', 'message.strokeColor', '#000000');
+  const showMessage = getSetting('showMessage', 'message.showMessage', true);
+  const messageText = getSetting('messageText', 'message.text', 'ขอบคุณสำหรับการใช้งาน FastDonate');
+  
+  // Effect settings
+  const effect = getSetting('effect', 'effect', 'realistic_look');
+  const imageGlow = getSetting('imageGlow', 'imageGlow', false);
+  const showConfetti = getSetting('showConfetti', 'showConfetti', false);
+  
+  // Image
+  const alertImage = imageUrl || getSetting('alertImage', 'image', "https://media.tenor.com/k_UsDt9xfWIAAAAM/i-will-eat-you-cat.gif");
+
+  // Font
+  const mainFontFamily = getFontFamilyCss(font);
+  const messageFontFamily = getFontFamilyCss(messageFont || font);
+  const messageFontWeightValue = getFontWeight(messageFontWeight);
+  
   const defaultMessage = "ขอบคุณสำหรับการใช้งาน FastDonate";
-  const displayMessage = settings.messageText ? settings.messageText.replace('{{user}}', displayName) : defaultMessage;
+  const displayMessage = messageText ? messageText.replace('{{user}}', displayName) : defaultMessage;
   
-  // ใช้ imageUrl ที่ส่งมาเป็น Prop ก่อน
-  const alertImage = imageUrl || settings.image || "https://media.tenor.com/k_UsDt9xfWIAAAAM/i-will-eat-you-cat.gif"; 
-  
-  // 3. คำนวณ Style & Shadow Utilities
-  const strokeColor = settings.borderColor || settings.titleStrokeColor || "#000";
-  const strokeWidth = settings.borderWidth || settings.titleStrokeWidth || 2; 
-  const messageStrokeColor = settings.messageBorderColor || settings.messageStrokeColor || "#000";
-  const messageStrokeWidth = settings.messageBorderWidth || settings.messageStrokeWidth || 2;
+  const strokeColor = borderColor;
+  const strokeWidthValue = parseFloat(borderWidth);
+  const messageStrokeColor = messageBorderColor;
+  const messageStrokeWidthValue = parseFloat(messageBorderWidth);
 
-  // 4. กำหนดสีและขนาดตัวอักษร
-  const nameColor = settings.donorNameColor || settings.textColor || "#FF9500";
-  const amountColor = settings.amountColor || "#0EA5E9";
-  const suffixText = settings.suffixText || "โดเนทมา";
-  
-  // 5. จัดการ Font Weight
-  const mainFontWeight = getFontWeight(settings.fontWeight || "700");
-  const nameFontWeight = getFontWeight(settings.fontWeight || "700");
+  const mainFontWeightValue = getFontWeight(fontWeight);
+  const nameFontWeightValue = getFontWeight(fontWeight);
 
-  // แก้ไขการจัดการ textSize ให้ใช้งานได้
   const getTextSize = () => {
-    if (!settings.textSize) return 32;
-    if (Array.isArray(settings.textSize)) {
-      return settings.textSize[0] || 32;
-    }
-    if (typeof settings.textSize === 'string') {
-      return parseInt(settings.textSize) || 32;
-    }
-    return settings.textSize || 32;
+    if (!textSize) return 32;
+    if (Array.isArray(textSize)) return textSize[0] || 32;
+    if (typeof textSize === 'string') return parseInt(textSize) || 32;
+    return textSize || 32;
   };
 
   const getMessageFontSize = () => {
-    if (!settings.messageFontSize) return 24;
-    if (Array.isArray(settings.messageFontSize)) {
-      return settings.messageFontSize[0] || 24;
-    }
-    if (typeof settings.messageFontSize === 'string') {
-      return parseInt(settings.messageFontSize) || 24;
-    }
-    return settings.messageFontSize || 24;
+    if (!messageFontSize) return 24;
+    if (Array.isArray(messageFontSize)) return messageFontSize[0] || 24;
+    if (typeof messageFontSize === 'string') return parseInt(messageFontSize) || 24;
+    return messageFontSize || 24;
   };
 
-  const getAmountText = () => {
+  const getAmountTextValue = () => {
     if (!amountText) return "500";
-    // ลบตัวอักษรที่ไม่ใช่ตัวเลขออก
     const numbers = amountText.replace(/[^0-9]/g, '');
     return numbers || "500";
   };
 
   const currentTextSize = getTextSize();
   const currentMessageFontSize = getMessageFontSize();
-  const cleanAmount = getAmountText();
+  const cleanAmount = getAmountTextValue();
 
   const getTextStroke = (color, width) => {
     if (!width || width === 0) return "none";
     const w = parseFloat(width);
-    return `
-      ${-w}px ${-w}px 0 ${color},
-      ${w}px ${-w}px 0 ${color},
-      ${-w}px ${w}px 0 ${color},
-      ${w}px ${w}px 0 ${color}
-    `.trim().replace(/\s+/g, ' ');
+    return `${-w}px ${-w}px 0 ${color}, ${w}px ${-w}px 0 ${color}, ${-w}px ${w}px 0 ${color}, ${w}px ${w}px 0 ${color}`.trim().replace(/\s+/g, ' ');
   };
   
   const getAmountShadow = (color, isShine) => {
     const shineColor = color || "#0EA5E9";
-    const stroke = getTextStroke(strokeColor, strokeWidth); 
-    const type = settings.effect || "realistic_look";
-
-    switch (type) {
+    const stroke = getTextStroke(strokeColor, strokeWidthValue);
+    switch (effect) {
       case "glow":
       case "neon":
         return `${stroke}, 0 0 10px ${shineColor}, 0 0 20px ${shineColor}80, 0 0 30px ${shineColor}40`;
       case "shadow":
         return `${stroke}, 3px 3px 6px rgba(0,0,0,0.5)`;
       case "realistic_look":
-        if (isShine) {
-          return `${stroke}, 0 0 10px ${shineColor}, 0 0 20px ${shineColor}80, 0 0 30px ${shineColor}40, 0 0 40px ${shineColor}20`;
-        }
+        if (isShine) return `${stroke}, 0 0 10px ${shineColor}, 0 0 20px ${shineColor}80, 0 0 30px ${shineColor}40, 0 0 40px ${shineColor}20`;
         return stroke;
       default:
         return stroke;
@@ -206,15 +286,14 @@ const EasyDonateTheme = ({
   };
 
   const getImageShadow = () => {
-    if (settings.imageGlow || ["glow", "neon"].includes(settings.effect)) {
-      const c = settings.amountColor || "#0EA5E9";
+    if (imageGlow || ["glow", "neon"].includes(effect)) {
+      const c = amountColor || "#0EA5E9";
       return `0 0 10px ${c}, 0 0 15px ${c}80`;
     }
-    if (settings.effect === "shadow") return "0 5px 15px rgba(0,0,0,0.5)";
-    return settings.imageShadow ? "0 0 10px rgba(255,107,0,0.3)" : "none";
+    if (effect === "shadow") return "0 5px 15px rgba(0,0,0,0.5)";
+    return "none";
   };
 
-  // Animation classes based on animationStep
   const imageAnimationClass = animationStep === "in" ? "animate__animated animate__fadeInUp" : 
                               animationStep === "out" ? "animate__animated animate__fadeOutUp" : "";
   const textContainerAnimationClass = animationStep === "in" ? "animate__animated animate__fadeInUp" : 
@@ -233,13 +312,11 @@ const EasyDonateTheme = ({
       animate={animationStep === "in" || animationStep === "display" ? "animate" : animationStep} 
       exit="exit"
     >
-      {/* Confetti Layer */}
-      {settings.showConfetti && (animationStep === "in" || animationStep === "display") && <ConfettiLayer settings={settings} />} 
+      {showConfetti && (animationStep === "in" || animationStep === "display") && <ConfettiLayer settings={settings} />} 
 
-      {/* Main Content Container */}
       <div className="flex flex-col items-center justify-center gap-4 text-center">
-        {/* Image with animation */}
         <motion.img 
+          ref={imageRef}
           className={`h-[200px] w-auto rounded-2xl ${imageAnimationClass}`}
           src={alertImage}
           alt="img"
@@ -248,52 +325,50 @@ const EasyDonateTheme = ({
             filter: `drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6))`,
             boxShadow: getImageShadow()
           }}
-          animate={{ 
-            scale: [1, 1.05, 1],
-          }}
+          animate={{ scale: [1, 1.05, 1] }}
           transition={{ duration: 2, repeat: Infinity }}
         />
 
-        {/* Text Container with animation */}
         <motion.div 
           className={`flex flex-col items-center ${textContainerAnimationClass}`}
           style={{ animationDuration: "1000ms" }}
         >
-          {/* Name and Amount Row */}
           <div className="mb-2 flex items-end justify-center gap-3">
             <h1 
+              ref={donorNameRef}
               style={{ 
                 fontFamily: mainFontFamily, 
-                fontWeight: mainFontWeight, // ใช้ค่าจาก settings
+                fontWeight: mainFontWeightValue,
                 fontSize: `${currentTextSize}px`,
                 lineHeight: `${currentTextSize * 1.2}px`, 
-                color: '#FFFFFF',
+                color: textColor,
                 filter: `url(#stroke-filter) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6))`
               }}
             >
               <span></span>
-              {settings.showName && (
+              {showName && (
                 <span style={{ 
-                  color: nameColor,
-                  fontWeight: nameFontWeight // ใช้ค่าเดียวกับ main
+                  color: donorNameColor,
+                  fontWeight: nameFontWeightValue
                 }}>
                   {displayName}
                 </span>
               )}
-              <span> {suffixText}</span>
+              <span ref={suffixTextRef}> {suffixText}</span>
             </h1>
             
-            {settings.showAmount && (
+            {showAmount && (
               <h1 
+                ref={amountRef}
                 className="w-fit shine-effect top-1"
                 style={{ 
                   fontFamily: mainFontFamily, 
-                  fontWeight: mainFontWeight, // ใช้ค่าจาก settings
+                  fontWeight: mainFontWeightValue,
                   fontSize: `${currentTextSize * 1.33}px`,
                   lineHeight: `${currentTextSize * 1.33}px`, 
                   color: amountColor,
                   filter: `url(#stroke-filter) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6))`,
-                  textShadow: getAmountShadow(amountColor, settings.amountShine)
+                  textShadow: getAmountShadow(amountColor, amountShine)
                 }}
               >
                 <span></span>
@@ -303,14 +378,14 @@ const EasyDonateTheme = ({
             )}
           </div>
 
-          {/* Message */}
-          {settings.showMessage && displayMessage && (
+          {showMessage && displayMessage && (
             <p 
+              ref={messageRef}
               className="w-[400px]"
               style={{ 
                 fontFamily: messageFontFamily, 
-                fontWeight: messageFontWeight,
-                color: settings.messageColor || settings.textColor || '#FFFFFF', 
+                fontWeight: messageFontWeightValue,
+                color: messageColor, 
                 fontSize: `${currentMessageFontSize}px`,
                 lineHeight: `${currentMessageFontSize * 1.4}px`,
                 filter: `url(#message-stroke-filter) drop-shadow(0 4px 6px rgba(0, 0, 0, 0.6))`
@@ -322,11 +397,10 @@ const EasyDonateTheme = ({
         </motion.div>
       </div>
 
-      {/* SVG filters for stroke effects */}
       <svg style={{ position: 'absolute', width: 0, height: 0 }}>
         <defs>
           <filter id="stroke-filter">
-            <feMorphology operator="dilate" radius={strokeWidth} in="SourceAlpha" result="thicken" />
+            <feMorphology operator="dilate" radius={strokeWidthValue} in="SourceAlpha" result="thicken" />
             <feFlood floodColor={strokeColor} floodOpacity="1" result="flood" />
             <feComposite in="flood" in2="thicken" operator="in" result="stroke" />
             <feMerge>
@@ -335,7 +409,7 @@ const EasyDonateTheme = ({
             </feMerge>
           </filter>
           <filter id="message-stroke-filter">
-            <feMorphology operator="dilate" radius={messageStrokeWidth} in="SourceAlpha" result="thicken" />
+            <feMorphology operator="dilate" radius={messageStrokeWidthValue} in="SourceAlpha" result="thicken" />
             <feFlood floodColor={messageStrokeColor} floodOpacity="1" result="flood" />
             <feComposite in="flood" in2="thicken" operator="in" result="stroke" />
             <feMerge>
@@ -346,10 +420,10 @@ const EasyDonateTheme = ({
         </defs>
       </svg>
 
-      {/* Canvas for confetti */}
       <canvas id="preview-confetti-canvas" className="pointer-events-none absolute inset-0 z-10 h-full w-full"></canvas>
     </motion.div>
   );
-};
+});
 
+EasyDonateTheme.displayName = 'EasyDonateTheme';
 export default EasyDonateTheme;
