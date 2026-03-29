@@ -32,7 +32,7 @@ export default function RootLayout({ children }) {
           <AuthProvider>
             {/* ⭐ ใช้ Client Wrapper แยก */}
             <LayoutClient>{children}</LayoutClient>
-            <Toaster richColors />;
+            <Toaster richColors />
           </AuthProvider>
         </LanguageProvider>
       </body>

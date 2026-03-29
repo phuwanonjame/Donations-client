@@ -19,6 +19,8 @@ export const fetchDonateSettings = async () => {
 
 // SAVE settings
 export const saveDonateSettings = async (settings) => {
+  console.log(settings);
+  
   try {
     const res = await fetch(API_URL, {
       method: "POST",

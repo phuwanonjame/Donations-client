@@ -25,9 +25,89 @@ import {
   Leaf
 } from "lucide-react";
 
+// Helper function to convert flat settings to grouped structure
+const convertToGroupedStructure = (flatSettings) => {
+  return {
+    type: "ALERT",
+    metadata: {
+      type: "main",
+      title: {
+        text: flatSettings.prefixText || "{{user}} โดเนทมา",
+        amountText: flatSettings.amountText || "{{amount}}฿",
+        amountShine: flatSettings.amountShine ?? true,
+        fontFamily: getFontFamilyFromId(flatSettings.font || "ibmplex"),
+        fontWeight: flatSettings.fontWeight || "700",
+        fontSize: flatSettings.textSize?.[0] || 36,
+        mainColor: flatSettings.textColor || "#FFFFFF",
+        usernameColor: flatSettings.donorNameColor || "#FF9500",
+        amountColor: flatSettings.amountColor || "#0EA5E9",
+        strokeWidth: flatSettings.borderWidth || 2.5,
+        strokeColor: flatSettings.borderColor || "#000000",
+        suffixText: flatSettings.suffixText || "โดเนทมา"
+      },
+      message: {
+        text: flatSettings.messageText || "ขอบคุณสำหรับการใช้งาน FastDonate",
+        fontFamily: getFontFamilyFromId(flatSettings.messageFont || "ibmplex"),
+        fontWeight: flatSettings.messageFontWeight || "500",
+        fontSize: flatSettings.messageFontSize || 24,
+        color: flatSettings.messageColor || "#FFFFFF",
+        strokeWidth: flatSettings.messageBorderWidth || 2.5,
+        strokeColor: flatSettings.messageBorderColor || "#000000"
+      },
+      animation: {
+        enter: {
+          type: flatSettings.inAnimation || "fadeInUp",
+          duration: (flatSettings.inDuration || 1) * 1000
+        },
+        display: {
+          duration: (flatSettings.displayDuration || 3) * 1000
+        },
+        exit: {
+          type: flatSettings.outAnimation || "fadeOutUp",
+          duration: (flatSettings.outDuration || 1) * 1000
+        }
+      },
+      image: flatSettings.image || flatSettings.alertImage || "https://media.tenor.com/k_UsDt9xfWIAAAAM/i-will-eat-you-cat.gif",
+      audio: {
+        notification: {
+          sound: flatSettings.alertSound || "bb_spirit",
+          useCustom: flatSettings.useCustomSound || false,
+          customSound: flatSettings.customSound || null,
+          volume: flatSettings.volume?.[0] || 75
+        },
+        tts: {
+          voice: flatSettings.ttsVoice || "female",
+          rate: flatSettings.ttsRate || 0.5,
+          pitch: flatSettings.ttsPitch || 0.5,
+          title: {
+            enabled: flatSettings.ttsTitleEnabled ?? true
+          },
+          message: {
+            enabled: flatSettings.ttsMessageEnabledField ?? false
+          },
+          volume: flatSettings.ttsVolume || 50
+        }
+      },
+      effect: flatSettings.effect || "realistic_look",
+      minimumDonation: flatSettings.minAmountForAlert || 10
+    }
+  };
+};
+
+// Helper function to get font family from ID
+const getFontFamilyFromId = (fontId) => {
+  const fontMap = {
+    "default": "Kanit",
+    "prompt": "Prompt",
+    "sarabun": "Sarabun",
+    "noto": "Noto Sans Thai",
+    "ibmplex": "IBM Plex Sans Thai"
+  };
+  return fontMap[fontId] || "IBM Plex Sans Thai";
+};
 
 // =====================================
-// TEMPLATE LIST
+// TEMPLATE LIST - Updated for grouped structure
 // =====================================
 
 const templates = {
@@ -39,19 +119,21 @@ const templates = {
     color: "text-blue-400",
     bgColor: "from-blue-900/20 to-blue-800/20",
     borderColor: "border-blue-700/50",
-    settings: {
+    settings: convertToGroupedStructure({
       backgroundColor: 'linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(30, 41, 59, 0.9) 100%)',
       textColor: '#ffffff',
       borderColor: '#3b82f6',
       borderWidth: 2,
       font: 'default',
-      fontWeight: 'medium',
-      textSize: [24],
+      fontWeight: '700',
+      textSize: [36],
       amountColor: '#3b82f6',
       donorNameColor: '#ffffff',
       messageColor: '#d1d5db',
-      amountShine: false
-    }
+      amountShine: false,
+      prefixText: "{{user}} โดเนทมา",
+      amountText: "{{amount}}฿"
+    })
   },
 
   fantasy: {
@@ -62,20 +144,21 @@ const templates = {
     color: "text-purple-400",
     bgColor: "from-purple-900/20 to-pink-800/20",
     borderColor: "border-purple-700/50",
-    settings: {
+    settings: convertToGroupedStructure({
       backgroundColor: 'linear-gradient(135deg, rgba(88, 28, 135, 0.9) 0%, rgba(168, 85, 247, 0.9) 100%)',
       textColor: '#f3e8ff',
       borderColor: '#c084fc',
       borderWidth: 3,
       font: 'prompt',
-      fontWeight: 'bold',
-      textSize: [26],
+      fontWeight: '700',
+      textSize: [38],
       amountColor: '#e879f9',
       donorNameColor: '#f0abfc',
       messageColor: '#f5d0fe',
       amountShine: true,
-      borderStyle: 'double'
-    }
+      prefixText: "✨ {{user}} ✨",
+      amountText: "{{amount}}฿"
+    })
   },
 
   dragon: {
@@ -86,21 +169,21 @@ const templates = {
     color: "text-red-400",
     bgColor: "from-red-900/20 to-orange-800/20",
     borderColor: "border-red-700/50",
-    settings: {
+    settings: convertToGroupedStructure({
       backgroundColor: 'linear-gradient(135deg, rgba(127, 29, 29, 0.9) 0%, rgba(220, 38, 38, 0.9) 100%)',
       textColor: '#fecaca',
       borderColor: '#f87171',
       borderWidth: 4,
       font: 'noto',
-      fontWeight: 'bold',
-      textSize: [28],
+      fontWeight: '700',
+      textSize: [40],
       amountColor: '#fca5a5',
       donorNameColor: '#fca5a5',
       messageColor: '#fecaca',
       amountShine: true,
-      borderStyle: 'solid',
-      amountSuffix: '🔥'
-    }
+      prefixText: "🐉 {{user}} 🐉",
+      amountText: "{{amount}}฿"
+    })
   },
 
   game: {
@@ -111,21 +194,21 @@ const templates = {
     color: "text-green-400",
     bgColor: "from-green-900/20 to-emerald-800/20",
     borderColor: "border-green-700/50",
-    settings: {
+    settings: convertToGroupedStructure({
       backgroundColor: 'linear-gradient(135deg, rgba(6, 78, 59, 0.9) 0%, rgba(16, 185, 129, 0.9) 100%)',
       textColor: '#d1fae5',
       borderColor: '#10b981',
       borderWidth: 2,
       font: 'ibmplex',
-      fontWeight: 'bold',
-      textSize: [22],
+      fontWeight: '700',
+      textSize: [34],
       amountColor: '#34d399',
       donorNameColor: '#6ee7b7',
       messageColor: '#a7f3d0',
       amountShine: false,
-      prefixText: 'Player: {{user}}',
-      suffixText: '⚔️'
-    }
+      prefixText: "🎮 {{user}} 🎮",
+      amountText: "{{amount}}฿"
+    })
   },
 
   movie: {
@@ -136,21 +219,21 @@ const templates = {
     color: "text-yellow-400",
     bgColor: "from-yellow-900/20 to-amber-800/20",
     borderColor: "border-yellow-700/50",
-    settings: {
+    settings: convertToGroupedStructure({
       backgroundColor: 'linear-gradient(135deg, rgba(120, 53, 15, 0.9) 0%, rgba(245, 158, 11, 0.9) 100%)',
       textColor: '#fef3c7',
       borderColor: '#f59e0b',
       borderWidth: 1,
       font: 'sarabun',
-      fontWeight: 'normal',
-      textSize: [20],
+      fontWeight: '500',
+      textSize: [32],
       amountColor: '#fbbf24',
       donorNameColor: '#fbbf24',
       messageColor: '#fde68a',
       amountShine: false,
-      prefixText: 'Star: {{user}}',
-      suffixText: '🎬'
-    }
+      prefixText: "🎬 {{user}} 🎬",
+      amountText: "{{amount}}฿"
+    })
   },
 
   anime: {
@@ -161,23 +244,21 @@ const templates = {
     color: "text-pink-400",
     bgColor: "from-pink-900/20 to-rose-800/20",
     borderColor: "border-pink-700/50",
-    settings: {
+    settings: convertToGroupedStructure({
       backgroundColor: 'linear-gradient(135deg, rgba(190, 24, 93, 0.9) 0%, rgba(236, 72, 153, 0.9) 100%)',
       textColor: '#fce7f3',
       borderColor: '#f472b6',
       borderWidth: 3,
       font: 'prompt',
-      fontWeight: 'medium',
-      textSize: [24],
+      fontWeight: '600',
+      textSize: [36],
       amountColor: '#f9a8d4',
       donorNameColor: '#f9a8d4',
       messageColor: '#fbcfe8',
       amountShine: true,
-      prefixText: 'Kawaii {{user}}',
-      suffixText: '🌸',
-      messageFont: 'prompt',
-      messageFontWeight: 'medium'
-    }
+      prefixText: "🌸 {{user}} 🌸",
+      amountText: "{{amount}}฿"
+    })
   },
 
   royal: {
@@ -188,22 +269,21 @@ const templates = {
     color: "text-amber-400",
     bgColor: "from-amber-900/20 to-yellow-800/20",
     borderColor: "border-amber-700/50",
-    settings: {
+    settings: convertToGroupedStructure({
       backgroundColor: 'linear-gradient(135deg, rgba(120, 53, 15, 0.9) 0%, rgba(245, 158, 11, 0.9) 100%)',
       textColor: '#fef3c7',
       borderColor: '#f59e0b',
       borderWidth: 4,
       font: 'noto',
-      fontWeight: 'bold',
-      textSize: [26],
+      fontWeight: '700',
+      textSize: [38],
       amountColor: '#fbbf24',
       donorNameColor: '#fde68a',
       messageColor: '#fef3c7',
       amountShine: true,
-      prefixText: 'Your Majesty {{user}}',
-      suffixText: '👑',
-      amountSuffix: '🥇'
-    }
+      prefixText: "👑 {{user}} 👑",
+      amountText: "{{amount}}฿"
+    })
   },
 
   ninja: {
@@ -214,22 +294,21 @@ const templates = {
     color: "text-gray-400",
     bgColor: "from-gray-900/20 to-slate-800/20",
     borderColor: "border-gray-700/50",
-    settings: {
+    settings: convertToGroupedStructure({
       backgroundColor: 'linear-gradient(135deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 41, 59, 0.95) 100%)',
       textColor: '#cbd5e1',
       borderColor: '#475569',
       borderWidth: 1,
       font: 'sarabun',
-      fontWeight: 'medium',
-      textSize: [22],
+      fontWeight: '500',
+      textSize: [34],
       amountColor: '#94a3b8',
       donorNameColor: '#94a3b8',
       messageColor: '#cbd5e1',
       amountShine: false,
-      prefixText: 'Shinobi {{user}}',
-      suffixText: '🗡️',
-      amountSuffix: '💨'
-    }
+      prefixText: "🥷 {{user}} 🥷",
+      amountText: "{{amount}}฿"
+    })
   },
 
   cyberpunk: {
@@ -240,22 +319,21 @@ const templates = {
     color: "text-cyan-400",
     bgColor: "from-cyan-900/20 to-blue-800/20",
     borderColor: "border-cyan-700/50",
-    settings: {
+    settings: convertToGroupedStructure({
       backgroundColor: 'linear-gradient(135deg, rgba(22, 78, 99, 0.9) 0%, rgba(8, 145, 178, 0.9) 100%)',
       textColor: '#cffafe',
       borderColor: '#22d3ee',
       borderWidth: 2,
       font: 'ibmplex',
-      fontWeight: 'bold',
-      textSize: [24],
+      fontWeight: '700',
+      textSize: [36],
       amountColor: '#67e8f9',
       donorNameColor: '#a5f3fc',
       messageColor: '#cffafe',
       amountShine: true,
-      prefixText: 'Neo-{{user}}',
-      suffixText: '⚡',
-      amountSuffix: '💾'
-    }
+      prefixText: "⚡ {{user}} ⚡",
+      amountText: "{{amount}}฿"
+    })
   },
 
   nature: {
@@ -266,27 +344,23 @@ const templates = {
     color: "text-emerald-400",
     bgColor: "from-emerald-900/20 to-green-800/20",
     borderColor: "border-emerald-700/50",
-    settings: {
+    settings: convertToGroupedStructure({
       backgroundColor: 'linear-gradient(135deg, rgba(6, 78, 59, 0.9) 0%, rgba(16, 185, 129, 0.9) 100%)',
       textColor: '#d1fae5',
       borderColor: '#10b981',
       borderWidth: 2,
       font: 'default',
-      fontWeight: 'normal',
-      textSize: [22],
+      fontWeight: '500',
+      textSize: [34],
       amountColor: '#34d399',
       donorNameColor: '#6ee7b7',
       messageColor: '#a7f3d0',
       amountShine: false,
-      prefixText: 'Nature Lover {{user}}',
-      suffixText: '🌿',
-      amountSuffix: '🍃'
-    }
+      prefixText: "🌿 {{user}} 🌿",
+      amountText: "{{amount}}฿"
+    })
   }
 };
-
-
-
 
 // =====================================
 // MAIN COMPONENT
@@ -302,10 +376,10 @@ export default function TemplateTab({
   const [selectedTemplate, setSelectedTemplate] = useState(currentTemplate);
   const [showAllTemplates, setShowAllTemplates] = useState(false);
 
-
   const handleTemplateClick = (templateId) => {
     setSelectedTemplate(templateId);
     if (onTemplateSelect) {
+      // Send the grouped structure directly
       onTemplateSelect(templates[templateId].settings);
     }
   };
@@ -316,7 +390,6 @@ export default function TemplateTab({
     { title: "แนวบันเทิง", templates: ["game", "movie", "anime"] },
     { title: "แนวพิเศษ", templates: ["ninja", "cyberpunk"] },
   ];
-
 
   return (
     <motion.div
@@ -334,7 +407,6 @@ export default function TemplateTab({
           {Object.keys(templates).length} templates available
         </div>
       </div>
-
 
       {/* TEMPLATE CATEGORIES */}
       <div className="space-y-6">
@@ -396,8 +468,6 @@ export default function TemplateTab({
         ))}
       </div>
 
-
-
       {/* SHOW MORE BUTTON */}
       <div className="flex justify-center">
         <Button
@@ -409,8 +479,6 @@ export default function TemplateTab({
           {showAllTemplates ? "Show Less Templates" : "Show All Templates"}
         </Button>
       </div>
-
-
 
       {/* SELECTED TEMPLATE PREVIEW */}
       {selectedTemplate && (
@@ -444,22 +512,16 @@ export default function TemplateTab({
         </motion.div>
       )}
 
-
-
-
       {/* RESET + IMPORT/EXPORT PANEL */}
       <div className="space-y-4">
-
         {/* RESET SECTION */}
         <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
           <p className="text-white font-medium mb-2 flex items-center gap-2">
             <RotateCcw className="w-4 h-4" /> Reset to Default Settings
           </p>
-
           <p className="text-slate-400 text-sm mb-4">
             Wipes all custom settings and reverts to the system defaults.
           </p>
-
           <Button 
             variant="destructive"
             onClick={handleReset}
@@ -470,18 +532,14 @@ export default function TemplateTab({
           </Button>
         </div>
 
-
-
         {/* IMPORT / EXPORT JSON */}
         <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
           <p className="text-white font-medium mb-2 flex items-center gap-2">
             <Copy className="w-4 h-4" /> Import/Export Settings
           </p>
-
           <p className="text-slate-400 text-sm mb-4">
             Share your configuration using a JSON string.
           </p>
-
           <div className="flex flex-col sm:flex-row gap-2">
             <Button 
               variant="outline" 
@@ -491,7 +549,6 @@ export default function TemplateTab({
               <Copy className="w-4 h-4 mr-2" />
               Copy JSON
             </Button>
-
             <Button 
               variant="outline" 
               className="border-slate-700 text-slate-300 hover:bg-slate-700"
@@ -501,7 +558,6 @@ export default function TemplateTab({
             </Button>
           </div>
         </div>
-
       </div>
     </motion.div>
   );
