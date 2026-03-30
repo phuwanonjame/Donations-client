@@ -21,8 +21,9 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 import SocialForm from "@/components/dashboard/account/social-form";
-import ProfileDetailFrom from "@/components/dashboard/account/profile-detail-form";
+import ProfileDetailForm from "@/components/dashboard/account/profile-detail-form";
 import ProfileAvatar from "@/components/dashboard/account/profile-avatar";
+import CategorySelectorForm from "@/components/dashboard/account/category-selector-form";
 
 export default function ManageAccount() {
   const [profile, setProfile] = useState({
@@ -134,11 +135,13 @@ export default function ManageAccount() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Personal Information */}
-        <ProfileDetailFrom />
+        <ProfileDetailForm />
 
         {/* Social Media Links */}
         <SocialForm />
       </div>
+
+      <CategorySelectorForm />
 
       {/* Security Section */}
       <motion.div

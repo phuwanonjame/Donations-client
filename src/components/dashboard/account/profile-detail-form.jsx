@@ -20,7 +20,7 @@ const profile = {
   country: "",
 };
 
-const ProfileDetailFrom = () => {
+const ProfileDetailForm = () => {
   const onSubmit = async (data) => {
     await new Promise((res) => setTimeout(res, 1500));
     console.log(data);
@@ -28,6 +28,7 @@ const ProfileDetailFrom = () => {
 
   return (
     <FormWrapper
+
       schema={profileDetailSchema}
       onSubmit={onSubmit}
       defaultValues={{
@@ -143,4 +144,4 @@ const ProfileDetailFrom = () => {
   );
 };
 
-export default ProfileDetailFrom;
+export default ProfileDetailForm;
