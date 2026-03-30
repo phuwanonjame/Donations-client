@@ -53,11 +53,11 @@ const FormField = ({
       {/* SELECT */}
       {type === "select" && (
         <Select
-          value={value || ""} // ✅ bind ค่า
-          onValueChange={(val) => setValue(name, val, { shouldDirty: true })} // ✅ update form
+          value={value || ""}
+          onValueChange={(val) => setValue(name, val, { shouldDirty: true })}
           disabled={loading}
         >
-          <SelectTrigger className="bg-slate-800/80 border-slate-700 text-white">
+          <SelectTrigger className="w-full bg-slate-800/80 border-slate-700 text-white">
             <SelectValue placeholder={placeholder} />
           </SelectTrigger>
 

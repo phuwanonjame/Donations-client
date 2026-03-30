@@ -1,18 +1,9 @@
 "use client";
-import React, { useState } from "react";
+import React from "react";
 import { motion } from "framer-motion";
 import { Save, User } from "lucide-react";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import FormWrapper from "@/components/form/form-wrapper";
 
 import { profileDetailSchema } from "@/schemas/profile.schema";
@@ -94,28 +85,23 @@ const ProfileDetailFrom = () => {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-slate-300">Email Address</Label>
-              <FormField
-                value={profile.email}
-                name="email"
-                  placeholder={""}
-                  loading={loading}
-                className="bg-slate-800/80 border-slate-700 text-slate-400"
-              />
-            </div>
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label className="text-slate-300">Phone Number</Label>
+                <Label className="text-slate-300">Country / Region</Label>
                 <FormField
-                  value={profile.phone}
-                    name="phone"
-                  placeholder={""}
+                  name="country"
+                  type="select"
+                  placeholder={"Select your country"}
                   loading={loading}
-                  className="bg-slate-800/80 border-slate-700 text-white placeholder:text-slate-500"
+                  options={[
+                    { label: "🇹🇭 Thailand", value: "th" },
+                    { label: "🇺🇸 United States", value: "us" },
+                    { label: "🇯🇵 Japan", value: "jp" },
+                    { label: "🇰🇷 South Korea", value: "kr" },
+                  ]}
                 />
               </div>
+
               <div className="space-y-2">
                 <Label className="text-slate-300">Date of Birth</Label>
                 <FormField
@@ -126,22 +112,6 @@ const ProfileDetailFrom = () => {
                   className="bg-slate-800/80 border-slate-700 text-white"
                 />
               </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-slate-300">Country / Region</Label>
-              <FormField
-                name="country"
-                type="select"
-                placeholder={"Select your country"}
-                loading={loading}
-                options={[
-                    { label: "🇹🇭 Thailand", value: "th" },
-                    { label: "🇺🇸 United States", value: "us" },
-                    { label: "🇯🇵 Japan", value: "jp" },
-                    { label: "🇰🇷 South Korea", value: "kr" },
-                ]}
-                />
             </div>
 
             <div className="space-y-2">
@@ -157,12 +127,16 @@ const ProfileDetailFrom = () => {
             </div>
           </div>
           {/* BUTTON */}
-            <div className="mt-6 flex justify-end">
-              <FormButton className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 px-8" loading={loading} isDirty={isDirty}>
-                <Save className="w-4 h-4"/>
-                Save
-              </FormButton>
-            </div>
+          <div className="mt-6 flex justify-end">
+            <FormButton
+              className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 px-8"
+              loading={loading}
+              isDirty={isDirty}
+            >
+              <Save className="w-4 h-4" />
+              Save
+            </FormButton>
+          </div>
         </motion.div>
       )}
     </FormWrapper>

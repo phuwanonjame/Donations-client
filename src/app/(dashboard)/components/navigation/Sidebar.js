@@ -78,7 +78,7 @@ export default function Sidebar({ currentPage, isOpen, onClose }) {
             </div>
             <div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-                StreamFlow
+                DonateHub
               </h1>
               <p className="text-slate-500 text-xs">Creator Platform</p>
             </div>
@@ -130,7 +130,7 @@ export default function Sidebar({ currentPage, isOpen, onClose }) {
             </div>
             <div>
               <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-                StreamFlow
+                DonateHub
               </h1>
               <p className="text-slate-500 text-xs">Creator Platform</p>
             </div>
