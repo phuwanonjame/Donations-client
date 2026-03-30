@@ -10,9 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import RangeConfigModal from "./ranges/RangeConfigModal";
-import RangeTemplateSelector from "./ranges/RangeTemplateSelector";
-import RangeItem from "./ranges/RangeItem"; // ต้อง import RangeItem ด้วย
+import RangeConfigModal from "../ranges/RangeConfigModal";
+import RangeTemplateSelector from "../ranges/RangeTemplateSelector";
+import RangeItem from "../ranges/RangeItem"; // ต้อง import RangeItem ด้วย
 
 export default function RangesTab({ settings, updateSetting }) {
   const [ranges, setRanges] = useState(settings?.donationRanges || []);

@@ -80,3 +80,126 @@ export default function RangeItem({ range, onEdit, onDelete, onDuplicate, isExpa
               <Copy className="w-4 h-4" />
             </Button>
             <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onEdit(range)}
+              className="text-blue-400 hover:text-blue-300"
+              title="Edit"
+            >
+              <Edit2 className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => onDelete(range.id)}
+              className="text-red-400 hover:text-red-300"
+              title="Delete"
+            >
+              <Trash2 className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggleExpand}
+              className="text-slate-400"
+              title={isExpanded ? "Collapse" : "Expand"}
+            >
+              {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+            </Button>
+          </div>
+        </div>
+
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="mt-4 pt-4 border-t border-slate-700/50 overflow-hidden"
+            >
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                <div>
+                  <p className="text-slate-500 text-xs">Image</p>
+                  <p className="text-white text-sm">{range.imageSize || 'md'} • {range.imageShape || 'circle'}</p>
+                  {range.imageUrl && (
+                    <p className="text-slate-400 text-xs truncate mt-1">{range.imageUrl.substring(0, 40)}</p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-slate-500 text-xs">Font</p>
+                  <p className="text-white text-sm">{range.fontFamily || 'Inter'} • {range.fontSize || 'text-2xl'}</p>
+                  <p className="text-slate-400 text-xs">Color: {range.textColor || '#ffffff'}</p>
+                </div>
+                <div>
+                  <p className="text-slate-500 text-xs">Position</p>
+                  <p className="text-white text-sm">{range.position || 'top-center'}</p>
+                  <p className="text-slate-400 text-xs">Blur: {range.backgroundBlur?.replace('backdrop-blur-', '') || 'md'}</p>
+                </div>
+                <div>
+                  <p className="text-slate-500 text-xs">Background</p>
+                  <div className={`w-full h-6 rounded bg-gradient-to-r ${range.backgroundColor || 'from-purple-500 to-pink-500'} mt-1`} />
+                </div>
+              </div>
+              
+              {range.customCSS && (
+                <div className="mt-3 p-2 bg-slate-900/50 rounded-lg">
+                  <p className="text-slate-500 text-xs">Custom CSS</p>
+                  <pre className="text-slate-400 text-xs truncate font-mono">{range.customCSS.substring(0, 100)}</pre>
+                </div>
+              )}
+
+              <div className="mt-3 pt-3 border-t border-slate-700/50">
+                <div className="flex gap-4 text-xs">
+                  <span className="text-slate-500">Sound: {range.soundEnabled ? (range.soundUrl || 'Default sound') : 'Disabled'}</span>
+                  {range.soundEnabled && <span className="text-slate-500">Volume: {range.soundVolume}%</span>}
+                  <span className="text-slate-500">Confetti: {range.showConfetti ? range.confettiEffect : 'Off'}</span>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+    </motion.div>
+  );
+}
+
+RangeItem.propTypes = {
+  range: PropTypes.shape({
+    id: PropTypes.oneOfType([PropTypes.number, PropTypes.string]).isRequired,
+    name: PropTypes.string,
+    minAmount: PropTypes.number,
+    maxAmount: PropTypes.number,
+    priority: PropTypes.number,
+    enabled: PropTypes.bool,
+    backgroundColor: PropTypes.string,
+    textEffect: PropTypes.string,
+    animationStyle: PropTypes.string,
+    duration: PropTypes.number,
+    soundEnabled: PropTypes.bool,
+    showConfetti: PropTypes.bool,
+    imageGlow: PropTypes.bool,
+    amountShine: PropTypes.bool,
+    imageSize: PropTypes.string,
+    imageShape: PropTypes.string,
+    imageUrl: PropTypes.string,
+    fontFamily: PropTypes.string,
+    fontSize: PropTypes.string,
+    textColor: PropTypes.string,
+    position: PropTypes.string,
+    backgroundBlur: PropTypes.string,
+    confettiEffect: PropTypes.string,
+    soundUrl: PropTypes.string,
+    soundVolume: PropTypes.number,
+    customCSS: PropTypes.string,
+  }).isRequired,
+  onEdit: PropTypes.func.isRequired,
+  onDelete: PropTypes.func.isRequired,
+  onDuplicate: PropTypes.func.isRequired,
+  isExpanded: PropTypes.bool,
+  onToggleExpand: PropTypes.func.isRequired,
+};
+
+RangeItem.defaultProps = {
+  isExpanded: false,
+};
