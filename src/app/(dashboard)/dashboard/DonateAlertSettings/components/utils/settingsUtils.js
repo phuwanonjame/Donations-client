@@ -1,18 +1,14 @@
-// ในไฟล์: ./components/utils/settingsUtils.js
-
-// ★ ไม่มี id↔family mapping อีกต่อไป
-//   font และ messageFont เก็บเป็น family string ตลอด เช่น "IBM Plex Sans Thai"
-//   ทั้งใน flat structure และ grouped structure (metadata.title.fontFamily)
+// ==================== settingsUtils.js ====================
 
 export const defaultSettings = {
   type: "ALERT",
   metadata: {
     type: "main",
     title: {
-      text: "{{user}} โดเนทมา",
+      text: "{{user}}",
       amountText: "{{amount}}฿",
       amountShine: true,
-      fontFamily: "IBM Plex Sans Thai",   // ★ family string
+      fontFamily: "IBM Plex Sans Thai",
       fontWeight: "700",
       fontSize: 36,
       mainColor: "#FFFFFF",
@@ -24,7 +20,7 @@ export const defaultSettings = {
       showAmount: true,
     },
     message: {
-      fontFamily: "IBM Plex Sans Thai",   // ★ family string
+      fontFamily: "IBM Plex Sans Thai",
       fontWeight: "500",
       fontSize: 24,
       color: "#FFFFFF",
@@ -33,9 +29,9 @@ export const defaultSettings = {
       showMessage: true,
     },
     animation: {
-      enter:   { type: "fadeInUp",   duration: 1000 },
+      enter:   { type: "fadeInUp",  duration: 1000 },
       display: { duration: 3000 },
-      exit:    { type: "fadeOutUp",  duration: 1000 },
+      exit:    { type: "fadeOutUp", duration: 1000 },
     },
     image:
       "https://i0.wp.com/images.onwardstate.com/uploads/2015/05/oie_14175751vZSQRLEn.gif?fit=650%2C408&ssl=1",
@@ -58,42 +54,197 @@ export const defaultSettings = {
     ranges: { useRanges: false, items: [] },
     effect: "realistic_look",
     minimumDonation: 10,
+    imageGlow: false,
+    showConfetti: false,
+    confettiEffect: "fountain",
   },
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Internal helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+function getNumVal(raw, fallback) {
+  if (Array.isArray(raw)) return raw[0] ?? fallback;
+  if (typeof raw === "number") return raw;
+  if (typeof raw === "string") return parseInt(raw, 10) || fallback;
+  return fallback;
+}
+
+/**
+ * แปลง flat range object → grouped structure (เหมือน global metadata แต่มี metadata ของ range เพิ่ม)
+ */
+function flatRangeToGrouped(range) {
+  return {
+    // ── Range metadata ────────────────────────────────────
+    id:          range.id,
+    name:        range.name        ?? `Range #${range.id}`,
+    minAmount:   range.minAmount   ?? 0,
+    maxAmount:   range.maxAmount   ?? null,
+    priority:    range.priority    ?? 0,
+    color:       range.color       ?? "#00e5ff",
+    isCustomized: range.isCustomized ?? false,
+
+    // ── เหมือน global metadata ────────────────────────────
+    title: {
+      text:          range.prefixText     ?? "{{user}}",
+      amountText:    range.amountText     ?? "{{amount}}฿",
+      amountShine:   range.amountShine    ?? true,
+      fontFamily:    range.font           ?? "IBM Plex Sans Thai",
+      fontWeight:    range.fontWeight     ?? "700",
+      fontSize:      getNumVal(range.textSize, 36),
+      mainColor:     range.textColor      ?? "#FFFFFF",
+      usernameColor: range.donorNameColor ?? "#FF9500",
+      amountColor:   range.amountColor    ?? "#0EA5E9",
+      strokeWidth:   range.borderWidth    ?? 2.5,
+      strokeColor:   range.borderColor    ?? "#000000",
+      showName:      range.showName       ?? true,
+      showAmount:    range.showAmount     ?? true,
+    },
+    message: {
+      fontFamily:  range.messageFont        ?? "IBM Plex Sans Thai",
+      fontWeight:  range.messageFontWeight  ?? "500",
+      fontSize:    getNumVal(range.messageFontSize, 24),
+      color:       range.messageColor       ?? "#FFFFFF",
+      strokeWidth: range.messageBorderWidth ?? 2.5,
+      strokeColor: range.messageBorderColor ?? "#000000",
+      showMessage: range.showMessage        ?? true,
+    },
+    animation: {
+      enter:   { type: range.inAnimation  ?? "fadeInUp",  duration: (range.inDuration      ?? 1) * 1000 },
+      display: { duration: (range.displayDuration ?? 3) * 1000 },
+      exit:    { type: range.outAnimation ?? "fadeOutUp", duration: (range.outDuration     ?? 1) * 1000 },
+    },
+    image: range.alertImage ?? range.image ?? null,
+    audio: {
+      notification: {
+        sound:       range.alertSound     ?? "bb_spirit",
+        useCustom:   range.useCustomSound ?? false,
+        customSound: range.customSound    ?? null,
+        volume:      getNumVal(range.volume, 75),
+      },
+      tts: {
+        voice:   range.ttsVoice  ?? "female",
+        rate:    range.ttsRate   ?? 0.5,
+        pitch:   range.ttsPitch  ?? 0.5,
+        title:   { enabled: range.ttsTitleEnabled        ?? true },
+        message: { enabled: range.ttsMessageEnabledField ?? false },
+        volume:  getNumVal(range.ttsVolume, 50),
+      },
+    },
+    effect:         range.effect         ?? "realistic_look",
+    imageGlow:      range.imageGlow      ?? false,
+    showConfetti:   range.showConfetti   ?? false,
+    confettiEffect: range.confettiEffect ?? "fountain",
+  };
+}
+
+/**
+ * แปลง grouped range → flat (สำหรับ UI)
+ */
+function groupedRangeToFlat(r) {
+  const title   = r.title   || {};
+  const message = r.message || {};
+  const anim    = r.animation || {};
+  const audio   = r.audio   || {};
+  const notif   = audio.notification || {};
+  const tts     = audio.tts || {};
+
+  return {
+    // metadata ของ range
+    id:          r.id,
+    name:        r.name,
+    minAmount:   r.minAmount   ?? 0,
+    maxAmount:   r.maxAmount   ?? null,
+    priority:    r.priority    ?? 0,
+    color:       r.color       ?? "#00e5ff",
+    isCustomized: r.isCustomized ?? false,
+
+    // config (เหมือน global flat)
+    prefixText:     title.text          ?? "{{user}}",
+    amountText:     title.amountText    ?? "{{amount}}฿",
+    amountShine:    title.amountShine   ?? true,
+    font:           title.fontFamily    ?? "IBM Plex Sans Thai",
+    fontWeight:     title.fontWeight    ?? "700",
+    textSize:       [title.fontSize     ?? 36],
+    textColor:      title.mainColor     ?? "#FFFFFF",
+    donorNameColor: title.usernameColor ?? "#FF9500",
+    amountColor:    title.amountColor   ?? "#0EA5E9",
+    borderWidth:    title.strokeWidth   ?? 2.5,
+    borderColor:    title.strokeColor   ?? "#000000",
+    showName:       title.showName      ?? true,
+    showAmount:     title.showAmount    ?? true,
+
+    messageFont:        message.fontFamily  ?? "IBM Plex Sans Thai",
+    messageFontWeight:  message.fontWeight  ?? "500",
+    messageFontSize:    message.fontSize    ?? 24,
+    messageColor:       message.color       ?? "#FFFFFF",
+    messageBorderWidth: message.strokeWidth ?? 2.5,
+    messageBorderColor: message.strokeColor ?? "#000000",
+    showMessage:        message.showMessage ?? true,
+
+    inAnimation:     anim.enter?.type    ?? "fadeInUp",
+    inDuration:      (anim.enter?.duration  ?? 1000) / 1000,
+    outAnimation:    anim.exit?.type     ?? "fadeOutUp",
+    outDuration:     (anim.exit?.duration   ?? 1000) / 1000,
+    displayDuration: (anim.display?.duration ?? 3000) / 1000,
+
+    alertImage: r.image ?? null,
+    image:      r.image ?? null,
+    effect:         r.effect         ?? "realistic_look",
+    imageGlow:      r.imageGlow      ?? false,
+    showConfetti:   r.showConfetti   ?? false,
+    confettiEffect: r.confettiEffect ?? "fountain",
+
+    alertSound:    notif.sound       ?? "bb_spirit",
+    volume:        [notif.volume     ?? 75],
+    useCustomSound: notif.useCustom  ?? false,
+    customSound:   notif.customSound ?? null,
+
+    ttsTitleEnabled:        tts.title?.enabled   ?? true,
+    ttsMessageEnabledField: tts.message?.enabled ?? false,
+    ttsVoice:  tts.voice ?? "female",
+    ttsRate:   tts.rate  ?? 0.5,
+    ttsPitch:  tts.pitch ?? 0.5,
+    ttsVolume: tts.volume ?? 50,
+  };
+}
 
 // ─────────────────────────────────────────────────────────────────────────────
 // transformToGroupedStructure  (flat → grouped, สำหรับ save)
 // ─────────────────────────────────────────────────────────────────────────────
 export const transformToGroupedStructure = (flatSettings) => {
+  // donationRanges ใน flat คือ array ของ flat range objects
+  // → แปลงแต่ละ range เป็น grouped structure
+  const rangeItems = (flatSettings.donationRanges ?? []).map(flatRangeToGrouped);
+
   return {
     type: flatSettings.type || "ALERT",
     metadata: {
       type: "main",
       title: {
-        text:         flatSettings.prefixText     ?? "{{user}} โดเนทมา",
-        amountText:   flatSettings.amountText      ?? "{{amount}}฿",
-        amountShine:  flatSettings.amountShine     ?? true,
-        // ★ font คือ family string แล้ว — ส่งตรงๆ
-        fontFamily:   flatSettings.font            ?? "IBM Plex Sans Thai",
-        fontWeight:   flatSettings.fontWeight      ?? "700",
-        fontSize:     getNumVal(flatSettings.textSize, 36),
-        mainColor:    flatSettings.textColor       ?? "#FFFFFF",
+        text:          flatSettings.prefixText     ?? "{{user}}",
+        amountText:    flatSettings.amountText     ?? "{{amount}}฿",
+        amountShine:   flatSettings.amountShine    ?? true,
+        fontFamily:    flatSettings.font           ?? "IBM Plex Sans Thai",
+        fontWeight:    flatSettings.fontWeight     ?? "700",
+        fontSize:      getNumVal(flatSettings.textSize, 36),
+        mainColor:     flatSettings.textColor      ?? "#FFFFFF",
         usernameColor: flatSettings.donorNameColor ?? "#FF9500",
-        amountColor:  flatSettings.amountColor     ?? "#0EA5E9",
-        strokeWidth:  flatSettings.borderWidth     ?? 2.5,
-        strokeColor:  flatSettings.borderColor     ?? "#000000",
-        showName:     flatSettings.showName        ?? true,
-        showAmount:   flatSettings.showAmount      ?? true,
+        amountColor:   flatSettings.amountColor    ?? "#0EA5E9",
+        strokeWidth:   flatSettings.borderWidth    ?? 2.5,
+        strokeColor:   flatSettings.borderColor    ?? "#000000",
+        showName:      flatSettings.showName       ?? true,
+        showAmount:    flatSettings.showAmount     ?? true,
       },
       message: {
-        // ★ messageFont คือ family string แล้ว — ส่งตรงๆ
-        fontFamily:   flatSettings.messageFont        ?? "IBM Plex Sans Thai",
-        fontWeight:   flatSettings.messageFontWeight  ?? "500",
-        fontSize:     getNumVal(flatSettings.messageFontSize, 24),
-        color:        flatSettings.messageColor       ?? "#FFFFFF",
-        strokeWidth:  flatSettings.messageBorderWidth ?? 2.5,
-        strokeColor:  flatSettings.messageBorderColor ?? "#000000",
-        showMessage:  flatSettings.showMessage        ?? true,
+        fontFamily:  flatSettings.messageFont        ?? "IBM Plex Sans Thai",
+        fontWeight:  flatSettings.messageFontWeight  ?? "500",
+        fontSize:    getNumVal(flatSettings.messageFontSize, 24),
+        color:       flatSettings.messageColor       ?? "#FFFFFF",
+        strokeWidth: flatSettings.messageBorderWidth ?? 2.5,
+        strokeColor: flatSettings.messageBorderColor ?? "#000000",
+        showMessage: flatSettings.showMessage        ?? true,
       },
       animation: {
         enter:   { type: flatSettings.inAnimation  ?? "fadeInUp",  duration: (flatSettings.inDuration      ?? 1) * 1000 },
@@ -110,24 +261,24 @@ export const transformToGroupedStructure = (flatSettings) => {
           volume:      getNumVal(flatSettings.volume, 75),
         },
         tts: {
-          voice: flatSettings.ttsVoice ?? "female",
-          rate:  flatSettings.ttsRate  ?? 0.5,
-          pitch: flatSettings.ttsPitch ?? 0.5,
+          voice:   flatSettings.ttsVoice ?? "female",
+          rate:    flatSettings.ttsRate  ?? 0.5,
+          pitch:   flatSettings.ttsPitch ?? 0.5,
           title:   { enabled: flatSettings.ttsTitleEnabled        ?? true },
           message: { enabled: flatSettings.ttsMessageEnabledField ?? false },
           volume:  getNumVal(flatSettings.ttsVolume, 50),
         },
       },
+      // ✅ ranges อยู่ใน metadata เหมือนเดิม ไม่แยกออกมา
       ranges: {
         useRanges: flatSettings.useRanges ?? false,
-        items:     transformRanges(flatSettings.ranges ?? []),
+        items:     rangeItems,
       },
-      effect:            flatSettings.effect           ?? "realistic_look",
-      minimumDonation:   flatSettings.minAmountForAlert ?? 10,
-      // ★ pass-through เพิ่มเติม
-      imageGlow:         flatSettings.imageGlow         ?? false,
-      showConfetti:      flatSettings.showConfetti      ?? false,
-      confettiEffect:    flatSettings.confettiEffect    ?? "fountain",
+      effect:         flatSettings.effect           ?? "realistic_look",
+      minimumDonation: flatSettings.minAmountForAlert ?? 10,
+      imageGlow:      flatSettings.imageGlow         ?? false,
+      showConfetti:   flatSettings.showConfetti      ?? false,
+      confettiEffect: flatSettings.confettiEffect    ?? "fountain",
     },
   };
 };
@@ -145,6 +296,9 @@ export const transformToFlatStructure = (groupedSettings) => {
   const tts          = audio.tts                   || {};
   const ranges       = metadata.ranges             || {};
 
+  // ✅ แปลง grouped range items → flat range objects
+  const flatRanges = (ranges.items ?? []).map(groupedRangeToFlat);
+
   return {
     id:        groupedSettings.id,
     userId:    groupedSettings.userId,
@@ -157,7 +311,6 @@ export const transformToFlatStructure = (groupedSettings) => {
 
     // ── title ──────────────────────────────────────────────────────────────
     textSize:       [title.fontSize    || 36],
-    // ★ font = family string โดยตรง (ไม่แปลงเป็น id)
     font:           title.fontFamily   || "IBM Plex Sans Thai",
     fontWeight:     title.fontWeight   || "700",
     textColor:      title.mainColor    || "#FFFFFF",
@@ -165,7 +318,7 @@ export const transformToFlatStructure = (groupedSettings) => {
     amountColor:    title.amountColor  || "#0EA5E9",
     borderWidth:    title.strokeWidth  || 2.5,
     borderColor:    title.strokeColor  || "#000000",
-    prefixText:     title.text         || "{{user}} โดเนทมา",
+    prefixText:     title.text         || "{{user}}",
     amountText:     title.amountText   || "{{amount}}฿",
     amountSuffix:   "฿",
     amountShine:    title.amountShine  ?? true,
@@ -173,7 +326,6 @@ export const transformToFlatStructure = (groupedSettings) => {
     showAmount:     title.showAmount   ?? true,
 
     // ── message ────────────────────────────────────────────────────────────
-    // ★ messageFont = family string โดยตรง
     messageFont:        message.fontFamily  || "IBM Plex Sans Thai",
     messageFontWeight:  message.fontWeight  || "500",
     messageFontSize:    message.fontSize    || 24,
@@ -211,9 +363,9 @@ export const transformToFlatStructure = (groupedSettings) => {
     ttsPitch:  tts.pitch || 0.5,
     ttsVolume: tts.volume || 50,
 
-    // ── ranges ─────────────────────────────────────────────────────────────
-    useRanges: ranges.useRanges || false,
-    ranges:    ranges.items     || [],
+    // ✅ ranges: useRanges + donationRanges (flat) อยู่ที่ root ของ flat structure
+    useRanges:      ranges.useRanges ?? false,
+    donationRanges: flatRanges,
 
     // ── misc ───────────────────────────────────────────────────────────────
     minAmountForAlert: metadata.minimumDonation || 10,
@@ -224,78 +376,7 @@ export const transformToFlatStructure = (groupedSettings) => {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Internal helpers
-// ─────────────────────────────────────────────────────────────────────────────
-
-/** อ่านค่าตัวเลขจาก number | number[] */
-function getNumVal(raw, fallback) {
-  if (Array.isArray(raw)) return raw[0] ?? fallback;
-  if (typeof raw === "number") return raw;
-  if (typeof raw === "string") return parseInt(raw, 10) || fallback;
-  return fallback;
-}
-
-/** แปลง ranges flat → grouped (เก็บ family string ตรงๆ) */
-const transformRanges = (ranges) => {
-  if (!Array.isArray(ranges)) return [];
-
-  return ranges.map((range) => ({
-    id:    range.id,
-    start: range.start || 0,
-    end:   range.end   || 10,
-    title: {
-      text:          range.prefixText        || range.title?.text          || "{{user}} โดเนทมา",
-      amountText:    range.amountText        || range.title?.amountText    || "{{amount}}฿",
-      amountShine:   range.amountShine       ?? range.title?.amountShine   ?? true,
-      // ★ family string ตรงๆ
-      fontFamily:    range.font              || range.title?.fontFamily    || "IBM Plex Sans Thai",
-      fontWeight:    range.fontWeight        || range.title?.fontWeight    || "700",
-      fontSize:      getNumVal(range.textSize, range.title?.fontSize || 36),
-      mainColor:     range.textColor         || range.title?.mainColor     || "#FFFFFF",
-      usernameColor: range.donorNameColor    || range.title?.usernameColor || "#FF9500",
-      amountColor:   range.amountColor       || range.title?.amountColor   || "#0EA5E9",
-      strokeWidth:   range.borderWidth       || range.title?.strokeWidth   || 2.5,
-      strokeColor:   range.borderColor       || range.title?.strokeColor   || "#000000",
-      showName:      range.showName          ?? range.title?.showName      ?? true,
-      showAmount:    range.showAmount        ?? range.title?.showAmount    ?? true,
-    },
-    message: {
-      // ★ family string ตรงๆ
-      fontFamily:  range.messageFont         || range.message?.fontFamily  || "IBM Plex Sans Thai",
-      fontWeight:  range.messageFontWeight   || range.message?.fontWeight  || "500",
-      fontSize:    range.messageFontSize     || range.message?.fontSize    || 24,
-      color:       range.messageColor        || range.message?.color       || "#FFFFFF",
-      strokeWidth: range.messageBorderWidth  || range.message?.strokeWidth || 2.5,
-      strokeColor: range.messageBorderColor  || range.message?.strokeColor || "#000000",
-      showMessage: range.showMessage         ?? range.message?.showMessage  ?? true,
-    },
-    animation: {
-      enter:   { type: range.inAnimation  || range.animation?.enter?.type  || "fadeInUp",  duration: (range.inDuration      || (range.animation?.enter?.duration   || 1000) / 1000) * 1000 },
-      display: { duration: (range.displayDuration  || (range.animation?.display?.duration  || 3000) / 1000) * 1000 },
-      exit:    { type: range.outAnimation || range.animation?.exit?.type   || "fadeOutUp", duration: (range.outDuration     || (range.animation?.exit?.duration    || 1000) / 1000) * 1000 },
-    },
-    image: range.alertImage || range.image,
-    audio: {
-      notification: {
-        sound:       range.alertSound     || range.audio?.notification?.sound       || "bb_spirit",
-        useCustom:   range.useCustomSound || range.audio?.notification?.useCustom   || false,
-        customSound: range.customSound    || range.audio?.notification?.customSound || null,
-        volume:      getNumVal(range.volume, range.audio?.notification?.volume      || 75),
-      },
-      tts: {
-        voice:   range.ttsVoice  || range.audio?.tts?.voice  || "female",
-        rate:    range.ttsRate   || range.audio?.tts?.rate   || 0.5,
-        pitch:   range.ttsPitch  || range.audio?.tts?.pitch  || 0.5,
-        title:   { enabled: range.ttsTitleEnabled        ?? range.audio?.tts?.title?.enabled   ?? true },
-        message: { enabled: range.ttsMessageEnabledField ?? range.audio?.tts?.message?.enabled ?? false },
-        volume:  range.ttsVolume || range.audio?.tts?.volume || 50,
-      },
-    },
-  }));
-};
-
-// ─────────────────────────────────────────────────────────────────────────────
-// Exports (คงไว้เพื่อ backward-compat กับไฟล์ที่ import อยู่)
+// Exports
 // ─────────────────────────────────────────────────────────────────────────────
 export const alertSounds = [
   { id: "chime",     name: "Chime" },
@@ -307,8 +388,6 @@ export const alertSounds = [
   { id: "custom",    name: "Custom Upload" },
 ];
 
-// ★ fontOptions เปลี่ยนเป็น family string เป็น id (เพื่อ backward-compat)
-//   แต่ถ้าไฟล์อื่นใช้ fontOptions ให้ระวัง — ค่า id ตอนนี้คือ family string
 export const fontOptions = [
   { id: "Kanit",              name: "Kanit" },
   { id: "Prompt",             name: "Prompt" },
