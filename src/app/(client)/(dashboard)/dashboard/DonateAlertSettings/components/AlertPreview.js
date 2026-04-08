@@ -1,6 +1,5 @@
-// ============================================
-// AlertPreview.js — STABLE (no infinite loop)
-// ============================================
+// ==================== AlertPreview.js ====================
+// แก้: ลบ if (settings.metadata) branch ออกทั้งหมด — flat only
 "use client";
 import React, {
   useState, useEffect, forwardRef, useImperativeHandle, useRef,
@@ -17,101 +16,50 @@ function readNum(raw, fallback) {
   return fallback;
 }
 
-// ── build flat settings จาก props (pure function, ไม่มี side-effect) ──
+// ✅ flat structure เท่านั้น — ไม่มี if (settings.metadata) อีกต่อไป
 function buildSettings(settings) {
-  if (settings.metadata) {
-    const m  = settings.metadata;
-    const t  = m.title        || {};
-    const ms = m.message      || {};
-    const an = m.animation    || {};
-    const au = m.audio        || {};
-    const nt = au.notification || {};
-    const tt = au.tts          || {};
-    return {
-      prefixText:          t.text          ?? "{{user}} โดเนทมา",
-      amountText:          t.amountText    ?? "{{amount}}฿",
-      textSize:            t.fontSize      ?? 36,
-      font:                t.fontFamily    ?? "IBM Plex Sans Thai",
-      fontWeight:          t.fontWeight    ?? "700",
-      textColor:           t.mainColor     ?? "#FFFFFF",
-      donorNameColor:      t.usernameColor ?? "#FF9500",
-      amountColor:         t.amountColor   ?? "#0EA5E9",
-      borderWidth:         t.strokeWidth   ?? 2.5,
-      borderColor:         t.strokeColor   ?? "#000000",
-      amountShine:         t.amountShine   ?? true,
-      suffixText:          t.suffixText    ?? "โดเนทมา",
-      showName:            t.showName      ?? true,
-      showAmount:          t.showAmount    ?? true,
-      messageFont:         ms.fontFamily   ?? "IBM Plex Sans Thai",
-      messageFontWeight:   ms.fontWeight   ?? "500",
-      messageFontSize:     ms.fontSize     ?? 24,
-      messageColor:        ms.color        ?? "#FFFFFF",
-      messageBorderWidth:  ms.strokeWidth  ?? 2.5,
-      messageBorderColor:  ms.strokeColor  ?? "#000000",
-      messageText:         ms.text         ?? "ขอบคุณสำหรับการใช้งาน FastDonate",
-      showMessage:         ms.showMessage  ?? true,
-      inAnimation:         an.enter?.type  ?? "fadeInUp",
-      inDuration:          (an.enter?.duration  ?? 1000) / 1000,
-      outAnimation:        an.exit?.type   ?? "fadeOutUp",
-      outDuration:         (an.exit?.duration   ?? 1000) / 1000,
-      displayDuration:     (an.display?.duration ?? 3000) / 1000,
-      alertSound:          nt.sound        ?? "bb_spirit",
-      volume:              nt.volume       ?? 75,
-      useCustomSound:      nt.useCustom    ?? false,
-      ttsVoice:            tt.voice        ?? "female",
-      ttsRate:             tt.rate         ?? 0.5,
-      ttsPitch:            tt.pitch        ?? 0.5,
-      image:               m.image         ?? "https://media.tenor.com/k_UsDt9xfWIAAAAM/i-will-eat-you-cat.gif",
-      effect:              m.effect        ?? "realistic_look",
-      confettiEffect:      m.confettiEffect ?? "fountain",
-      imageGlow:           m.imageGlow     ?? false,
-      showConfetti:        m.showConfetti  ?? false,
-      minAmountForAlert:   m.minimumDonation ?? 10,
-    };
-  }
-
   return {
-    prefixText:         settings.prefixText         ?? "{{user}} โดเนทมา",
-    amountText:         settings.amountText          ?? "{{amount}}฿",
+    prefixText:         settings.prefixText         ?? "{{user}} ",
+    amountText:         settings.amountText         ?? "{{amount}}฿",
     textSize:           readNum(settings.textSize, 36),
-    // ★ ใช้ ?? ไม่ใช้ || เพื่อไม่ mask ค่าที่ user เลือก
     font:               settings.font               ?? "IBM Plex Sans Thai",
-    fontWeight:         settings.fontWeight          ?? "700",
-    textColor:          settings.textColor           ?? "#FFFFFF",
-    donorNameColor:     settings.donorNameColor      ?? "#FF9500",
-    amountColor:        settings.amountColor         ?? "#0EA5E9",
-    borderWidth:        settings.borderWidth         ?? 2.5,
-    borderColor:        settings.borderColor         ?? "#000000",
-    amountShine:        settings.amountShine         ?? true,
-    suffixText:         settings.suffixText          ?? "โดเนทมา",
-    showName:           settings.showName            ?? true,
-    showAmount:         settings.showAmount          ?? true,
-    messageFont:        settings.messageFont         ?? "IBM Plex Sans Thai",
-    messageFontWeight:  settings.messageFontWeight   ?? "500",
+    fontWeight:         settings.fontWeight         ?? "700",
+    textColor:          settings.textColor          ?? "#FFFFFF",
+    donorNameColor:     settings.donorNameColor     ?? "#FF9500",
+    amountColor:        settings.amountColor        ?? "#0EA5E9",
+    borderWidth:        settings.borderWidth        ?? 2.5,
+    borderColor:        settings.borderColor        ?? "#000000",
+    amountShine:        settings.amountShine        ?? true,
+    suffixText:         settings.suffixText         ?? "โดเนทมา",
+    showName:           settings.showName           ?? true,
+    showAmount:         settings.showAmount         ?? true,
+    messageFont:        settings.messageFont        ?? "IBM Plex Sans Thai",
+    messageFontWeight:  settings.messageFontWeight  ?? "500",
     messageFontSize:    readNum(settings.messageFontSize, 24),
-    messageColor:       settings.messageColor        ?? "#FFFFFF",
-    messageBorderWidth: settings.messageBorderWidth  ?? 2.5,
-    messageBorderColor: settings.messageBorderColor  ?? "#000000",
-    messageText:        settings.messageText         ?? "ขอบคุณสำหรับการใช้งาน FastDonate",
-    showMessage:        settings.showMessage         ?? true,
-    inAnimation:        settings.inAnimation         ?? "fadeInUp",
-    inDuration:         settings.inDuration          ?? 1,
-    outAnimation:       settings.outAnimation        ?? "fadeOutUp",
-    outDuration:        settings.outDuration         ?? 1,
-    displayDuration:    settings.displayDuration     ?? 3,
-    alertSound:         settings.alertSound          ?? "bb_spirit",
+    messageColor:       settings.messageColor       ?? "#FFFFFF",
+    messageBorderWidth: settings.messageBorderWidth ?? 2.5,
+    messageBorderColor: settings.messageBorderColor ?? "#000000",
+    messageText:        settings.messageText        ?? "ขอบคุณสำหรับการใช้งาน FastDonate",
+    showMessage:        settings.showMessage        ?? true,
+    inAnimation:        settings.inAnimation        ?? "fadeInUp",
+    inDuration:         settings.inDuration         ?? 1,
+    outAnimation:       settings.outAnimation       ?? "fadeOutUp",
+    outDuration:        settings.outDuration        ?? 1,
+    displayDuration:    settings.displayDuration    ?? 3,
+    alertSound:         settings.alertSound         ?? "bb_spirit",
     volume:             readNum(settings.volume, 75),
-    useCustomSound:     settings.useCustomSound      ?? false,
-    ttsVoice:           settings.ttsVoice            ?? "female",
-    ttsRate:            settings.ttsRate             ?? 0.5,
-    ttsPitch:           settings.ttsPitch            ?? 0.5,
+    useCustomSound:     settings.useCustomSound     ?? false,
+    ttsVoice:           settings.ttsVoice           ?? "female",
+    ttsRate:            settings.ttsRate            ?? 0.5,
+    ttsPitch:           settings.ttsPitch           ?? 0.5,
+    // ✅ รองรับทั้ง alertImage และ image (flat ใช้ทั้งสองอย่าง)
     image:              settings.alertImage ?? settings.image
                         ?? "https://media.tenor.com/k_UsDt9xfWIAAAAM/i-will-eat-you-cat.gif",
-    effect:             settings.effect              ?? "realistic_look",
-    confettiEffect:     settings.confettiEffect      ?? "fountain",
-    imageGlow:          settings.imageGlow           ?? false,
-    showConfetti:       settings.showConfetti        ?? false,
-    minAmountForAlert:  settings.minAmountForAlert   ?? 10,
+    effect:             settings.effect             ?? "realistic_look",
+    confettiEffect:     settings.confettiEffect     ?? "fountain",
+    imageGlow:          settings.imageGlow          ?? false,
+    showConfetti:       settings.showConfetti       ?? false,
+    minAmountForAlert:  settings.minAmountForAlert  ?? 10,
   };
 }
 
@@ -123,15 +71,14 @@ const AlertPreview = forwardRef(({
   externalAnimationStep,
   externalIsVisible,
 }, ref) => {
-  const themeRef   = useRef(null);
-  const [cycleKey, setCycleKey] = useState(0);   // เพิ่มเฉพาะตอน cycle จบ
-  const [step,  setStep]  = useState("display");
+  const themeRef  = useRef(null);
+  const [cycleKey, setCycleKey] = useState(0);
+  const [step,  setStep]   = useState("display");
   const [visible, setVisible] = useState(true);
 
   const animStep = externalAnimationStep ?? step;
   const isVis    = externalIsVisible     ?? visible;
 
-  // derived (ไม่ใช่ state — compute ทุกครั้งที่ settings เปลี่ยน)
   const s = buildSettings(settings);
 
   const displayName  = getDisplayName(s.prefixText);
@@ -185,7 +132,6 @@ const AlertPreview = forwardRef(({
     return () => clearTimeout(timer);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlaying, animStep]);
-  // ★ deps เจาะจง ไม่ใส่ s.* ทั้งหมด เพราะจะ re-trigger loop
 
   useEffect(() => {
     if (isPlaying) {

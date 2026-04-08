@@ -1,181 +1,167 @@
+// ==================== DonateAlertSettings.js (FIXED) ====================
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { 
-  Bell, 
-  Eye, 
-  Settings, 
-  Save, 
-  RotateCcw, 
-  Copy, 
-  Check,
-  AlertCircle,
-  X,
-  Loader2,
-  Sparkles,
-  MonitorSmartphone,
-  ChevronLeft,
-  ChevronRight,
-  PanelLeftClose,
-  PanelLeftOpen,
-  Edit3
+import {
+  Check, X, RotateCcw, Copy, AlertCircle,
+  Sparkles, MonitorSmartphone, Edit3, Save
 } from "lucide-react";
 import { Button } from '@/components/ui/button';
 import { toast } from 'react-hot-toast';
 
-// Components
-import SettingsHeader from "./components/SettingsHeader";
 import SettingsTabs from "./components/SettingsTabs";
 import PreviewPanel from "./components/PreviewPanel";
+import SettingsHeader from "./components/SettingsHeader";
 import FullscreenVisualEditor from "./components/FullscreenVisualEditor";
-import { 
-  defaultSettings, 
-  transformToFlatStructure, 
-  transformToGroupedStructure 
+import {
+  defaultSettings,
+  transformToFlatStructure,
+  transformToGroupedStructure,
 } from "./components/utils/settingsUtils";
 
-// API
 import {
   saveDonateSettings,
   fetchDonateSettings,
 } from "../../../../../actions/DonateAlertapi/donateSettingsApi";
 
-export default function DonateAlertSettings() {
-  const [settings, setSettings] = useState(() => transformToFlatStructure(defaultSettings));
-  const [loading, setLoading] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [saveSuccess, setSaveSuccess] = useState(false);
-  const [hasChanges, setHasChanges] = useState(false);
-  const [lastSaved, setLastSaved] = useState(null);
-  const [showSaveNotification, setShowSaveNotification] = useState(false);
-  const [copied, setCopied] = useState(false);
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  
-  // ✅ State สำหรับ Fullscreen Visual Editor
-  const [showFullscreenEditor, setShowFullscreenEditor] = useState(false);
+/* ─────────────────────────────────────────────
+   HELPERS
+───────────────────────────────────────────── */
+function buildSavePayload(flatSettings) {
+  const grouped = transformToGroupedStructure(flatSettings);
+  return {
+    ...grouped,
+    updatedAt: new Date().toISOString(),
+  };
+}
 
-  // Load settings on mount
+/* ─────────────────────────────────────────────
+   COMPONENT
+───────────────────────────────────────────── */
+export default function DonateAlertSettings() {
+  const [settings, setSettings]       = useState(() => transformToFlatStructure(defaultSettings));
+  const [loading, setLoading]         = useState(false);
+  const [saving, setSaving]           = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [hasChanges, setHasChanges]   = useState(false);
+  const [lastSaved, setLastSaved]     = useState(null);
+  const [showSaveNotification, setShowSaveNotification] = useState(false);
+  const [copied, setCopied]           = useState(false);
+
+  const [previewSettings, setPreviewSettings] = useState(() => transformToFlatStructure(defaultSettings));
+
+  // ── FIX: Visual Editor state ───────────────────────────
+  // เก็บ effectiveSettings และ context-aware updateFn ที่ SettingsTabs ส่งมา
+  const [showFullscreenEditor, setShowFullscreenEditor] = useState(false);
+  const editorContextRef = useRef({
+    effectiveSettings: null,
+    updateFn: null,
+  });
+
+  // ── Load settings ──────────────────────────────────────
   useEffect(() => {
-    const loadSettings = async () => {
+    const load = async () => {
       setLoading(true);
       try {
         const res = await fetchDonateSettings();
-        if (!res || !res.settings) {
-          console.log("⚠ No data, using default");
+        if (!res?.settings) {
           setSettings(transformToFlatStructure(defaultSettings));
           toast.success("Using default settings");
         } else {
-          console.log("📥 Loaded:", res.settings);
-          const flatSettings = transformToFlatStructure(res.settings);
-          setSettings(flatSettings);
+          const flat = transformToFlatStructure(res.settings);
+          setSettings(flat);
           setLastSaved(new Date());
-          toast.success("Settings loaded successfully");
+          toast.success("Settings loaded");
         }
-      } catch (error) {
-        console.error("Error loading settings:", error);
+      } catch (err) {
+        console.error(err);
         toast.error("Failed to load settings");
       } finally {
         setLoading(false);
       }
     };
-
-    loadSettings();
+    load();
   }, []);
 
-  // Track changes
-  useEffect(() => {
-    setHasChanges(true);
-  }, [settings]);
+  useEffect(() => { setHasChanges(true); }, [settings]);
 
-  // Auto-hide save notification
+  const handleEffectiveSettingsChange = useCallback((effective) => {
+    setPreviewSettings(effective);
+  }, []);
+
   useEffect(() => {
-    if (showSaveNotification) {
-      const timer = setTimeout(() => setShowSaveNotification(false), 3000);
-      return () => clearTimeout(timer);
-    }
+    if (!showSaveNotification) return;
+    const t = setTimeout(() => setShowSaveNotification(false), 3000);
+    return () => clearTimeout(t);
   }, [showSaveNotification]);
 
-  // Listen for sidebar toggle events
   useEffect(() => {
-    const handleSidebarToggle = (e) => {
-      setSidebarCollapsed(e.detail.collapsed);
-    };
-    window.addEventListener('sidebarToggle', handleSidebarToggle);
-    return () => window.removeEventListener('sidebarToggle', handleSidebarToggle);
+    const h = () => {};
+    window.addEventListener("sidebarToggle", h);
+    return () => window.removeEventListener("sidebarToggle", h);
   }, []);
 
-  const updateSetting = (key, value) => {
-    setSettings((prev) => ({ ...prev, [key]: value }));
-  };
+  // ── updateSetting (global) ─────────────────────────────
+  const updateSetting = useCallback((key, value) => {
+    setSettings(prev => ({ ...prev, [key]: value }));
+  }, []);
 
+  // ── Actions ───────────────────────────────────────────
   const handleResetSettings = () => {
-    if (window.confirm("Are you sure you want to reset all settings to default?")) {
-      setSettings(transformToFlatStructure(defaultSettings));
-      setHasChanges(true);
-      toast.success("Settings reset to default");
-    }
+    if (!window.confirm("Reset all settings to default?")) return;
+    setSettings(transformToFlatStructure(defaultSettings));
+    setHasChanges(true);
+    toast.success("Settings reset");
   };
 
   const handleCopyJSON = async () => {
     try {
-      const groupedData = transformToGroupedStructure(settings);
-      const jsonString = JSON.stringify(groupedData, null, 2);
-      await navigator.clipboard.writeText(jsonString);
+      const payload = buildSavePayload(settings);
+      await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
       setCopied(true);
-      toast.success("Settings copied to clipboard!");
+      toast.success("Copied to clipboard!");
       setTimeout(() => setCopied(false), 2000);
-    } catch (error) {
-      toast.error("Failed to copy settings");
+    } catch {
+      toast.error("Failed to copy");
     }
   };
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     setSaving(true);
     try {
-      const groupedData = transformToGroupedStructure(settings);
-      console.log("groupedData", groupedData);
-      
-      const dataToSave = {
-        ...groupedData,
-        updatedAt: new Date().toISOString(),
-      };
-      
-      const res = await saveDonateSettings(dataToSave);
-      if (!res) {
-        throw new Error("Failed to save");
-      }
+      const payload = buildSavePayload(settings);
+      console.log("💾 Saving:", payload);
+      const res = await saveDonateSettings(payload);
+      if (!res) throw new Error("Save failed");
+
       setSaveSuccess(true);
       setHasChanges(false);
       setLastSaved(new Date());
       setShowSaveNotification(true);
-      toast.success("Settings saved successfully!");
-      
+      toast.success("Saved!");
       setTimeout(() => setSaveSuccess(false), 2000);
-    } catch (error) {
-      console.error("Save error:", error);
-      toast.error("Failed to save settings");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to save");
     } finally {
       setSaving(false);
     }
-  };
+  }, [settings]);
 
-  // ✅ เปิด Fullscreen Visual Editor
-  const openFullscreenEditor = () => {
+  // ── FIX: เปิด Visual Editor พร้อม context จาก SettingsTabs ──
+  // SettingsTabs จะส่ง (effectiveSettings, updateFn) มาเมื่อกดปุ่ม
+  const handleOpenVisualEditor = useCallback((effectiveSettings, updateFn) => {
+    editorContextRef.current = { effectiveSettings, updateFn };
     setShowFullscreenEditor(true);
-  };
+  }, []);
 
-  // ✅ ปิด Fullscreen Visual Editor
-  const closeFullscreenEditor = () => {
-    setShowFullscreenEditor(false);
-  };
-
-  // Loading state
+  // ── Loading ───────────────────────────────────────────
   if (loading) {
     return (
       <div className="h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
+          initial={{ opacity:0, scale:0.9 }}
+          animate={{ opacity:1, scale:1 }}
           className="text-center space-y-4"
         >
           <div className="relative">
@@ -188,121 +174,58 @@ export default function DonateAlertSettings() {
     );
   }
 
+  // ── Render ────────────────────────────────────────────
   return (
     <>
-      {/* Save notification */}
       <AnimatePresence>
         {showSaveNotification && (
           <motion.div
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -50 }}
+            initial={{ opacity:0, y:-50 }}
+            animate={{ opacity:1, y:0 }}
+            exit={{ opacity:0, y:-50 }}
             className="fixed top-20 right-4 z-50 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3"
           >
             <Check className="w-5 h-5" />
             <span>Settings saved successfully!</span>
-            <button 
-              onClick={() => setShowSaveNotification(false)}
-              className="ml-2 hover:bg-white/20 rounded-lg p-1"
-            >
+            <button onClick={() => setShowSaveNotification(false)} className="ml-2 hover:bg-white/20 rounded-lg p-1">
               <X className="w-4 h-4" />
             </button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Main content */}
       <div className="h-full w-full overflow-y-auto">
         <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-          {/* Header */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6"
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-xl flex-shrink-0 hidden sm:block">
-                <MonitorSmartphone className="w-6 h-6 text-cyan-400" />
-              </div>
-              <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-white">Donation Alert Settings</h1>
-                <p className="text-slate-400 text-sm flex items-center gap-2 flex-wrap">
-                  Customize your donation alert
-                  {lastSaved && (
-                    <span className="text-xs text-slate-500">
-                      • Last saved: {lastSaved.toLocaleTimeString()}
-                    </span>
-                  )}
-                </p>
-              </div>
-            </div>
-
-            {/* Status badges */}
-            <div className="flex items-center gap-2">
-              {/* ✅ Fullscreen Visual Editor Button */}
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={openFullscreenEditor}
-                className="border-slate-700 text-slate-400 hover:text-white hover:border-slate-600 transition-all duration-200"
-              >
-                <Edit3 className="w-4 h-4 mr-2" />
-                Visual Editor
-              </Button>
-
-              {hasChanges && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm flex items-center gap-2 border border-yellow-500/30"
-                >
-                  <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
-                  Unsaved Changes
-                </motion.div>
-              )}
-              {saveSuccess && (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm flex items-center gap-2 border border-green-500/30"
-                >
-                  <Check className="w-4 h-4" />
-                  Saved
-                </motion.div>
-              )}
-            </div>
-          </motion.div>
-
-          {/* Settings Header */}
           <div className="mb-6">
-            <SettingsHeader settings={settings} updateSetting={updateSetting} />
+            <SettingsHeader 
+              settings={settings} 
+              updateSetting={updateSetting}
+              hasChanges={hasChanges}
+              saveSuccess={saveSuccess}
+            />
           </div>
 
-          {/* Main grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left Column */}
-            <motion.div 
+            <motion.div
               className="lg:col-span-8 space-y-6"
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.1 }}
+              initial={{ opacity:0, x:-20 }}
+              animate={{ opacity:1, x:0 }}
+              transition={{ delay:0.1 }}
             >
               <SettingsTabs
                 settings={settings}
                 updateSetting={updateSetting}
                 handleReset={handleResetSettings}
                 handleCopyJSON={handleCopyJSON}
-                onOpenVisualEditor={openFullscreenEditor}  // ✅ เพิ่มตรงนี้
+                onOpenVisualEditor={handleOpenVisualEditor}
+                onEffectiveSettingsChange={handleEffectiveSettingsChange}
               />
 
-              {/* Action Buttons */}
               <div className="flex flex-wrap items-center justify-between gap-3 p-4 bg-slate-900/50 rounded-xl border border-slate-800">
                 <div className="flex items-center gap-2 text-sm text-slate-400">
                   <AlertCircle className="w-4 h-4" />
                   <span>Changes are automatically reflected in preview</span>
                 </div>
-                
                 <div className="flex items-center gap-2">
                   <Button
                     variant="outline"
@@ -310,19 +233,8 @@ export default function DonateAlertSettings() {
                     className="bg-slate-800/50 border-slate-700 hover:bg-slate-700/50 text-slate-300"
                     disabled={copied}
                   >
-                    {copied ? (
-                      <>
-                        <Check className="w-4 h-4 mr-2" />
-                        Copied!
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-4 h-4 mr-2" />
-                        Copy JSON
-                      </>
-                    )}
+                    {copied ? <><Check className="w-4 h-4 mr-2" />Copied!</> : <><Copy className="w-4 h-4 mr-2" />Copy JSON</>}
                   </Button>
-                  
                   <Button
                     variant="outline"
                     onClick={handleResetSettings}
@@ -335,22 +247,20 @@ export default function DonateAlertSettings() {
               </div>
             </motion.div>
 
-            {/* Right Column */}
-            <motion.div 
+            <motion.div
               className="lg:col-span-4"
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: 0.2 }}
+              initial={{ opacity:0, x:20 }}
+              animate={{ opacity:1, x:0 }}
+              transition={{ delay:0.2 }}
             >
               <div className="sticky top-6 space-y-6">
-                <PreviewPanel 
-                  settings={settings} 
+                <PreviewPanel
+                  settings={previewSettings}
                   handleSave={handleSave}
                   isSaving={saving}
                   hasChanges={hasChanges}
                 />
-                
-                {/* Tips Card */}
+
                 <div className="p-4 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 rounded-xl border border-cyan-500/20">
                   <h4 className="text-sm font-medium text-cyan-400 mb-3 flex items-center gap-2">
                     <Sparkles className="w-4 h-4" />
@@ -359,15 +269,19 @@ export default function DonateAlertSettings() {
                   <ul className="space-y-2 text-sm text-slate-400">
                     <li className="flex items-start gap-2">
                       <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 mt-1.5" />
-                      <span>Test your alert on different screen sizes</span>
+                      <span>Default settings ใช้เมื่อไม่มี Range ตรง</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 mt-1.5" />
-                      <span>Click Save to apply changes permanently</span>
+                      <span>แต่ละ Range มี config ของตัวเองแยกจาก Default</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 mt-1.5" />
-                      <span>Try Visual Editor for click-to-edit experience</span>
+                      <span>กดปุ่ม "Config →" บน Range เพื่อแก้ไข</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 mt-1.5" />
+                      <span>Preview จะแสดง Range ที่กำลังแก้อยู่</span>
                     </li>
                   </ul>
                 </div>
@@ -377,13 +291,13 @@ export default function DonateAlertSettings() {
         </div>
       </div>
 
-      {/* Fullscreen Visual Editor Modal */}
+      {/* ── FIX: Visual Editor รับ effectiveSettings + context updateFn ── */}
       <AnimatePresence>
         {showFullscreenEditor && (
           <FullscreenVisualEditor
-            settings={settings}
-            updateSetting={updateSetting}
-            onClose={closeFullscreenEditor}
+            settings={editorContextRef.current.effectiveSettings ?? settings}
+            updateSetting={editorContextRef.current.updateFn ?? updateSetting}
+            onClose={() => setShowFullscreenEditor(false)}
             onSave={handleSave}
           />
         )}

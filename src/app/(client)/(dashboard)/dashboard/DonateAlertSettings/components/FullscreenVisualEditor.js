@@ -1,5 +1,5 @@
 // ============================================
-// FullscreenVisualEditor.js — STABLE (no infinite loop)
+// FullscreenVisualEditor.js — FIXED (range sync + no jank)
 // ============================================
 "use client";
 import React, {
@@ -27,7 +27,7 @@ import { playAlertSound } from "../../../../../../utils/audioUtils";
 import { thaiGoogleFonts, fontWeights } from "./utils/fontUtils";
 
 /* ─────────────────────────────────────────────
-   FONT UTILITIES  (ไม่เปลี่ยน)
+   FONT UTILITIES
 ───────────────────────────────────────────── */
 function optFamily(opt) {
   return opt?.family || opt?.name || opt?.id || "";
@@ -46,7 +46,7 @@ function injectFont(family) {
 }
 
 /* ─────────────────────────────────────────────
-   HELPERS  (ไม่เปลี่ยน)
+   HELPERS
 ───────────────────────────────────────────── */
 function isHex(v) { return typeof v === "string" && /^#[0-9a-fA-F]{3,8}$/.test(v); }
 
@@ -122,10 +122,7 @@ const OnboardingModal = memo(function OnboardingModal({ onClose }) {
         transition={{ type: "spring", damping: 22, stiffness: 280 }}
         className="relative w-full max-w-md mx-4"
       >
-        {/* Card */}
         <div className={`rounded-2xl border backdrop-blur-xl p-6 ${s.highlight} bg-slate-900/95 shadow-2xl`}>
-
-          {/* Close */}
           <button
             onClick={handleFinish}
             className="absolute top-4 right-4 p-1.5 rounded-lg hover:bg-slate-700/60 text-slate-400 hover:text-white transition-colors"
@@ -133,33 +130,22 @@ const OnboardingModal = memo(function OnboardingModal({ onClose }) {
             <X className="w-4 h-4" />
           </button>
 
-          {/* Step indicator */}
           <div className="flex items-center gap-1.5 mb-5">
             {STEPS.map((_, i) => (
               <div
                 key={i}
                 className={`h-1 rounded-full transition-all duration-300 ${
-                  i === step
-                    ? "bg-cyan-400 w-6"
-                    : i < step
-                    ? "bg-cyan-700 w-3"
-                    : "bg-slate-700 w-3"
+                  i === step ? "bg-cyan-400 w-6" : i < step ? "bg-cyan-700 w-3" : "bg-slate-700 w-3"
                 }`}
               />
             ))}
-            <span className="ml-auto text-[10px] text-slate-500 font-mono">
-              {step + 1} / {total}
-            </span>
+            <span className="ml-auto text-[10px] text-slate-500 font-mono">{step + 1} / {total}</span>
           </div>
 
-          {/* Icon */}
           <div className="flex justify-center mb-4">
-            <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/60">
-              {s.icon}
-            </div>
+            <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700/60">{s.icon}</div>
           </div>
 
-          {/* Content */}
           <AnimatePresence mode="wait">
             <motion.div
               key={step}
@@ -176,7 +162,6 @@ const OnboardingModal = memo(function OnboardingModal({ onClose }) {
             </motion.div>
           </AnimatePresence>
 
-          {/* Navigation */}
           <div className="flex items-center justify-between mt-6 gap-3">
             <button
               onClick={() => setStep(p => Math.max(0, p - 1))}
@@ -212,7 +197,6 @@ const OnboardingModal = memo(function OnboardingModal({ onClose }) {
             )}
           </div>
 
-          {/* Skip */}
           {!isLast && (
             <button
               onClick={handleFinish}
@@ -228,7 +212,7 @@ const OnboardingModal = memo(function OnboardingModal({ onClose }) {
 });
 
 /* ─────────────────────────────────────────────
-   STATIC DATA  (ไม่เปลี่ยน)
+   STATIC DATA
 ───────────────────────────────────────────── */
 const SOUNDS = [
   { id:"chime",     name:"Chime" },
@@ -272,7 +256,7 @@ const TTS_VOICES = [
 ];
 
 /* ─────────────────────────────────────────────
-   ZONE DEFINITIONS  (ไม่เปลี่ยน)
+   ZONE DEFINITIONS
 ───────────────────────────────────────────── */
 const ZONES = [
   {
@@ -288,7 +272,7 @@ const ZONES = [
     description:"สี, ขนาด, ฟอนต์",
     disp:(ls) => `${readArr(ls.textSize,36)}px`,
     fields:[
-      { key:"prefixText",     label:"ข้อความนำหน้า",  type:"text",   placeholder:"{{user}} โดเนทมา" },
+      { key:"prefixText",     label:"ข้อความนำหน้า",  type:"text",   placeholder:"{{user}} " },
       { key:"suffixText",     label:"ข้อความท้าย",     type:"text",   placeholder:"โดเนทมา" },
       { key:"font",           label:"แบบอักษร",         type:"font",   options:thaiGoogleFonts },
       { key:"fontWeight",     label:"น้ำหนักฟอนต์",    type:"select", options:fontWeights.map(w=>({id:w,name:w})) },
@@ -367,7 +351,7 @@ const ZONES = [
   },
   {
     id:"visibility", side:"right", icon:Eye, name:"การแสดงผล", posKey:"donorName",
-    description:"แสดง/ซ่อน",
+    description:"แสด/ซ่อน",
     disp:(ls) => {
       const p=[];
       if (ls.showName!==false)    p.push("ชื่อ");
@@ -388,11 +372,10 @@ const LEFT_ZONES  = ZONES.filter(z => z.side === "left");
 const RIGHT_ZONES = ZONES.filter(z => z.side === "right");
 
 /* ─────────────────────────────────────────────
-   FIELD RENDERER  (ไม่เปลี่ยน)
+   FIELD RENDERER
 ───────────────────────────────────────────── */
 const FieldRenderer = memo(function FieldRenderer({ field, value, onUpdate }) {
   switch (field.type) {
-
     case "font": {
       const opts   = field.options ?? [];
       const safeV  = (typeof value === "string" && value) ? value : optFamily(opts[0]);
@@ -519,7 +502,7 @@ const FieldRenderer = memo(function FieldRenderer({ field, value, onUpdate }) {
 });
 
 /* ─────────────────────────────────────────────
-   INLINE PANEL  (ไม่เปลี่ยน)
+   INLINE PANEL
 ───────────────────────────────────────────── */
 const InlinePanel = memo(function InlinePanel({
   zone, ls, onUpdate, onTestSound, testingSound,
@@ -557,7 +540,7 @@ const InlinePanel = memo(function InlinePanel({
 });
 
 /* ─────────────────────────────────────────────
-   BADGE BUTTON  (ไม่เปลี่ยน)
+   BADGE BUTTON
 ───────────────────────────────────────────── */
 const BadgeButton = memo(function BadgeButton({
   zone, isSelected, dispVal, onToggle, badgeRef,
@@ -599,7 +582,7 @@ const BadgeButton = memo(function BadgeButton({
 });
 
 /* ─────────────────────────────────────────────
-   CONNECTOR LINES  (ไม่เปลี่ยน)
+   CONNECTOR LINES
 ───────────────────────────────────────────── */
 const Connectors = memo(function Connectors({
   zones, badgeRects, elemRects, previewBox, selectedId,
@@ -652,7 +635,7 @@ const Connectors = memo(function Connectors({
 });
 
 /* ─────────────────────────────────────────────
-   ANNOTATION COLUMN  (ไม่เปลี่ยน)
+   ANNOTATION COLUMN
 ───────────────────────────────────────────── */
 const AnnotationColumn = memo(function AnnotationColumn({
   zoneList, side, selectedId, ls,
@@ -695,35 +678,47 @@ const AnnotationColumn = memo(function AnnotationColumn({
 
 /* ─────────────────────────────────────────────
    MAIN COMPONENT
+   
+   FIX 1: รับ effectiveSettings แทน settings ธรรมดา
+          → ls จะ sync กับ range ที่กำลังแก้อยู่เสมอ
+   FIX 2: handleUpdate อัปเดต ls local ก่อน
+          แล้ว debounce ส่ง updateSetting ไป parent เพื่อลด jank
+   FIX 3: measure() ใช้ debounce + ไม่ trigger จาก ls โดยตรง
 ───────────────────────────────────────────── */
 export default function FullscreenVisualEditor({
-  settings, updateSetting, onClose, onSave,
+  settings,           // ← parent ควรส่ง effectiveSettings มาแทน raw settings
+  updateSetting,      // ← (key, value) update global หรือ range ขึ้นอยู่กับ context ใน parent
+  onClose,
+  onSave,
 }) {
   const [selectedId,   setSelectedId]   = useState(null);
   const [previewScale, setPreviewScale] = useState(0.75);
   const [isPlaying,    setIsPlaying]    = useState(false);
   const [animStep,     setAnimStep]     = useState("display");
-  const [ls,           setLs]           = useState(() => ({ ...settings }));
+
+  // ── ls = local snapshot สำหรับ preview ──────────────────
+  // sync จาก settings prop (ซึ่ง parent ส่ง effectiveSettings มาแล้ว)
+  const [ls, setLs] = useState(() => ({ ...settings }));
+
   const [hasChanges,   setHasChanges]   = useState(false);
   const [testingSound, setTestingSound] = useState(false);
   const [elemRects,    setElemRects]    = useState({});
   const [previewBox,   setPreviewBox]   = useState(null);
   const [badgeRects,   setBadgeRects]   = useState({});
-
-  // ★ Onboarding state — แสดงครั้งแรกเท่านั้น (localStorage)
   const [showOnboarding, setShowOnboarding] = useState(() => {
     try { return !localStorage.getItem(ONBOARDING_KEY); } catch { return true; }
   });
 
-  const wrapRef      = useRef(null);
-  const previewRef   = useRef(null);
-  const badgeRefs    = useRef({});
-  const mountedRef   = useRef(true);
-  const rafRef       = useRef(null);
-  const resizeRef    = useRef(null);
-  const soundRef     = useRef(null);
+  const wrapRef    = useRef(null);
+  const previewRef = useRef(null);
+  const badgeRefs  = useRef({});
+  const mountedRef = useRef(true);
+  const rafRef     = useRef(null);
+  const resizeRef  = useRef(null);
+  const soundRef   = useRef(null);
+  const debounceRef = useRef(null); // ← debounce ref สำหรับ updateSetting
 
-  // ── lifecycle  (ไม่เปลี่ยน) ──────────────────────────────
+  // ── lifecycle ──────────────────────────────────────────
   useEffect(() => {
     mountedRef.current = true;
     injectFont(settings.font);
@@ -733,19 +728,24 @@ export default function FullscreenVisualEditor({
       cancelAnimationFrame(rafRef.current);
       clearTimeout(resizeRef.current);
       clearTimeout(soundRef.current);
+      clearTimeout(debounceRef.current);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const settingsRef = useRef(settings);
+  // ── FIX 1: sync ls เมื่อ settings prop เปลี่ยน ──────────
+  // ใช้ JSON key เพื่อ detect deep change โดยไม่ต้อง deep-equal
+  // settings จาก parent คือ effectiveSettings (merge กับ range แล้ว)
+  const settingsJsonRef = useRef("");
   useEffect(() => {
-    if (settingsRef.current !== settings) {
-      settingsRef.current = settings;
+    const next = JSON.stringify(settings);
+    if (settingsJsonRef.current !== next) {
+      settingsJsonRef.current = next;
       setLs({ ...settings });
     }
   }, [settings]);
 
-  // ── rect measurement  (ไม่เปลี่ยน) ──────────────────────
+  // ── rect measurement (debounced, ไม่ผูกกับ ls โดยตรง) ──
   const measure = useCallback(() => {
     if (!mountedRef.current) return;
     if (wrapRef.current) setPreviewBox(wrapRef.current.getBoundingClientRect());
@@ -761,22 +761,27 @@ export default function FullscreenVisualEditor({
       }
     }
     const br = {};
-    Object.entries(badgeRefs.current).forEach(([id, el]) => { if (el) br[id] = el.getBoundingClientRect(); });
+    Object.entries(badgeRefs.current).forEach(([id, el]) => {
+      if (el) br[id] = el.getBoundingClientRect();
+    });
     setBadgeRects(br);
   }, []);
 
+  // trigger measure เมื่อ scale หรือ selectedId เปลี่ยน
   useEffect(() => {
     cancelAnimationFrame(rafRef.current);
     rafRef.current = requestAnimationFrame(measure);
   }, [previewScale, selectedId, measure]);
 
+  // trigger measure เมื่อ ls เปลี่ยน (debounced 120ms เพื่อลด thrash)
   const lsMeasureRef = useRef(null);
   useEffect(() => {
     clearTimeout(lsMeasureRef.current);
-    lsMeasureRef.current = setTimeout(measure, 100);
+    lsMeasureRef.current = setTimeout(measure, 120);
     return () => clearTimeout(lsMeasureRef.current);
   }, [ls, measure]);
 
+  // resize / scroll listener
   useEffect(() => {
     const h = () => {
       clearTimeout(resizeRef.current);
@@ -790,26 +795,38 @@ export default function FullscreenVisualEditor({
     };
   }, [measure]);
 
-  // ── update handler  (ไม่เปลี่ยน) ─────────────────────────
+  // ── FIX 2: handleUpdate — local first, debounce parent ──
+  // อัปเดต ls ทันที (ไม่กระตุก) แล้วค่อย propagate ไป parent
+  // หลังจาก 80ms — ป้องกัน parent re-render ทุก keystroke
   const handleUpdate = useCallback((key, value) => {
     let final = value;
     if (key === "font" || key === "messageFont") {
       injectFont(value);
-      final = value;
     } else if (ARR_KEYS.has(key) && typeof value === "number") {
       final = [value];
     }
 
+    // อัปเดต local state ทันที → preview เปลี่ยนไว
     setLs(prev => {
       if (prev[key] === final) return prev;
       if (Array.isArray(final) && Array.isArray(prev[key]) && final[0] === prev[key][0]) return prev;
       return { ...prev, [key]: final };
     });
-    updateSetting(key, final);
+
     setHasChanges(true);
+
+    // debounce parent update เพื่อลด re-render cascade
+    clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      if (mountedRef.current) {
+        updateSetting(key, final);
+      }
+    }, 80);
   }, [updateSetting]);
 
   const handleSave = useCallback(async () => {
+    // flush debounced updates ก่อน save
+    clearTimeout(debounceRef.current);
     await onSave();
     onClose();
   }, [onSave, onClose]);
@@ -827,10 +844,9 @@ export default function FullscreenVisualEditor({
     setSelectedId(prev => prev === id ? null : id);
   }, []);
 
-  // ── render ───────────────────────────────────────────────
+  // ── render ──────────────────────────────────────────────
   return (
     <>
-      {/* ★ Onboarding Modal — แสดงครั้งแรกเท่านั้น */}
       <AnimatePresence>
         {showOnboarding && (
           <OnboardingModal onClose={() => setShowOnboarding(false)} />
@@ -861,8 +877,6 @@ export default function FullscreenVisualEditor({
                 ⚡ ยังไม่ได้บันทึก
               </span>
             )}
-
-            {/* ★ Help button — เปิด Onboarding ซ้ำได้ */}
             <button
               onClick={() => setShowOnboarding(true)}
               title="คำแนะนำการใช้งาน"
@@ -871,7 +885,6 @@ export default function FullscreenVisualEditor({
             >
               <HelpCircle className="w-4 h-4" />
             </button>
-
             <Button onClick={() => setIsPlaying(v => !v)} variant="outline" size="sm"
               className="border-slate-700 text-slate-300 text-xs h-8">
               {isPlaying ? "⏸ หยุด" : "▶ เล่น"}

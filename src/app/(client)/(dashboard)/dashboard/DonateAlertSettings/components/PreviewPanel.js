@@ -1,94 +1,55 @@
+// ==================== PreviewPanel.js ====================
+// แก้เฉพาะ getDuration — เอา metadata branch ออก
 "use client";
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { 
-  Bell, 
-  Eye, 
-  EyeOff,
-  Maximize2, 
-  Minimize2, 
-  RefreshCw, 
-  CheckCircle,
-  AlertCircle,
-  Smartphone,
-  Tablet,
-  Monitor,
-  Save,
-  Settings2,
-  Sparkles,
-  Download,
-  Share2,
-  Play,
-  Pause,
-  Clock,
-  Volume2,
-  EyeIcon,
-  ArrowDown,
-  ArrowUp,
-  Info
+import {
+  Maximize2, Minimize2, RefreshCw, CheckCircle,
+  Smartphone, Tablet, Monitor, Save, Settings2,
+  Download, Share2, Play, Pause, Clock, EyeIcon,
+  ArrowDown, ArrowUp, Info
 } from "lucide-react";
 import AlertPreview from "./AlertPreview";
 
-export default function PreviewPanel({ 
-  settings, 
-  handleSave, 
-  isSaving = false, 
-  hasChanges = false 
+export default function PreviewPanel({
+  settings,
+  handleSave,
+  isSaving = false,
+  hasChanges = false
 }) {
   const alertPreviewRef = useRef();
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [deviceSize, setDeviceSize] = useState('desktop');
+  const [deviceSize, setDeviceSize] = useState("desktop");
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [key, setKey] = useState(0);
   const [previewScale, setPreviewScale] = useState(1);
   const [showSettings, setShowSettings] = useState(false);
-  
-  // Animation states
   const [isPlaying, setIsPlaying] = useState(false);
   const [animationStep, setAnimationStep] = useState("display");
   const [isVisible, setIsVisible] = useState(true);
-  const [showControls, setShowControls] = useState(true);
+  const [showControls] = useState(true);
 
   const devicePresets = {
-    mobile: { width: '375px', icon: Smartphone, label: 'Mobile' },
-    tablet: { width: '768px', icon: Tablet, label: 'Tablet' },
-    desktop: { width: '100%', icon: Monitor, label: 'Desktop' }
+    mobile:  { width: "375px", icon: Smartphone, label: "Mobile" },
+    tablet:  { width: "768px", icon: Tablet,     label: "Tablet" },
+    desktop: { width: "100%",  icon: Monitor,    label: "Desktop" },
   };
 
-  // Helper function to get duration from settings (support both flat and grouped)
+  // ✅ flat structure เท่านั้น — ไม่มี metadata branch
   const getDuration = (type, defaultValue) => {
     if (!settings) return defaultValue;
-    
-    if (settings.metadata && settings.metadata.animation) {
-      const animation = settings.metadata.animation;
-      switch (type) {
-        case 'in':
-          return (animation.enter?.duration || defaultValue * 1000) / 1000;
-        case 'display':
-          return (animation.display?.duration || defaultValue * 1000) / 1000;
-        case 'out':
-          return (animation.exit?.duration || defaultValue * 1000) / 1000;
-        default:
-          return defaultValue;
-      }
-    }
-    
     switch (type) {
-      case 'in':
-        return settings.inDuration || defaultValue;
-      case 'display':
-        return settings.displayDuration || defaultValue;
-      case 'out':
-        return settings.outDuration || defaultValue;
-      default:
-        return defaultValue;
+      case "in":      return settings.inDuration      ?? defaultValue;
+      case "display": return settings.displayDuration ?? defaultValue;
+      case "out":     return settings.outDuration     ?? defaultValue;
+      default:        return defaultValue;
     }
   };
 
-  const inDuration = getDuration('in', 0.8);
-  const displayDuration = getDuration('display', 5);
-  const outDuration = getDuration('out', 0.8);
+  const inDuration      = getDuration("in",      0.8);
+  const displayDuration = getDuration("display", 5);
+  const outDuration     = getDuration("out",     0.8);
 
   const handleSaveWithFeedback = async () => {
     try {
@@ -96,22 +57,17 @@ export default function PreviewPanel({
       setShowSaveSuccess(true);
       setTimeout(() => setShowSaveSuccess(false), 3000);
     } catch (error) {
-      console.error('Save failed:', error);
+      console.error("Save failed:", error);
     }
   };
 
-  const refreshPreview = () => {
-    setKey(prev => prev + 1);
-  };
+  const refreshPreview = () => setKey(prev => prev + 1);
 
-  const handlePlayPause = () => {
-    setIsPlaying(!isPlaying);
-  };
+  const handlePlayPause = () => setIsPlaying(!isPlaying);
 
   const handleStep = (step) => {
     setIsPlaying(false);
     setAnimationStep(step);
-    
     if (step === "display" || step === "in") {
       setIsVisible(true);
     } else if (step === "out") {
@@ -123,14 +79,13 @@ export default function PreviewPanel({
   const DeviceButton = ({ device }) => {
     const { icon: Icon, label } = devicePresets[device];
     const isActive = deviceSize === device;
-    
     return (
       <button
         onClick={() => setDeviceSize(device)}
         className={`relative p-2 rounded-lg transition-all duration-200 ${
-          isActive 
-            ? 'bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-400 border border-cyan-500/30' 
-            : 'text-slate-400 hover:bg-slate-800/50 hover:text-slate-300'
+          isActive
+            ? "bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-400 border border-cyan-500/30"
+            : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-300"
         }`}
         title={`${label} view`}
       >
@@ -141,12 +96,12 @@ export default function PreviewPanel({
 
   return (
     <div className="w-full">
-      <motion.div 
+      <motion.div
         key={key}
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className={`rounded-2xl bg-gradient-to-br from-slate-900/90 to-slate-950/90 backdrop-blur-sm border border-white/10 overflow-hidden shadow-2xl shadow-cyan-500/5 ${
-          isFullscreen ? 'fixed inset-4 z-50' : ''
+          isFullscreen ? "fixed inset-4 z-50" : ""
         }`}
       >
         {/* Preview Header */}
@@ -190,23 +145,15 @@ export default function PreviewPanel({
 
               {/* Action Buttons */}
               <div className="flex items-center gap-1 px-2 py-1 bg-black/30 rounded-xl border border-white/5">
-                <button
-                  onClick={refreshPreview}
-                  className="p-1 rounded-lg hover:bg-white/10 text-slate-400 transition-colors"
-                >
+                <button onClick={refreshPreview} className="p-1 rounded-lg hover:bg-white/10 text-slate-400 transition-colors">
                   <RefreshCw className="w-3.5 h-3.5" />
                 </button>
-                <button
-                  onClick={() => setIsFullscreen(!isFullscreen)}
-                  className="p-1 rounded-lg hover:bg-white/10 text-slate-400 transition-colors"
-                >
+                <button onClick={() => setIsFullscreen(!isFullscreen)} className="p-1 rounded-lg hover:bg-white/10 text-slate-400 transition-colors">
                   {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
                 </button>
                 <button
                   onClick={() => setShowSettings(!showSettings)}
-                  className={`p-1 rounded-lg transition-colors ${
-                    showSettings ? 'bg-cyan-500/20 text-cyan-400' : 'hover:bg-white/10 text-slate-400'
-                  }`}
+                  className={`p-1 rounded-lg transition-colors ${showSettings ? "bg-cyan-500/20 text-cyan-400" : "hover:bg-white/10 text-slate-400"}`}
                 >
                   <Settings2 className="w-3.5 h-3.5" />
                 </button>
@@ -220,7 +167,7 @@ export default function PreviewPanel({
           {showSettings && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
+              animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               className="border-b border-white/10 bg-white/5 overflow-hidden"
             >
@@ -243,14 +190,14 @@ export default function PreviewPanel({
         </AnimatePresence>
 
         {/* Preview Content */}
-        <div 
+        <div
           className="bg-gradient-to-br from-slate-950 to-slate-900 p-6 flex items-center justify-center transition-all duration-300 relative"
-          style={{ 
-            minHeight: '320px',
-            maxHeight: '420px',
-            overflow: 'auto',
+          style={{
+            minHeight: "320px",
+            maxHeight: "420px",
+            overflow: "auto",
             transform: `scale(${previewScale})`,
-            transformOrigin: 'center'
+            transformOrigin: "center",
           }}
         >
           <div className="absolute inset-0 overflow-hidden">
@@ -258,12 +205,9 @@ export default function PreviewPanel({
             <div className="absolute bottom-0 -right-4 w-72 h-72 bg-cyan-500 rounded-full mix-blend-multiply filter blur-xl opacity-10 animate-pulse delay-1000" />
           </div>
 
-          <div 
+          <div
             className="transition-all duration-300 flex items-center justify-center relative z-10"
-            style={{ 
-              width: devicePresets[deviceSize].width,
-              margin: '0 auto'
-            }}
+            style={{ width: devicePresets[deviceSize].width, margin: "0 auto" }}
           >
             <AlertPreview
               ref={alertPreviewRef}
@@ -285,7 +229,7 @@ export default function PreviewPanel({
 
         {/* Animation Controls */}
         {showControls && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="border-t border-white/10 bg-gradient-to-br from-slate-800/50 to-slate-900/50"
@@ -299,8 +243,8 @@ export default function PreviewPanel({
                   <span className="text-sm font-medium text-white">Animation Controls</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className={`w-2 h-2 rounded-full ${isVisible ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-                  <span className="text-xs text-slate-400">{isVisible ? 'Active' : 'Hidden'}</span>
+                  <div className={`w-2 h-2 rounded-full ${isVisible ? "bg-green-500 animate-pulse" : "bg-red-500"}`} />
+                  <span className="text-xs text-slate-400">{isVisible ? "Active" : "Hidden"}</span>
                 </div>
               </div>
             </div>
@@ -324,14 +268,14 @@ export default function PreviewPanel({
               <div className="grid grid-cols-3 gap-3">
                 {[
                   { step: "display", label: "Display", color: "emerald", icon: EyeIcon },
-                  { step: "in", label: "Enter", color: "cyan", icon: ArrowDown },
-                  { step: "out", label: "Exit", color: "rose", icon: ArrowUp }
+                  { step: "in",      label: "Enter",   color: "cyan",    icon: ArrowDown },
+                  { step: "out",     label: "Exit",    color: "rose",    icon: ArrowUp },
                 ].map((item) => {
                   const IconComponent = item.icon;
-                  const isActive = (item.step === "display" && animationStep === "display" && isVisible) ||
-                                   (item.step === "in" && animationStep === "in") ||
-                                   (item.step === "out" && (!isVisible || animationStep === "out"));
-                  
+                  const isActive =
+                    (item.step === "display" && animationStep === "display" && isVisible) ||
+                    (item.step === "in"      && animationStep === "in") ||
+                    (item.step === "out"     && (!isVisible || animationStep === "out"));
                   return (
                     <Button
                       key={item.step}
@@ -379,21 +323,11 @@ export default function PreviewPanel({
         <div className="p-3 bg-white/5 border-t border-white/10">
           <div className="flex items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700/50"
-              >
-                <Download className="w-4 h-4 mr-2" />
-                Export
+              <Button variant="outline" size="sm" className="bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700/50">
+                <Download className="w-4 h-4 mr-2" /> Export
               </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                className="bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700/50"
-              >
-                <Share2 className="w-4 h-4 mr-2" />
-                Share
+              <Button variant="outline" size="sm" className="bg-slate-800/50 border-slate-700 text-slate-300 hover:bg-slate-700/50">
+                <Share2 className="w-4 h-4 mr-2" /> Share
               </Button>
             </div>
 
@@ -401,26 +335,24 @@ export default function PreviewPanel({
               onClick={handleSaveWithFeedback}
               disabled={isSaving || !hasChanges}
               className={`relative overflow-hidden transition-all duration-300 ${
-                hasChanges 
-                  ? 'bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 shadow-lg shadow-cyan-500/25' 
-                  : 'bg-slate-700 text-slate-400 cursor-not-allowed'
+                hasChanges
+                  ? "bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 shadow-lg shadow-cyan-500/25"
+                  : "bg-slate-700 text-slate-400 cursor-not-allowed"
               }`}
             >
               <AnimatePresence mode="wait">
                 {isSaving ? (
                   <motion.div key="saving" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2">
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    Saving...
+                    <RefreshCw className="w-4 h-4 animate-spin" /> Saving...
                   </motion.div>
                 ) : showSaveSuccess ? (
                   <motion.div key="success" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="flex items-center gap-2 text-green-300">
-                    <CheckCircle className="w-4 h-4" />
-                    Saved
+                    <CheckCircle className="w-4 h-4" /> Saved
                   </motion.div>
                 ) : (
                   <motion.div key="save" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="flex items-center gap-2">
                     <Save className="w-4 h-4" />
-                    {hasChanges ? 'Save Changes' : 'No Changes'}
+                    {hasChanges ? "Save Changes" : "No Changes"}
                   </motion.div>
                 )}
               </AnimatePresence>

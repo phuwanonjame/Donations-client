@@ -146,65 +146,7 @@ export default function EffectsTab({ settings, updateSetting }) {
       </div>
 
       {/* --- Ranges System --- */}
-      <div className="mt-6 pt-6 border-t border-slate-700/50">
-        <div className="flex items-center justify-between mb-4">
-          <h4 className="text-lg font-semibold text-white flex items-center gap-2">
-            <Layers className="w-5 h-5 text-cyan-400" />
-            Donation Ranges
-          </h4>
-          <Switch
-            checked={useRanges}
-            onCheckedChange={(v) => updateSetting("useRanges", v)}
-            className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-cyan-500 data-[state=checked]:to-blue-500"
-          />
-        </div>
-
-        {useRanges ? (
-          <div className="space-y-4">
-            <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-cyan-500/30 transition-colors cursor-pointer">
-              <div className="flex items-center justify-between">
-                <p className="text-white font-medium">Range 1: 1 - 100 THB</p>
-                <Button variant="ghost" size="sm" className="text-cyan-400 hover:text-cyan-300">
-                  Edit
-                </Button>
-              </div>
-              <p className="text-slate-400 text-sm mt-1">Default settings will be used</p>
-            </div>
-
-            <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-cyan-500/30 transition-colors cursor-pointer">
-              <div className="flex items-center justify-between">
-                <p className="text-white font-medium">Range 2: 101 - 500 THB</p>
-                <Button variant="ghost" size="sm" className="text-cyan-400 hover:text-cyan-300">
-                  Edit
-                </Button>
-              </div>
-              <p className="text-slate-400 text-sm mt-1">Special effect and sound</p>
-            </div>
-
-            <div className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-cyan-500/30 transition-colors cursor-pointer">
-              <div className="flex items-center justify-between">
-                <p className="text-white font-medium">Range 3: 501 THB+</p>
-                <Button variant="ghost" size="sm" className="text-cyan-400 hover:text-cyan-300">
-                  Edit
-                </Button>
-              </div>
-              <p className="text-slate-400 text-sm mt-1">Premium alert with custom image</p>
-            </div>
-
-            <Button variant="outline" className="w-full border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white">
-              <Layers className="w-4 h-4 mr-2" /> Add New Range
-            </Button>
-          </div>
-        ) : (
-          <div className="p-6 rounded-xl bg-slate-800/30 border border-slate-700/30 text-center">
-            <Layers className="w-12 h-12 text-slate-600 mx-auto mb-3" />
-            <p className="text-slate-400">Ranges system is disabled</p>
-            <p className="text-slate-500 text-sm mt-1">
-              Enable to create different alerts for different donation amounts
-            </p>
-          </div>
-        )}
-      </div>
+     
     </motion.div>
   );
 }
