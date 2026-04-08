@@ -48,7 +48,7 @@ const FormWrapper = ({
         onSubmit={methods.handleSubmit(handleSubmit)}
         className={className}
       >
-        {children({ loading, isDirty })}
+        {children({ loading, isDirty, ...methods })}
       </form>
     </FormProvider>
   );

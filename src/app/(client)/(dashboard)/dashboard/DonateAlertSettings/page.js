@@ -38,7 +38,7 @@ import {
 import {
   saveDonateSettings,
   fetchDonateSettings,
-} from "../../../../actions/DonateAlertapi/donateSettingsApi";
+} from "../../../../../actions/DonateAlertapi/donateSettingsApi";
 
 export default function DonateAlertSettings() {
   const [settings, setSettings] = useState(() => transformToFlatStructure(defaultSettings));

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { use, useState } from "react";
 import { motion } from "framer-motion";
 import {
   User,
@@ -24,8 +24,17 @@ import SocialForm from "@/components/dashboard/account/social-form";
 import ProfileDetailForm from "@/components/dashboard/account/profile-detail-form";
 import ProfileAvatar from "@/components/dashboard/account/profile-avatar";
 import CategorySelectorForm from "@/components/dashboard/account/category-selector-form";
+import PaymentCard from "@/components/dashboard/account/promptpay-card";
+import PromptPayCard from "@/components/dashboard/account/promptpay-card";
+import BankPayCard from "@/components/dashboard/account/bankpay-card";
+import PromptpayForm from "@/components/dashboard/account/promptpay-form";
+import BankForm from "@/components/dashboard/account/bank-form";
 
 export default function ManageAccount() {
+  const [expanded, setExpanded] = useState(false);
+  const [enabled, setEnabled] = useState(true);
+  const [type, setType] = useState("phone");
+  const [value, setValue] = useState("0825568960");
   const [profile, setProfile] = useState({
     displayName: "Creator",
     fullName: "",
@@ -93,8 +102,6 @@ export default function ManageAccount() {
                   จัดการบัญชี
                 </p>
               </div>
-
-             
             </div>
 
             {/* Info block */}
@@ -103,15 +110,13 @@ export default function ManageAccount() {
               <div className="rounded-2xl bg-white/5 p-4">
                 <p className="text-sm text-white/60">Email</p>
                 <div className="flex justify-between items-center">
-                   <p className="text-lg font-medium break-all text-white">
-                  {profile.email}
-                  
-                </p>
+                  <p className="text-lg font-medium break-all text-white">
+                    {profile.email}
+                  </p>
                   <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-sm border border-emerald-500/30">
-                Verified
-              </span>
+                    Verified
+                  </span>
                 </div>
-               
               </div>
 
               {/* Example extra */}
@@ -119,17 +124,39 @@ export default function ManageAccount() {
                 <p className="text-sm text-white/60">Phone Number</p>
                 <div className="flex justify-between items-center">
                   <p className="text-lg font-medium break-all text-white">
-                  0123456789
-                  
-                </p>
+                    0123456789
+                  </p>
                   <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-400 text-sm border border-emerald-500/30">
-                Verified
-              </span>
+                    Verified
+                  </span>
                 </div>
-                
               </div>
             </div>
           </div>
+        </div>
+      </motion.div>
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl p-6"
+      >
+        <div className="flex items-center gap-4 mb-6">
+          <div className="p-3 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-500">
+            <User className="w-6 h-6 text-white" />
+          </div>
+          <div>
+            <h3 className="text-xl font-bold text-white">
+              Personal Information
+            </h3>
+            <p className="text-slate-400 text-sm">
+              Update your personal details
+            </p>
+          </div>
+        </div>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+          <PromptpayForm />
+          <BankForm />
         </div>
       </motion.div>
 
@@ -144,7 +171,7 @@ export default function ManageAccount() {
       <CategorySelectorForm />
 
       {/* Security Section */}
-      <motion.div
+      {/* <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
@@ -197,10 +224,10 @@ export default function ManageAccount() {
             </Button>
           </div>
         </div>
-      </motion.div>
+      </motion.div> */}
 
       {/* Save Button */}
-      <motion.div
+      {/* <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
@@ -210,7 +237,7 @@ export default function ManageAccount() {
           <Save className="w-4 h-4 mr-2" />
           Save Changes
         </Button>
-      </motion.div>
+      </motion.div> */}
     </div>
   );
 }

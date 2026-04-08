@@ -29,7 +29,7 @@ const MOCK = [
   { id: "irl", name: "IRL" },
 ];
 
-export default function CategorySelector({ name = "categories" }) {
+export default function CategorySelector({ name = "categories", disabled }) {
   const { setValue, watch } = useFormContext();
 
   const formValue = watch(name) || [];
@@ -40,6 +40,7 @@ export default function CategorySelector({ name = "categories" }) {
   }, [selected, setValue, name]);
 
   const toggle = (id) => {
+    if (disabled) return; 
     setSelected((prev) => {
       if (prev.includes(id)) {
         return prev.filter((i) => i !== id);
@@ -59,7 +60,7 @@ export default function CategorySelector({ name = "categories" }) {
 
   const Card = ({ item, isSelected, onClick, removable }) => (
     <div
-      onClick={onClick}
+      onClick={disabled ? undefined : onClick}
       className={`
         relative flex h-[90px] cursor-pointer gap-3 rounded-2xl border p-3
         transition duration-300 hover:scale-[1.02]
@@ -90,6 +91,7 @@ export default function CategorySelector({ name = "categories" }) {
         <div
           onClick={(e) => {
             e.stopPropagation();
+            if (disabled) return;
             remove(item.id);
           }}
           className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500"

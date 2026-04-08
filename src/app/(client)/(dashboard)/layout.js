@@ -21,6 +21,7 @@ export default function Layout({ children }) {
 
   return (
     <div className="h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+      
       <ToastProvider>
         <div className="flex h-full overflow-hidden">
           {/* Sidebar */}
@@ -49,5 +50,6 @@ export default function Layout({ children }) {
         </div>
       </ToastProvider>
     </div>
+    
   );
 }

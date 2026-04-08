@@ -19,3 +19,17 @@ export const profileDetailSchema = z.object({
   bio: z.string().optional(),
   country: z.string().optional(),
 });
+
+
+export const promptpaySchema = z.object({
+  promptpayType: z.string().optional(),
+  promptpayValue: z.string().optional(),
+  enabled: z.boolean().optional(),
+});
+
+export const bankSchema = z.object({
+  bankType: z.string().optional(),
+  bankValue: z.string().optional(),
+  bankTag: z.string().optional(),
+  enabled: z.boolean().optional(),
+});

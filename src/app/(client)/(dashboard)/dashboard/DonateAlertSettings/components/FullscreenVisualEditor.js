@@ -23,8 +23,8 @@ import {
   SelectTrigger, SelectValue,
 } from "@/components/ui/select";
 import AlertPreview from "./AlertPreview";
-import { playAlertSound } from "../../../../../utils/audioUtils";
-import { thaiGoogleFonts, fontWeights } from "../components/utils/fontUtils";
+import { playAlertSound } from "../../../../../../utils/audioUtils";
+import { thaiGoogleFonts, fontWeights } from "./utils/fontUtils";
 
 /* ─────────────────────────────────────────────
    FONT UTILITIES  (ไม่เปลี่ยน)
