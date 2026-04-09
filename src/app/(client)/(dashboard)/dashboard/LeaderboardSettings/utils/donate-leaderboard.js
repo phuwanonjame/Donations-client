@@ -1,3 +1,23 @@
+const normalizeMetadataFontWeight = (weight) => {
+  if (typeof weight === 'number') return `${weight}`;
+  const normalized = String(weight || '').trim().toLowerCase();
+  const weightMap = {
+    thin: '100',
+    extralight: '200',
+    'extra-light': '200',
+    light: '300',
+    normal: '400',
+    medium: '500',
+    semibold: '600',
+    'semi-bold': '600',
+    bold: '700',
+    extrabold: '800',
+    'extra-bold': '800',
+    black: '900',
+  };
+  return weightMap[normalized] || weight || '400';
+};
+
 export const toThaiDate = (dateString) => {
   if (!dateString) return '';
   const date = new Date(dateString);
@@ -17,7 +37,7 @@ export const fromThaiDate = (thaiDateString) => {
   const timePart = parts[1] || '00:00';
   const [day, month, thaiYear] = datePart.split('/');
   if (!day || !month || !thaiYear) return '';
-  const year = parseInt(thaiYear) - 543;
+  const year = parseInt(thaiYear, 10) - 543;
   const paddedMonth = month.toString().padStart(2, '0');
   const paddedDay = day.toString().padStart(2, '0');
   return `${year}-${paddedMonth}-${paddedDay}T${timePart}`;
@@ -40,8 +60,8 @@ export const toMetadata = (settings) => {
       title: {
         text: settings.titleText,
         fontFamily: settings.titleFontFamily,
-        fontWeight: settings.titleFontWeight === 'bold' ? '700' : settings.titleFontWeight === 'medium' ? '500' : '400',
-        fontSize: parseInt(settings.titleFontSize),
+        fontWeight: normalizeMetadataFontWeight(settings.titleFontWeight),
+        fontSize: parseInt(settings.titleFontSize, 10),
         color: settings.titleColor,
         strokeWidth: parseFloat(settings.titleStrokeWidth),
         strokeColor: settings.titleStrokeColor,
@@ -50,8 +70,8 @@ export const toMetadata = (settings) => {
       list: {
         count: settings.maxEntries,
         fontFamily: settings.listFontFamily,
-        fontWeight: settings.listFontWeight === 'bold' ? '700' : settings.listFontWeight === 'medium' ? '500' : '400',
-        fontSize: parseInt(settings.listFontSize),
+        fontWeight: normalizeMetadataFontWeight(settings.listFontWeight),
+        fontSize: parseInt(settings.listFontSize, 10),
         color: settings.listColor,
         amountColor: settings.listAmountColor,
         strokeWidth: parseFloat(settings.listStrokeWidth),
@@ -63,22 +83,30 @@ export const toMetadata = (settings) => {
       endAt: settings.isUseEndAt ? new Date(settings.endAt).getTime() : null,
       podium: {
         firstFontFamily: settings.podiumFirstFontFamily,
-        firstFontWeight: settings.podiumFirstFontWeight === 'bold' ? '700' : '500',
+        firstFontWeight: normalizeMetadataFontWeight(settings.podiumFirstFontWeight),
+        firstUsernameFontSize: parseInt(settings.podiumFirstUsernameFontSize, 10),
+        firstUsernameColor: settings.podiumFirstUsernameColor,
+        firstAmountFontSize: parseInt(settings.podiumFirstAmountFontSize, 10),
+        firstAmountColor: settings.podiumFirstAmountColor,
         firstStrokeWidth: parseFloat(settings.podiumFirstStrokeWidth),
         firstStrokeColor: settings.podiumFirstStrokeColor,
         firstShine: settings.podiumFirstShine,
-        firstUsernameFontSize: parseInt(settings.podiumFirstUsernameFontSize),
-        firstUsernameColor: settings.podiumFirstUsernameColor,
-        firstAmountFontSize: parseInt(settings.podiumFirstAmountFontSize),
-        firstAmountColor: settings.podiumFirstAmountColor,
         secondFontFamily: settings.podiumSecondFontFamily,
-        secondFontWeight: settings.podiumSecondFontWeight === 'bold' ? '700' : '500',
+        secondFontWeight: normalizeMetadataFontWeight(settings.podiumSecondFontWeight),
+        secondUsernameFontSize: parseInt(settings.podiumSecondUsernameFontSize, 10),
+        secondUsernameColor: settings.podiumSecondUsernameColor,
+        secondAmountFontSize: parseInt(settings.podiumSecondAmountFontSize, 10),
+        secondAmountColor: settings.podiumSecondAmountColor,
         secondStrokeWidth: parseFloat(settings.podiumSecondStrokeWidth),
         secondStrokeColor: settings.podiumSecondStrokeColor,
-        secondUsernameFontSize: parseInt(settings.podiumSecondUsernameFontSize),
-        secondUsernameColor: settings.podiumSecondUsernameColor,
-        secondAmountFontSize: parseInt(settings.podiumSecondAmountFontSize),
-        secondAmountColor: settings.podiumSecondAmountColor,
+        thirdFontFamily: settings.podiumThirdFontFamily,
+        thirdFontWeight: normalizeMetadataFontWeight(settings.podiumThirdFontWeight),
+        thirdUsernameFontSize: parseInt(settings.podiumThirdUsernameFontSize, 10),
+        thirdUsernameColor: settings.podiumThirdUsernameColor,
+        thirdAmountFontSize: parseInt(settings.podiumThirdAmountFontSize, 10),
+        thirdAmountColor: settings.podiumThirdAmountColor,
+        thirdStrokeWidth: parseFloat(settings.podiumThirdStrokeWidth),
+        thirdStrokeColor: settings.podiumThirdStrokeColor,
       },
     },
   };
