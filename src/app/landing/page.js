@@ -4,20 +4,20 @@ import HeroSection from '@/components/landing/HeroSection';
 import FeaturesSection from '@/components/landing/FeaturesSection';
 import PricingSection from '@/components/landing/PricingSection';
 import Footer from '@/components/landing/Footer';
-import  LanguageProvider  from '../../providers/LanguageProvider';
+
+// ไม่ต้อง import LanguageProvider มาที่นี่แล้ว
 
 export default function Landing() {
   return (
-    <LanguageProvider>
-      <div className="min-h-screen bg-[#0A1628]">
-        <Header />
-        <main>
-          <HeroSection />
-          <FeaturesSection />
-          <PricingSection />
-        </main>
-        <Footer />
-      </div>
-    </LanguageProvider>
+    // ลบ <LanguageProvider> ออกจากที่นี่
+    <div className="min-h-screen bg-[#0A1628]">
+      <Header />
+      <main>
+        <HeroSection />
+        <FeaturesSection />
+        <PricingSection />
+      </main>
+      <Footer />
+    </div>
   );
 }
