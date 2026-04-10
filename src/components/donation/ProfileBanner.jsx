@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 
 export default function ProfileBanner({ profile }) {
   return (
-    <div className="relative h-56 md:h-72 overflow-hidden">
+    <div className="relative h-56 md:h-100 overflow-hidden">
       {/* Animated gradient background */}
       <div
         className="absolute inset-0"

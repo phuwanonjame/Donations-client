@@ -1,5 +1,14 @@
 import { motion } from "framer-motion";
-import { Facebook, Instagram, Twitter, Youtube, Globe, Music, RefreshCw } from "lucide-react";
+import { Wifi, WifiOff, ExternalLink, Copy } from "lucide-react";
+import { toast } from "sonner";
+import {
+  Facebook,
+  Instagram,
+  Twitter,
+  Youtube,
+  Globe,
+  Music,
+} from "lucide-react";
 
 const socialIcons = {
   facebook: Facebook,
@@ -10,87 +19,157 @@ const socialIcons = {
   default: Globe,
 };
 
-export default function ProfileHeader({ profile }) {
-  const initials = profile.name?.slice(0, 2) || "??";
+export default function ProfileHeader({ profile, themeColors, festival }) {
+  const glowColor = themeColors?.glow || "#7c3aed";
+  const primaryColor = themeColors?.primary || "#7c3aed";
+
+  const copyLink = () => {
+    navigator.clipboard.writeText(window.location.href);
+    toast.success("คัดลอกลิงก์แล้ว!");
+  };
 
   return (
-    <div className="flex flex-wrap gap-5 items-end -mt-16 md:-mt-20 mb-8 relative z-10">
-      {/* Avatar */}
-      <motion.div
-        initial={{ scale: 0.8, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        transition={{ type: "spring", stiffness: 200, delay: 0.1 }}
-        className="relative group"
-      >
-        <div className="w-24 h-24 md:w-28 md:h-28 rounded-2xl ring-4 ring-background overflow-hidden flex-shrink-0 glow-primary">
-          {profile.avatarUrl ? (
-            <img
-              src={profile.avatarUrl}
-              alt={profile.name}
-              className="object-cover w-full h-full"
-            />
-          ) : (
-            <div className="w-full h-full bg-gradient-to-br from-purple-500 via-pink-500 to-cyan-400 flex items-center justify-center">
-              <span className="text-white text-3xl font-heading font-bold">
-                {initials}
-              </span>
-            </div>
-          )}
-        </div>
-        {/* Online indicator */}
-        {profile.isOnline && (
-          <div className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-emerald-500 border-3 border-background flex items-center justify-center">
-            <div className="w-2 h-2 rounded-full bg-white animate-pulse" />
-          </div>
+    <motion.div
+      initial={{ opacity: 0, y: -20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="relative space-y-4"
+    >
+      {/* Banner */}
+      <div className="relative h-48 sm:h-80 sm:block hidden rounded-2xl overflow-hidden">
+        {profile.banner_url ? (
+          <img
+            src={profile.banner_url}
+            alt="banner"
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div
+            className="w-full h-full"
+            style={{
+              background: `linear-gradient(135deg, ${primaryColor}40, ${glowColor}20, ${primaryColor}40)`,
+            }}
+          />
         )}
-      </motion.div>
 
-      {/* Info */}
-      <motion.div
-        initial={{ y: 20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ delay: 0.2 }}
-        className="flex-1 min-w-[200px] pb-1"
-      >
-        <h1 className="text-3xl md:text-4xl font-heading font-bold text-foreground leading-tight text-glow">
-          {profile.name}
-        </h1>
-        <p className="text-sm text-muted-foreground mt-0.5 font-body">
-          {profile.handle}
-        </p>
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 
-        {/* Status badge */}
-        <div className="inline-flex items-center gap-1.5 mt-2 bg-emerald-500/10 text-emerald-400 text-xs font-medium px-3 py-1.5 rounded-full border border-emerald-500/20">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-          {profile.isOnline ? "🟢 LIVE NOW" : "ออฟไลน์"}
-          <RefreshCw className="w-3 h-3 ml-1 opacity-50 cursor-pointer hover:opacity-100 transition-opacity" />
-        </div>
+        {/* Festival */}
+        {festival && festival.id !== "default" && (
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className="absolute top-4 right-4 px-3 py-1.5 rounded-full text-xs font-bold text-white flex items-center gap-1.5 backdrop-blur-md"
+            style={{
+              background: `${primaryColor}80`,
+              border: `1px solid ${primaryColor}60`,
+            }}
+          >
+            <span>{festival.emoji}</span>
+            <span>{festival.nameLocal}</span>
+          </motion.div>
+        )}
+      </div>
 
-        {/* Social links */}
-        <div className="flex flex-wrap gap-2 mt-3">
-          {profile.socials?.map((s) => {
-            const Icon = socialIcons[s.icon] || socialIcons.default;
-            return (
-              <a
-                key={s.label}
-                href={s.href}
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1.5 text-xs text-muted-foreground border border-border bg-card hover:border-primary/50 hover:text-primary px-3 py-1.5 rounded-full transition-all duration-300 hover:glow-primary"
+      {/* Main Info */}
+      <div className="relative sm:-mt-10 px-4 sm:px-6 flex flex-col sm:flex-row gap-4 items-center sm:items-end">
+        {/* Avatar */}
+        <div className="relative">
+          <div
+            className="w-28 h-28 rounded-2xl overflow-hidden border-4"
+            style={{
+              borderColor: primaryColor,
+              boxShadow: `0 0 25px ${glowColor}50`,
+            }}
+          >
+            {profile.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt={profile.display_name}
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div
+                className="w-full h-full flex items-center justify-center text-3xl font-black text-white"
+                style={{
+                  background: `linear-gradient(135deg, ${primaryColor}, ${glowColor})`,
+                }}
               >
-                <Icon className="w-3 h-3" />
-                {s.label}
-              </a>
-            );
-          })}
+                {profile.name?.[0] || "?"}
+              </div>
+            )}
+          </div>
+
+          {/* Status */}
+          <div
+            className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-black flex items-center justify-center ${
+              profile.is_online ? "bg-green-500" : "bg-gray-500"
+            }`}
+          >
+            {profile.is_online ? (
+              <Wifi className="w-3 h-3 text-white" />
+            ) : (
+              <WifiOff className="w-3 h-3 text-white" />
+            )}
+          </div>
         </div>
 
-        {profile.bio && (
-          <p className="mt-3 text-sm text-muted-foreground max-w-md leading-relaxed">
-            {profile.bio}
-          </p>
-        )}
-      </motion.div>
-    </div>
+        {/* Text Info */}
+        <div className="flex-1 text-center sm:text-left">
+          <h1 className="text-2xl sm:text-3xl font-black text-white">
+            {profile.name}
+          </h1>
+
+          <p className="text-white/50 text-sm font-mono">@{profile.handle}</p>
+
+          {/* Status */}
+          <div className="mt-2 flex items-center gap-2 justify-center sm:justify-start">
+            <span
+              className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                profile.is_online
+                  ? "bg-green-500/20 text-green-400"
+                  : "bg-gray-500/20 text-gray-400"
+              }`}
+            >
+              <span
+                className={`w-1.5 h-1.5 rounded-full ${
+                  profile.is_online
+                    ? "bg-green-400 animate-pulse"
+                    : "bg-gray-500"
+                }`}
+              />
+              {profile.is_online ? "กำลังสตรีมอยู่" : "ออฟไลน์"}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Social */}
+      <div className="ml-4 px-4 sm:px-6 flex flex-wrap gap-2">
+        {profile.socials?.map((s) => {
+          const Icon = socialIcons[s.icon] || socialIcons.default;
+          return (
+            <a
+              key={s.label}
+              href={s.href}
+              target="_blank"
+              rel="noreferrer"
+              className="text-white/80 flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary/50 transition"
+            >
+              <Icon className="w-4 h-4" />
+              {s.label}
+            </a>
+          );
+        })}
+      </div>
+
+      {/* Bio */}
+      {profile.bio && (
+        <div className="px-4 sm:px-6 text-white/80 text-sm max-w-2xl">
+        <p className="px-4 sm:px-6 text-white/60 text-sm max-w-2xl">
+          {profile.bio}
+        </p>
+        </div>
+      )}
+    </motion.div>
   );
 }
