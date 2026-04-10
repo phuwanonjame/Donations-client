@@ -12,6 +12,8 @@ import ProductPromo from "@/components/donation/ProductPromo";
 import RecentDonations from "@/components/donation/RecentDonations";
 import DonationForm from "@/components/donation/DonationForm";
 import ProfileHeader2 from "@/components/donation/ProfileHeader2";
+import MusicUploadPanel from "@/components/donation/MusicUploadPanel";
+import YouTubeAudioPlayer from "@/components/donation/YouTubeAudioPlayer";
 
 const PROFILE = {
   name: "x86",
@@ -148,6 +150,7 @@ export default function DonateProfile() {
             </div>
 
             <div className="lg:col-span-4 space-y-5 order-1 lg:order-2">
+              <MusicUploadPanel />
               <MusicPlayer />
               <PhotoGallery />
               <StreamSchedule />
