@@ -1,19 +1,19 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import ProfileBanner from "@/components/donation/ProfileBanner";
-import ProfileHeader from "@/components/donation/ProfileHeader";
-import MusicPlayer from "@/components/donation/MusicPlayer";
-import VideoHighlights from "@/components/donation/VideoHighlights";
-import DailyContent from "@/components/donation/DailyContent";
-import PhotoGallery from "@/components/donation/PhotoGallery";
-import StreamSchedule from "@/components/donation/StreamSchedule";
-import ProductPromo from "@/components/donation/ProductPromo";
-import RecentDonations from "@/components/donation/RecentDonations";
-import DonationForm from "@/components/donation/DonationForm";
-import ProfileHeader2 from "@/components/donation/ProfileHeader2";
-import MusicUploadPanel from "@/components/donation/MusicUploadPanel";
-import YouTubeAudioPlayer from "@/components/donation/YouTubeAudioPlayer";
+import ProfileBanner from "@/components/donation/view/ProfileBanner";
+import ProfileHeader from "@/components/donation/view/ProfileHeader";
+import MusicPlayer from "@/components/donation/view/MusicPlayer";
+import VideoHighlights from "@/components/donation/view/VideoHighlights";
+import DailyContent from "@/components/donation/view/DailyContent";
+import PhotoGallery from "@/components/donation/view/PhotoGallery";
+import StreamSchedule from "@/components/donation/view/StreamSchedule";
+import ProductPromo from "@/components/donation/view/ProductPromo";
+import RecentDonations from "@/components/donation/view/RecentDonations";
+import DonationForm from "@/components/donation/view/DonationForm";
+import ProfileHeader2 from "@/components/donation/view/ProfileHeader2";
+import MusicUploadPanel from "@/components/donation/edit/MusicUploadPanel";
+import YouTubeAudioPlayer from "@/components/donation/view/YouTubeAudioPlayer";
 
 const PROFILE = {
   name: "x86",
