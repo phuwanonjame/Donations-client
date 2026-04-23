@@ -76,6 +76,8 @@ export const toMetadata = (settings) => {
         amountColor: settings.listAmountColor,
         strokeWidth: parseFloat(settings.listStrokeWidth),
         strokeColor: settings.listStrokeColor,
+        backgroundColor: settings.listBackgroundColor,
+        borderColor: settings.listBorderColor,
       },
       isUseStartAt: settings.isUseStartAt,
       startAt: settings.isUseStartAt ? new Date(settings.startAt).getTime() : null,
@@ -91,6 +93,9 @@ export const toMetadata = (settings) => {
         firstStrokeWidth: parseFloat(settings.podiumFirstStrokeWidth),
         firstStrokeColor: settings.podiumFirstStrokeColor,
         firstShine: settings.podiumFirstShine,
+        firstBackgroundColor: settings.podiumFirstBackgroundColor,
+        firstPedestalColor: settings.podiumFirstPedestalColor,
+        firstImage: settings.podiumFirstImage, // เพิ่ม
         secondFontFamily: settings.podiumSecondFontFamily,
         secondFontWeight: normalizeMetadataFontWeight(settings.podiumSecondFontWeight),
         secondUsernameFontSize: parseInt(settings.podiumSecondUsernameFontSize, 10),
@@ -99,6 +104,9 @@ export const toMetadata = (settings) => {
         secondAmountColor: settings.podiumSecondAmountColor,
         secondStrokeWidth: parseFloat(settings.podiumSecondStrokeWidth),
         secondStrokeColor: settings.podiumSecondStrokeColor,
+        secondBackgroundColor: settings.podiumSecondBackgroundColor,
+        secondPedestalColor: settings.podiumSecondPedestalColor,
+        secondImage: settings.podiumSecondImage, // เพิ่ม
         thirdFontFamily: settings.podiumThirdFontFamily,
         thirdFontWeight: normalizeMetadataFontWeight(settings.podiumThirdFontWeight),
         thirdUsernameFontSize: parseInt(settings.podiumThirdUsernameFontSize, 10),
@@ -107,6 +115,9 @@ export const toMetadata = (settings) => {
         thirdAmountColor: settings.podiumThirdAmountColor,
         thirdStrokeWidth: parseFloat(settings.podiumThirdStrokeWidth),
         thirdStrokeColor: settings.podiumThirdStrokeColor,
+        thirdBackgroundColor: settings.podiumThirdBackgroundColor,
+        thirdPedestalColor: settings.podiumThirdPedestalColor,
+        thirdImage: settings.podiumThirdImage, // เพิ่ม
       },
     },
   };

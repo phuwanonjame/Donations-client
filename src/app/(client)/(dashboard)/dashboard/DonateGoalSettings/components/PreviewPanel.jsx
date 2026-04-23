@@ -38,7 +38,7 @@ const PreviewPanel = React.memo(({ settings, update, onSave }) => {
   }, [settings.type, settings.goalAmount, settings.currentAmount, settings.progressColor, settings.goalColor]);
 
   return (
-    <SectionWrapper delay={0.3} className="sticky top-24">
+    <SectionWrapper delay={0.3}>
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-lg font-semibold text-white">Preview</h3>
 
