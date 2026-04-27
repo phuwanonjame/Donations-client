@@ -18,6 +18,10 @@ import MusicManager from "@/components/donation/edit/MusicManager";
 import PhotoGalleryManager from "@/components/donation/edit/PhotoGalleryManager";
 import StreamScheduleManager from "@/components/donation/edit/StreamScheduleManager";
 import DailyContentManager from "@/components/donation/edit/DailyContentManager";
+import VideoHighlightsManager from "@/components/donation/edit/VedioHightlightsManager";
+import ProfileHeaderManager from "@/components/donation/edit/ProfileHeaderManager";
+import WallpaperManager from "@/components/donation/edit/WallpaperManager";
+import ProfileTextManager from "@/components/donation/edit/ProfileTextManager";
 
 const PROFILE = {
   name: "x86",
@@ -129,19 +133,19 @@ export default function DonateProfile() {
 
         <div className="max-w-6xl mx-auto px-4 pt-6 pb-16">
           <div className="mb-5">
-            {template === 1 ? (
-              <ProfileHeader profile={PROFILE} />
-            ) : (
-              <ProfileHeader2 profile={PROFILE} />
-            )}
+
+              <ProfileHeaderManager profile={PROFILE} />
+
+
           </div>
 
 
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start">
             <div className="lg:col-span-8 space-y-5 order-2 lg:order-1">
-
-              <VideoHighlights />
+              <WallpaperManager />
+              <ProfileTextManager />
+              <VideoHighlightsManager />
               <DailyContentManager />
             </div>
 
