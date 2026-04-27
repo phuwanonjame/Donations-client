@@ -54,6 +54,9 @@ export const defaultSettings = {
   listAmountColor: '#f59e0b',
   listStrokeWidth: '0px',
   listStrokeColor: '#000000',
+  listShowBackground: false,
+  listBackgroundColor: '#000000',
+  listBorderColor: 'rgba(0,0,0,0.12)',
 
   podiumFirstUsernameFontSize: '24px',
   podiumFirstUsernameColor: '#ffffff',
@@ -64,6 +67,9 @@ export const defaultSettings = {
   podiumFirstStrokeWidth: '0px',
   podiumFirstStrokeColor: '#000000',
   podiumFirstShine: true,
+  podiumFirstBackgroundColor: '',
+  podiumFirstPedestalColor: '#D3D1C7',
+  podiumFirstImage: '',
 
   podiumSecondUsernameFontSize: '20px',
   podiumSecondUsernameColor: '#ffffff',
@@ -73,6 +79,21 @@ export const defaultSettings = {
   podiumSecondFontWeight: 'bold',
   podiumSecondStrokeWidth: '0px',
   podiumSecondStrokeColor: '#000000',
+  podiumSecondBackgroundColor: '',
+  podiumSecondPedestalColor: '#B4B2A9',
+  podiumSecondImage: '',
+
+  podiumThirdUsernameFontSize: '18px',
+  podiumThirdUsernameColor: '#ffffff',
+  podiumThirdAmountFontSize: '20px',
+  podiumThirdAmountColor: '#f59e0b',
+  podiumThirdFontFamily: 'ibm-plex-sans-thai',
+  podiumThirdFontWeight: 'bold',
+  podiumThirdStrokeWidth: '0px',
+  podiumThirdStrokeColor: '#000000',
+  podiumThirdBackgroundColor: '',
+  podiumThirdPedestalColor: '#B4B2A9',
+  podiumThirdImage: '',
 
   backgroundColor: '#1e293b',
   accentColor: '#f59e0b',
@@ -81,4 +102,284 @@ export const defaultSettings = {
   startAt: new Date(Date.now()).toISOString().slice(0, 16),
   isUseEndAt: false,
   endAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
+};
+
+// Helper: แปลง font family id เป็นชื่อเต็ม
+const getFontFamilyName = (id) => {
+  const found = fontFamilies.find(f => f.id === id);
+  return found ? found.name : id;
+};
+
+const normalizeMetadataFontWeight = (weight) => {
+  if (typeof weight === 'number') return `${weight}`;
+  const normalized = String(weight || '').trim().toLowerCase();
+  const weightMap = {
+    thin: '100',
+    extralight: '200',
+    'extra-light': '200',
+    light: '300',
+    normal: '400',
+    medium: '500',
+    semibold: '600',
+    'semi-bold': '600',
+    bold: '700',
+    extrabold: '800',
+    'extra-bold': '800',
+    black: '900',
+  };
+  return weightMap[normalized] || weight || '400';
+};
+
+export const toThaiDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  if (isNaN(date.getTime())) return '';
+  const year = date.getFullYear() + 543;
+  const month = date.getMonth() + 1;
+  const day = date.getDate();
+  const hours = date.getHours();
+  const minutes = date.getMinutes();
+  return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year} ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+};
+
+export const fromThaiDate = (thaiDateString) => {
+  if (!thaiDateString) return '';
+  const parts = thaiDateString.trim().split(' ');
+  const datePart = parts[0];
+  const timePart = parts[1] || '00:00';
+  const [day, month, thaiYear] = datePart.split('/');
+  if (!day || !month || !thaiYear) return '';
+  const year = parseInt(thaiYear, 10) - 543;
+  const paddedMonth = month.toString().padStart(2, '0');
+  const paddedDay = day.toString().padStart(2, '0');
+  return `${year}-${paddedMonth}-${paddedDay}T${timePart}`;
+};
+
+export const getResetDates = () => {
+  const now = new Date();
+  const end = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  return {
+    startAt: now.toISOString().slice(0, 16),
+    endAt: end.toISOString().slice(0, 16),
+  };
+};
+
+export const toMetadata = (settings) => {
+  return {
+    type: 'LEADERBOARD',
+    metadata: {
+      // ── Layout & Display ──────────────────────────────────────
+      type: settings.layoutStyle || 'podium',
+      timeRange: settings.timeRange,
+      podiumLayoutVariant: settings.podiumLayoutVariant || 'classic',
+      enabled: settings.enabled,
+      maxEntries: settings.maxEntries,
+
+      // ── Display Toggles ───────────────────────────────────────
+      showRank: settings.showRank,
+      showAmount: settings.showAmount,
+      showAvatar: settings.showAvatar,
+      animateEntries: settings.animateEntries,
+
+      // ── Colors ────────────────────────────────────────────────
+      backgroundColor: settings.backgroundColor,
+      accentColor: settings.accentColor,
+
+      // ── Title ────────────────────────────────────────────────
+      title: {
+        text: settings.titleText,
+        fontFamily: getFontFamilyName(settings.titleFontFamily),
+        fontWeight: normalizeMetadataFontWeight(settings.titleFontWeight),
+        fontSize: parseInt(settings.titleFontSize, 10),
+        color: settings.titleColor,
+        strokeWidth: parseFloat(settings.titleStrokeWidth),
+        strokeColor: settings.titleStrokeColor,
+        alignment: settings.titleAlignment,
+      },
+
+      // ── List ─────────────────────────────────────────────────
+      list: {
+        count: settings.maxEntries,
+        fontFamily: getFontFamilyName(settings.listFontFamily),
+        fontWeight: normalizeMetadataFontWeight(settings.listFontWeight),
+        fontSize: parseInt(settings.listFontSize, 10),
+        color: settings.listColor,
+        amountColor: settings.listAmountColor,
+        strokeWidth: parseFloat(settings.listStrokeWidth),
+        strokeColor: settings.listStrokeColor,
+        showBackground: settings.listShowBackground,
+        backgroundColor: settings.listBackgroundColor,
+        borderColor: settings.listBorderColor,
+      },
+
+      // ── Date Range ────────────────────────────────────────────
+      isUseStartAt: settings.isUseStartAt,
+      startAt: settings.isUseStartAt ? new Date(settings.startAt).getTime() : null,
+      isUseEndAt: settings.isUseEndAt,
+      endAt: settings.isUseEndAt ? new Date(settings.endAt).getTime() : null,
+
+      // ── Podium ────────────────────────────────────────────────
+      podium: {
+        // Rank 1
+        firstFontFamily: getFontFamilyName(settings.podiumFirstFontFamily),
+        firstFontWeight: normalizeMetadataFontWeight(settings.podiumFirstFontWeight),
+        firstUsernameFontSize: parseInt(settings.podiumFirstUsernameFontSize, 10),
+        firstUsernameColor: settings.podiumFirstUsernameColor,
+        firstAmountFontSize: parseInt(settings.podiumFirstAmountFontSize, 10),
+        firstAmountColor: settings.podiumFirstAmountColor,
+        firstStrokeWidth: parseFloat(settings.podiumFirstStrokeWidth),
+        firstStrokeColor: settings.podiumFirstStrokeColor,
+        firstShine: settings.podiumFirstShine,
+        firstBackgroundColor: settings.podiumFirstBackgroundColor,
+        firstPedestalColor: settings.podiumFirstPedestalColor,
+        firstImage: settings.podiumFirstImage,
+        firstCardBorderColor: settings.podiumFirstCardBorderColor,
+        firstCardBorderWidth: settings.podiumFirstCardBorderWidth != null ? Number(settings.podiumFirstCardBorderWidth) : undefined,
+        firstCardBorderRadius: settings.podiumFirstCardBorderRadius != null ? Number(settings.podiumFirstCardBorderRadius) : undefined,
+        firstCardBorderStyle: settings.podiumFirstCardBorderStyle,
+        firstCardPaddingX: settings.podiumFirstCardPaddingX != null ? Number(settings.podiumFirstCardPaddingX) : undefined,
+        firstCardPaddingBottom: settings.podiumFirstCardPaddingBottom != null ? Number(settings.podiumFirstCardPaddingBottom) : undefined,
+        firstPedestalHeight: settings.podiumFirstPedestalHeight != null ? Number(settings.podiumFirstPedestalHeight) : undefined,
+        firstPedestalShape: settings.podiumFirstPedestalShape,
+        firstShowPedestalBase: settings.podiumFirstShowPedestalBase,
+        firstPedestalBaseHeight: settings.podiumFirstPedestalBaseHeight != null ? Number(settings.podiumFirstPedestalBaseHeight) : undefined,
+        firstPedestalBaseColor: settings.podiumFirstPedestalBaseColor,
+        firstShowBadge: settings.podiumFirstShowBadge,
+        firstBadgeType: settings.podiumFirstBadgeType,
+        firstBadgeSize: settings.podiumFirstBadgeSize != null ? Number(settings.podiumFirstBadgeSize) : undefined,
+        firstBadgeGradientFrom: settings.podiumFirstBadgeGradientFrom,
+        firstBadgeGradientTo: settings.podiumFirstBadgeGradientTo,
+        firstBadgeTextColor: settings.podiumFirstBadgeTextColor,
+        firstBadgeBorderColor: settings.podiumFirstBadgeBorderColor,
+        firstBadgeBorderWidth: settings.podiumFirstBadgeBorderWidth != null ? Number(settings.podiumFirstBadgeBorderWidth) : undefined,
+        firstBadgeGlowColor: settings.podiumFirstBadgeGlowColor,
+        firstBadgeOffsetY: settings.podiumFirstBadgeOffsetY != null ? Number(settings.podiumFirstBadgeOffsetY) : undefined,
+        firstImageOpacity: settings.podiumFirstImageOpacity != null ? Number(settings.podiumFirstImageOpacity) : undefined,
+        firstImageFit: settings.podiumFirstImageFit,
+        firstImagePosition: settings.podiumFirstImagePosition,
+        firstShowOverlay: settings.podiumFirstShowOverlay,
+        firstOverlayColor: settings.podiumFirstOverlayColor,
+        firstOverlayOpacity: settings.podiumFirstOverlayOpacity != null ? Number(settings.podiumFirstOverlayOpacity) : undefined,
+        firstOverlayDirection: settings.podiumFirstOverlayDirection,
+        firstGlowColor: settings.podiumFirstGlowColor,
+        firstGlowBlur: settings.podiumFirstGlowBlur != null ? Number(settings.podiumFirstGlowBlur) : undefined,
+        firstTextAlign: settings.podiumFirstTextAlign,
+        firstTextVerticalAlign: settings.podiumFirstTextVerticalAlign,
+        firstUsernameLetterSpacing: settings.podiumFirstUsernameLetterSpacing,
+        firstUsernameTransform: settings.podiumFirstUsernameTransform,
+        firstUsernameLineHeight: settings.podiumFirstUsernameLineHeight,
+        firstAmountPrefix: settings.podiumFirstAmountPrefix,
+        firstShowExtraLabel: settings.podiumFirstShowExtraLabel,
+        firstExtraLabelText: settings.podiumFirstExtraLabelText,
+        firstExtraLabelColor: settings.podiumFirstExtraLabelColor,
+        firstExtraLabelFontSize: settings.podiumFirstExtraLabelFontSize,
+
+        // Rank 2
+        secondFontFamily: getFontFamilyName(settings.podiumSecondFontFamily),
+        secondFontWeight: normalizeMetadataFontWeight(settings.podiumSecondFontWeight),
+        secondUsernameFontSize: parseInt(settings.podiumSecondUsernameFontSize, 10),
+        secondUsernameColor: settings.podiumSecondUsernameColor,
+        secondAmountFontSize: parseInt(settings.podiumSecondAmountFontSize, 10),
+        secondAmountColor: settings.podiumSecondAmountColor,
+        secondStrokeWidth: parseFloat(settings.podiumSecondStrokeWidth),
+        secondStrokeColor: settings.podiumSecondStrokeColor,
+        secondBackgroundColor: settings.podiumSecondBackgroundColor,
+        secondPedestalColor: settings.podiumSecondPedestalColor,
+        secondImage: settings.podiumSecondImage,
+        secondCardBorderColor: settings.podiumSecondCardBorderColor,
+        secondCardBorderWidth: settings.podiumSecondCardBorderWidth != null ? Number(settings.podiumSecondCardBorderWidth) : undefined,
+        secondCardBorderRadius: settings.podiumSecondCardBorderRadius != null ? Number(settings.podiumSecondCardBorderRadius) : undefined,
+        secondCardBorderStyle: settings.podiumSecondCardBorderStyle,
+        secondCardPaddingX: settings.podiumSecondCardPaddingX != null ? Number(settings.podiumSecondCardPaddingX) : undefined,
+        secondCardPaddingBottom: settings.podiumSecondCardPaddingBottom != null ? Number(settings.podiumSecondCardPaddingBottom) : undefined,
+        secondPedestalHeight: settings.podiumSecondPedestalHeight != null ? Number(settings.podiumSecondPedestalHeight) : undefined,
+        secondPedestalShape: settings.podiumSecondPedestalShape,
+        secondShowPedestalBase: settings.podiumSecondShowPedestalBase,
+        secondPedestalBaseHeight: settings.podiumSecondPedestalBaseHeight != null ? Number(settings.podiumSecondPedestalBaseHeight) : undefined,
+        secondPedestalBaseColor: settings.podiumSecondPedestalBaseColor,
+        secondShowBadge: settings.podiumSecondShowBadge,
+        secondBadgeType: settings.podiumSecondBadgeType,
+        secondBadgeSize: settings.podiumSecondBadgeSize != null ? Number(settings.podiumSecondBadgeSize) : undefined,
+        secondBadgeGradientFrom: settings.podiumSecondBadgeGradientFrom,
+        secondBadgeGradientTo: settings.podiumSecondBadgeGradientTo,
+        secondBadgeTextColor: settings.podiumSecondBadgeTextColor,
+        secondBadgeBorderColor: settings.podiumSecondBadgeBorderColor,
+        secondBadgeBorderWidth: settings.podiumSecondBadgeBorderWidth != null ? Number(settings.podiumSecondBadgeBorderWidth) : undefined,
+        secondBadgeGlowColor: settings.podiumSecondBadgeGlowColor,
+        secondBadgeOffsetY: settings.podiumSecondBadgeOffsetY != null ? Number(settings.podiumSecondBadgeOffsetY) : undefined,
+        secondImageOpacity: settings.podiumSecondImageOpacity != null ? Number(settings.podiumSecondImageOpacity) : undefined,
+        secondImageFit: settings.podiumSecondImageFit,
+        secondImagePosition: settings.podiumSecondImagePosition,
+        secondShowOverlay: settings.podiumSecondShowOverlay,
+        secondOverlayColor: settings.podiumSecondOverlayColor,
+        secondOverlayOpacity: settings.podiumSecondOverlayOpacity != null ? Number(settings.podiumSecondOverlayOpacity) : undefined,
+        secondOverlayDirection: settings.podiumSecondOverlayDirection,
+        secondGlowColor: settings.podiumSecondGlowColor,
+        secondGlowBlur: settings.podiumSecondGlowBlur != null ? Number(settings.podiumSecondGlowBlur) : undefined,
+        secondTextAlign: settings.podiumSecondTextAlign,
+        secondTextVerticalAlign: settings.podiumSecondTextVerticalAlign,
+        secondUsernameLetterSpacing: settings.podiumSecondUsernameLetterSpacing,
+        secondUsernameTransform: settings.podiumSecondUsernameTransform,
+        secondUsernameLineHeight: settings.podiumSecondUsernameLineHeight,
+        secondAmountPrefix: settings.podiumSecondAmountPrefix,
+        secondShowExtraLabel: settings.podiumSecondShowExtraLabel,
+        secondExtraLabelText: settings.podiumSecondExtraLabelText,
+        secondExtraLabelColor: settings.podiumSecondExtraLabelColor,
+        secondExtraLabelFontSize: settings.podiumSecondExtraLabelFontSize,
+
+        // Rank 3
+        thirdFontFamily: getFontFamilyName(settings.podiumThirdFontFamily),
+        thirdFontWeight: normalizeMetadataFontWeight(settings.podiumThirdFontWeight),
+        thirdUsernameFontSize: parseInt(settings.podiumThirdUsernameFontSize, 10),
+        thirdUsernameColor: settings.podiumThirdUsernameColor,
+        thirdAmountFontSize: parseInt(settings.podiumThirdAmountFontSize, 10),
+        thirdAmountColor: settings.podiumThirdAmountColor,
+        thirdStrokeWidth: parseFloat(settings.podiumThirdStrokeWidth),
+        thirdStrokeColor: settings.podiumThirdStrokeColor,
+        thirdBackgroundColor: settings.podiumThirdBackgroundColor,
+        thirdPedestalColor: settings.podiumThirdPedestalColor,
+        thirdImage: settings.podiumThirdImage,
+        thirdCardBorderColor: settings.podiumThirdCardBorderColor,
+        thirdCardBorderWidth: settings.podiumThirdCardBorderWidth != null ? Number(settings.podiumThirdCardBorderWidth) : undefined,
+        thirdCardBorderRadius: settings.podiumThirdCardBorderRadius != null ? Number(settings.podiumThirdCardBorderRadius) : undefined,
+        thirdCardBorderStyle: settings.podiumThirdCardBorderStyle,
+        thirdCardPaddingX: settings.podiumThirdCardPaddingX != null ? Number(settings.podiumThirdCardPaddingX) : undefined,
+        thirdCardPaddingBottom: settings.podiumThirdCardPaddingBottom != null ? Number(settings.podiumThirdCardPaddingBottom) : undefined,
+        thirdPedestalHeight: settings.podiumThirdPedestalHeight != null ? Number(settings.podiumThirdPedestalHeight) : undefined,
+        thirdPedestalShape: settings.podiumThirdPedestalShape,
+        thirdShowPedestalBase: settings.podiumThirdShowPedestalBase,
+        thirdPedestalBaseHeight: settings.podiumThirdPedestalBaseHeight != null ? Number(settings.podiumThirdPedestalBaseHeight) : undefined,
+        thirdPedestalBaseColor: settings.podiumThirdPedestalBaseColor,
+        thirdShowBadge: settings.podiumThirdShowBadge,
+        thirdBadgeType: settings.podiumThirdBadgeType,
+        thirdBadgeSize: settings.podiumThirdBadgeSize != null ? Number(settings.podiumThirdBadgeSize) : undefined,
+        thirdBadgeGradientFrom: settings.podiumThirdBadgeGradientFrom,
+        thirdBadgeGradientTo: settings.podiumThirdBadgeGradientTo,
+        thirdBadgeTextColor: settings.podiumThirdBadgeTextColor,
+        thirdBadgeBorderColor: settings.podiumThirdBadgeBorderColor,
+        thirdBadgeBorderWidth: settings.podiumThirdBadgeBorderWidth != null ? Number(settings.podiumThirdBadgeBorderWidth) : undefined,
+        thirdBadgeGlowColor: settings.podiumThirdBadgeGlowColor,
+        thirdBadgeOffsetY: settings.podiumThirdBadgeOffsetY != null ? Number(settings.podiumThirdBadgeOffsetY) : undefined,
+        thirdImageOpacity: settings.podiumThirdImageOpacity != null ? Number(settings.podiumThirdImageOpacity) : undefined,
+        thirdImageFit: settings.podiumThirdImageFit,
+        thirdImagePosition: settings.podiumThirdImagePosition,
+        thirdShowOverlay: settings.podiumThirdShowOverlay,
+        thirdOverlayColor: settings.podiumThirdOverlayColor,
+        thirdOverlayOpacity: settings.podiumThirdOverlayOpacity != null ? Number(settings.podiumThirdOverlayOpacity) : undefined,
+        thirdOverlayDirection: settings.podiumThirdOverlayDirection,
+        thirdGlowColor: settings.podiumThirdGlowColor,
+        thirdGlowBlur: settings.podiumThirdGlowBlur != null ? Number(settings.podiumThirdGlowBlur) : undefined,
+        thirdTextAlign: settings.podiumThirdTextAlign,
+        thirdTextVerticalAlign: settings.podiumThirdTextVerticalAlign,
+        thirdUsernameLetterSpacing: settings.podiumThirdUsernameLetterSpacing,
+        thirdUsernameTransform: settings.podiumThirdUsernameTransform,
+        thirdUsernameLineHeight: settings.podiumThirdUsernameLineHeight,
+        thirdAmountPrefix: settings.podiumThirdAmountPrefix,
+        thirdShowExtraLabel: settings.podiumThirdShowExtraLabel,
+        thirdExtraLabelText: settings.podiumThirdExtraLabelText,
+        thirdExtraLabelColor: settings.podiumThirdExtraLabelColor,
+        thirdExtraLabelFontSize: settings.podiumThirdExtraLabelFontSize,
+      },
+    },
+  };
 };

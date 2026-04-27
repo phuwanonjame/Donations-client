@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import {
-  Trophy, Clock, Users, Palette, Type, Crown, Medal, RotateCcw,
+  Trophy, Clock, Users, Palette, Type, Crown, Medal, RotateCcw, Image as ImageIcon,
 } from 'lucide-react';
 import ColorInput from './ColorInput';
 import DropdownSelect from './DropdownSelect';
@@ -42,7 +42,6 @@ const SwitchRow = ({ label, sublabel, checked, onCheckedChange }) => (
 
 const FontSizeSlider = ({ label, value, onChange }) => {
   const index = getFontSizeIndex(value, fontSizes);
-  
   return (
     <div className="space-y-2">
       <Label className="text-slate-300">{label}</Label>
@@ -152,9 +151,27 @@ export default function LeaderboardSettingsForm({ settings, update }) {
               onChange={v => update('accentColor', v)}
             />
             <ColorInput
-              label="Background"
+              label="Background (Container)"
               value={settings?.backgroundColor || '#1F2937'}
               onChange={v => update('backgroundColor', v)}
+            />
+            <ColorInput
+              label="List Background Color"
+              value={settings?.listBackgroundColor || '#ffffff'}
+              onChange={v => update('listBackgroundColor', v)}
+            />
+            <ColorInput
+              label="List Border Color"
+              value={settings?.listBorderColor || 'rgba(0,0,0,0.12)'}
+              onChange={v => update('listBorderColor', v)}
+            />
+          </div>
+          <div className="mb-6">
+            <SwitchRow
+              label="Show List Background"
+              sublabel="แสดงพื้นหลังของแต่ละรายการ (ใช้สีจาก List Background Color)"
+              checked={settings?.listShowBackground === true}
+              onCheckedChange={v => update('listShowBackground', v)}
             />
           </div>
           <div className="space-y-3">
@@ -175,7 +192,7 @@ export default function LeaderboardSettingsForm({ settings, update }) {
         </div>
       </SectionWrapper>
 
-      {/* Date Range */}
+      {/* Date Range (Filter) */}
       <SectionWrapper delay={0.25}>
         <div className="rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl p-4 sm:p-6">
           <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
@@ -320,7 +337,7 @@ export default function LeaderboardSettingsForm({ settings, update }) {
         </div>
       </SectionWrapper>
 
-      {/* Podium Settings */}
+      {/* Podium Settings with Image URL */}
       {isPodium && (
         <>
           <SectionWrapper delay={0.4}>
@@ -372,6 +389,27 @@ export default function LeaderboardSettingsForm({ settings, update }) {
                   value={settings?.podiumFirstStrokeColor || '#00000000'}
                   onChange={v => update('podiumFirstStrokeColor', v)}
                 />
+                <ColorInput
+                  label="Background Color"
+                  value={settings?.podiumFirstBackgroundColor || '#ffffff'}
+                  onChange={v => update('podiumFirstBackgroundColor', v)}
+                />
+                <ColorInput
+                  label="Pedestal Base Color"
+                  value={settings?.podiumFirstPedestalColor || '#D3D1C7'}
+                  onChange={v => update('podiumFirstPedestalColor', v)}
+                />
+                <div className="space-y-2">
+                  <Label className="text-slate-300 flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4" /> Badge Image URL
+                  </Label>
+                  <Input
+                    value={settings?.podiumFirstImage || ''}
+                    onChange={e => update('podiumFirstImage', e.target.value)}
+                    className="bg-slate-800/80 border-slate-700 text-white placeholder-slate-500"
+                    placeholder="https://example.com/badge.png"
+                  />
+                </div>
               </div>
               <div className="mt-4">
                 <SwitchRow
@@ -433,6 +471,27 @@ export default function LeaderboardSettingsForm({ settings, update }) {
                   value={settings?.podiumSecondStrokeColor || '#00000000'}
                   onChange={v => update('podiumSecondStrokeColor', v)}
                 />
+                <ColorInput
+                  label="Background Color"
+                  value={settings?.podiumSecondBackgroundColor || '#ffffff'}
+                  onChange={v => update('podiumSecondBackgroundColor', v)}
+                />
+                <ColorInput
+                  label="Pedestal Base Color"
+                  value={settings?.podiumSecondPedestalColor || '#B4B2A9'}
+                  onChange={v => update('podiumSecondPedestalColor', v)}
+                />
+                <div className="space-y-2">
+                  <Label className="text-slate-300 flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4" /> Badge Image URL
+                  </Label>
+                  <Input
+                    value={settings?.podiumSecondImage || ''}
+                    onChange={e => update('podiumSecondImage', e.target.value)}
+                    className="bg-slate-800/80 border-slate-700 text-white placeholder-slate-500"
+                    placeholder="https://example.com/badge.png"
+                  />
+                </div>
               </div>
             </div>
           </SectionWrapper>
@@ -486,6 +545,27 @@ export default function LeaderboardSettingsForm({ settings, update }) {
                   value={settings?.podiumThirdStrokeColor || '#00000000'}
                   onChange={v => update('podiumThirdStrokeColor', v)}
                 />
+                <ColorInput
+                  label="Background Color"
+                  value={settings?.podiumThirdBackgroundColor || '#ffffff'}
+                  onChange={v => update('podiumThirdBackgroundColor', v)}
+                />
+                <ColorInput
+                  label="Pedestal Base Color"
+                  value={settings?.podiumThirdPedestalColor || '#B4B2A9'}
+                  onChange={v => update('podiumThirdPedestalColor', v)}
+                />
+                <div className="space-y-2">
+                  <Label className="text-slate-300 flex items-center gap-2">
+                    <ImageIcon className="w-4 h-4" /> Badge Image URL
+                  </Label>
+                  <Input
+                    value={settings?.podiumThirdImage || ''}
+                    onChange={e => update('podiumThirdImage', e.target.value)}
+                    className="bg-slate-800/80 border-slate-700 text-white placeholder-slate-500"
+                    placeholder="https://example.com/badge.png"
+                  />
+                </div>
               </div>
             </div>
           </SectionWrapper>
