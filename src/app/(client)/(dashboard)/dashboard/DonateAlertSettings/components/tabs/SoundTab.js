@@ -31,6 +31,7 @@ export default function SoundTab({ settings, updateSetting }) {
   const customSound = settings?.customSound ?? null;
   const volume = settings?.volume ?? [75];
   const ttsVoice = settings?.ttsVoice ?? "female";
+  const ttsStyleId = settings?.ttsStyleId ?? null;
   const ttsRate = settings?.ttsRate ?? 0.95;
   const ttsPitch = settings?.ttsPitch ?? 1.05;
   const ttsTitleEnabled = settings?.ttsTitleEnabled ?? true;
@@ -52,7 +53,7 @@ export default function SoundTab({ settings, updateSetting }) {
   const [isPreviewingTts, setIsPreviewingTts] = useState(false);
 
   const resolvedVoiceId = resolveTtsVoiceId(ttsVoice);
-  const selectedStyleId = findMatchingTtsStyleId(currentTtsRate, currentTtsPitch);
+  const selectedStyleId = ttsStyleId || findMatchingTtsStyleId(currentTtsRate, currentTtsPitch);
   const selectedStyle = ttsStyles.find((style) => style.id === selectedStyleId) || FALLBACK_TTS_STYLES[0];
   const activeVoiceExists = useMemo(
     () => ttsVoices.some((voice) => voice.id === resolvedVoiceId),
@@ -168,13 +169,14 @@ export default function SoundTab({ settings, updateSetting }) {
       await audio.play();
     } catch (error) {
       console.error("TTS preview failed:", error);
-      alert("TTS preview failed. Please make sure the Python TTS service is running.");
+      alert(`TTS preview failed: ${error?.message || "Please make sure the Python TTS service is running."}`);
       setIsPreviewingTts(false);
     }
   };
 
   const handleStyleChange = (styleId) => {
     const style = ttsStyles.find((item) => item.id === styleId) || FALLBACK_TTS_STYLES[0];
+    updateSetting("ttsStyleId", style.id);
     updateSetting("ttsRate", style.rate);
     updateSetting("ttsPitch", style.pitch);
     if (style.recommended_voice) {
@@ -186,7 +188,7 @@ export default function SoundTab({ settings, updateSetting }) {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl p-6 space-y-6"
+      className="rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl p-4 sm:p-6 space-y-5 sm:space-y-6"
     >
       <div>
         <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
@@ -194,8 +196,8 @@ export default function SoundTab({ settings, updateSetting }) {
         </h3>
 
         <div className="space-y-3">
-          <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
-            <div>
+          <div className="flex items-start sm:items-center justify-between gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+            <div className="min-w-0">
               <Label className="text-slate-300">Use Custom Sound</Label>
               <p className="text-slate-500 text-sm mt-1">Upload your own notification sound</p>
             </div>
@@ -254,7 +256,7 @@ export default function SoundTab({ settings, updateSetting }) {
         )}
 
         <div className="space-y-3 mt-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <Label className="text-slate-300 text-base">Notification Volume ({currentVolume}%)</Label>
             <Button
               variant="outline"
@@ -275,8 +277,8 @@ export default function SoundTab({ settings, updateSetting }) {
         </div>
 
         <div className="space-y-3 mt-4">
-          <div className="flex items-center justify-between gap-3">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="min-w-0">
               <Label className="text-slate-300 text-base">TTS Voice</Label>
               <p className="text-slate-500 text-sm mt-1">
                 {voiceLoadError || `Current voice: ${getReadableVoiceLabel(resolvedVoiceId)}`}
@@ -289,7 +291,7 @@ export default function SoundTab({ settings, updateSetting }) {
                 loadVoices();
               }}
               disabled={loadingVoices || loadingStyles}
-              className="border-slate-700 text-slate-300 hover:bg-slate-800 h-8 px-3"
+              className="border-slate-700 text-slate-300 hover:bg-slate-800 h-8 px-3 w-full sm:w-auto"
             >
               {loadingVoices ? (
                 <Loader2 className="w-4 h-4 mr-1 animate-spin" />
@@ -348,7 +350,7 @@ export default function SoundTab({ settings, updateSetting }) {
             variant="outline"
             onClick={handleTtsPreview}
             disabled={isPreviewingTts || !ttsPreviewText.trim()}
-            className="border-slate-700 text-slate-300 hover:bg-slate-800"
+            className="border-slate-700 text-slate-300 hover:bg-slate-800 w-full sm:w-auto"
           >
             {isPreviewingTts ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
@@ -368,8 +370,8 @@ export default function SoundTab({ settings, updateSetting }) {
         </div>
 
         <div className="space-y-3 mt-6">
-          <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
-            <div>
+          <div className="flex items-start sm:items-center justify-between gap-3 p-3 sm:p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
+            <div className="min-w-0">
               <Label className="text-slate-300 text-base">Read Donation Info</Label>
               <p className="text-slate-500 text-sm mt-1">Read donor name and amount aloud</p>
             </div>
@@ -382,8 +384,8 @@ export default function SoundTab({ settings, updateSetting }) {
         </div>
 
         <div className="space-y-3 mt-4">
-          <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
-            <div>
+          <div className="flex items-start sm:items-center justify-between gap-3 p-3 sm:p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
+            <div className="min-w-0">
               <Label className="text-slate-300 text-base">Read Message</Label>
               <p className="text-slate-500 text-sm mt-1">Read donation message aloud</p>
             </div>

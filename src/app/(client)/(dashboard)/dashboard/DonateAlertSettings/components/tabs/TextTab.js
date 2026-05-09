@@ -64,7 +64,7 @@ export default function TextTab({ settings, updateSetting }) {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl p-6 space-y-6"
+      className="rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl p-4 sm:p-6 space-y-5 sm:space-y-6"
     >
       <div>
         <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
@@ -159,14 +159,14 @@ export default function TextTab({ settings, updateSetting }) {
 
         <div className="space-y-2 mt-4">
           <Label className="text-slate-300">Text Color</Label>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <Input type="color" value={textColor} onChange={(e) => updateSetting("textColor", e.target.value)}
-              className="w-20 h-10 p-1 bg-slate-800/80 border-slate-700" />
-            <span className="text-slate-400">{textColor}</span>
+              className="w-16 sm:w-20 h-10 p-1 bg-slate-800/80 border-slate-700 shrink-0" />
+            <span className="text-slate-400 font-mono text-xs sm:text-sm truncate">{textColor}</span>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
           <div className="space-y-2">
             <Label className="text-slate-300">Border Width ({borderWidth}px)</Label>
             <Slider value={[borderWidth]} onValueChange={(v) => updateSetting("borderWidth", v[0])}
@@ -179,7 +179,7 @@ export default function TextTab({ settings, updateSetting }) {
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
           <div className="space-y-2">
             <Label className="text-slate-300">Donor Name Color</Label>
             <Input type="color" value={donorNameColor} onChange={(e) => updateSetting("donorNameColor", e.target.value)}
@@ -248,14 +248,14 @@ export default function TextTab({ settings, updateSetting }) {
 
         <div className="space-y-2 mt-4">
           <Label className="text-slate-300">Message Color</Label>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 min-w-0">
             <Input type="color" value={messageColor} onChange={(e) => updateSetting("messageColor", e.target.value)}
-              className="w-20 h-10 p-1 bg-slate-800/80 border-slate-700" />
-            <span className="text-slate-400">{messageColor}</span>
+              className="w-16 sm:w-20 h-10 p-1 bg-slate-800/80 border-slate-700 shrink-0" />
+            <span className="text-slate-400 font-mono text-xs sm:text-sm truncate">{messageColor}</span>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-4 mt-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
           <div className="space-y-2">
             <Label className="text-slate-300">Message Border Width ({messageBorderWidth}px)</Label>
             <Slider value={[messageBorderWidth]} onValueChange={(v) => updateSetting("messageBorderWidth", v[0])}

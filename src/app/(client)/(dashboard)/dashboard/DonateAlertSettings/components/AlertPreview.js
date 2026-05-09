@@ -51,6 +51,7 @@ function buildSettings(settings) {
     volume:             readNum(settings.volume, 75),
     useCustomSound:     settings.useCustomSound     ?? false,
     ttsVoice:           settings.ttsVoice           ?? "female",
+    ttsStyleId:         settings.ttsStyleId         ?? null,
     ttsRate:            settings.ttsRate            ?? 0.95,
     ttsPitch:           settings.ttsPitch           ?? 1.05,
     ttsTitleEnabled:    settings.ttsTitleEnabled    ?? true,
@@ -61,6 +62,7 @@ function buildSettings(settings) {
                         ?? "https://media.tenor.com/k_UsDt9xfWIAAAAM/i-will-eat-you-cat.gif",
     effect:             settings.effect             ?? "realistic_look",
     confettiEffect:     settings.confettiEffect     ?? "fountain",
+    confettiMode:       settings.confettiMode       ?? "classic",
     imageGlow:          settings.imageGlow          ?? false,
     showConfetti:       settings.showConfetti       ?? false,
     minAmountForAlert:  settings.minAmountForAlert  ?? 10,
@@ -78,6 +80,8 @@ const AlertPreview = forwardRef(({
   const themeRef  = useRef(null);
   const ttsAudioRef = useRef(null);
   const ttsRequestIdRef = useRef(0);
+  const ttsPlaybackPromiseRef = useRef(null);
+  const ttsPlaybackActiveRef = useRef(false);
   const [cycleKey, setCycleKey] = useState(0);
   const [step,  setStep]   = useState("display");
   const [visible, setVisible] = useState(true);
@@ -105,6 +109,8 @@ const AlertPreview = forwardRef(({
     }
 
     ttsAudioRef.current = null;
+    ttsPlaybackActiveRef.current = false;
+    ttsPlaybackPromiseRef.current = null;
   };
 
   const buildPreviewTtsText = () => {
@@ -127,29 +133,38 @@ const AlertPreview = forwardRef(({
     return parts.join(" ").trim();
   };
 
+  const ttsText = buildPreviewTtsText();
+  const shouldWaitForTts = Boolean(ttsText);
+
   const triggerEnterAudio = async () => {
     try {
       playAlertSound(s.alertSound, s.volume);
     } catch {}
 
-    const previewText = buildPreviewTtsText();
-    if (!previewText) return;
+    const previewText = ttsText;
+    if (!previewText) {
+      ttsPlaybackActiveRef.current = false;
+      ttsPlaybackPromiseRef.current = null;
+      return Promise.resolve();
+    }
 
     const requestId = ++ttsRequestIdRef.current;
     stopTtsAudio();
+    ttsPlaybackActiveRef.current = true;
 
     try {
       const blob = await synthesizeTtsAudio({
         text: previewText,
         voice: s.ttsVoice,
-        styleId: findMatchingTtsStyleId(s.ttsRate, s.ttsPitch),
+        styleId: s.ttsStyleId || findMatchingTtsStyleId(s.ttsRate, s.ttsPitch),
         rate: s.ttsRate,
         pitch: s.ttsPitch,
         volume: s.ttsVolume,
       });
 
       if (ttsRequestIdRef.current !== requestId) {
-        return;
+        ttsPlaybackActiveRef.current = false;
+        return Promise.resolve();
       }
 
       const blobUrl = URL.createObjectURL(blob);
@@ -158,22 +173,36 @@ const AlertPreview = forwardRef(({
       audio._blobUrl = blobUrl;
       ttsAudioRef.current = audio;
 
-      const cleanup = () => {
-        if (audio._blobUrl) {
-          URL.revokeObjectURL(audio._blobUrl);
-        }
+      const playbackPromise = new Promise((resolve) => {
+        const cleanup = () => {
+          if (audio._blobUrl) {
+            URL.revokeObjectURL(audio._blobUrl);
+          }
 
-        if (ttsAudioRef.current === audio) {
-          ttsAudioRef.current = null;
-        }
-      };
+          if (ttsAudioRef.current === audio) {
+            ttsAudioRef.current = null;
+          }
 
-      audio.onended = cleanup;
-      audio.onerror = cleanup;
+          if (ttsRequestIdRef.current === requestId) {
+            ttsPlaybackActiveRef.current = false;
+          }
+
+          resolve();
+        };
+
+        audio.onended = cleanup;
+        audio.onerror = cleanup;
+      });
+
+      ttsPlaybackPromiseRef.current = playbackPromise;
 
       await audio.play();
+      return playbackPromise;
     } catch (error) {
       console.warn("Preview TTS playback failed:", error);
+      ttsPlaybackActiveRef.current = false;
+      ttsPlaybackPromiseRef.current = null;
+      return Promise.resolve();
     }
   };
 
@@ -201,20 +230,30 @@ const AlertPreview = forwardRef(({
   useEffect(() => {
     if (!isPlaying) return;
     let timer;
+    let cancelled = false;
     if (animStep === "in") {
-      triggerEnterAudio();
+      ttsPlaybackPromiseRef.current = triggerEnterAudio();
       timer = setTimeout(() => {
+        if (cancelled) return;
         setStep("display");
         onAnimationStepChange?.("display");
       }, s.inDuration * 1000);
     } else if (animStep === "display") {
-      timer = setTimeout(() => {
+      const goToExit = () => {
+        if (cancelled) return;
         setVisible(false);
         setStep("out");
         onAnimationStepChange?.("out");
-      }, s.displayDuration * 1000);
+      };
+
+      if (shouldWaitForTts && ttsPlaybackActiveRef.current && ttsPlaybackPromiseRef.current) {
+        ttsPlaybackPromiseRef.current.then(goToExit);
+      } else {
+        timer = setTimeout(goToExit, s.displayDuration * 1000);
+      }
     } else if (animStep === "out") {
       timer = setTimeout(() => {
+        if (cancelled) return;
         setStep("display");
         setVisible(true);
         onAnimationStepChange?.("display");
@@ -222,7 +261,10 @@ const AlertPreview = forwardRef(({
         setCycleKey(k => k + 1);
       }, s.outDuration * 1000);
     }
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isPlaying, animStep]);
 
@@ -265,6 +307,7 @@ const AlertPreview = forwardRef(({
                 getFontWeight={getFontWeight}
                 mainVariants={mainVariants}
                 animationStep={animStep}
+                isPlaying={isPlaying}
                 imageUrl={s.image}
               />
             </motion.div>

@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Zap, Sparkles, Layers, Image, Droplet, Ghost, AlertCircle } from "lucide-react";
+import { Zap, Sparkles, Layers, Image as ImageIcon, Droplet, Ghost, AlertCircle } from "lucide-react";
 
 export default function EffectsTab({ settings, updateSetting }) {
   // Safe value access with fallbacks
@@ -15,13 +15,14 @@ export default function EffectsTab({ settings, updateSetting }) {
   const amountShine = settings?.amountShine ?? false;
   const showConfetti = settings?.showConfetti ?? false;
   const confettiEffect = settings?.confettiEffect ?? "fountain";
+  const confettiMode = settings?.confettiMode ?? "classic";
   const useRanges = settings?.useRanges ?? false;
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl p-6 space-y-6"
+      className="rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl p-4 sm:p-6 space-y-5 sm:space-y-6"
     >
       <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
         <Zap className="w-5 h-5 text-cyan-400" /> General Effects
@@ -66,9 +67,9 @@ export default function EffectsTab({ settings, updateSetting }) {
 
       {/* --- Image Glow --- */}
       <div className="space-y-3">
-        <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
-          <div className="flex items-center gap-3">
-            <Image className="w-5 h-5 text-fuchsia-400" />
+        <div className="flex items-start sm:items-center justify-between gap-3 p-3 sm:p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
+          <div className="flex items-start sm:items-center gap-3 min-w-0">
+            <ImageIcon className="w-5 h-5 text-fuchsia-400 shrink-0" />
             <div>
               <Label className="text-slate-300 text-base">Image Glow</Label>
               <p className="text-slate-500 text-sm mt-1">Adds a glow around the alert image/GIF</p>
@@ -85,8 +86,8 @@ export default function EffectsTab({ settings, updateSetting }) {
       {/* --- Amount Shine (เฉพาะ Realistic Look) --- */}
       {effect === "realistic_look" && (
         <div className="space-y-3">
-          <div className="flex items-center justify-between p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
-            <div className="flex items-center gap-3">
+        <div className="flex items-start sm:items-center justify-between gap-3 p-3 sm:p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
+            <div className="flex items-start sm:items-center gap-3 min-w-0">
               <Sparkles className="w-5 h-5 text-yellow-400" />
               <div>
                 <Label className="text-slate-300 text-base">Amount Shine Effect</Label>
@@ -104,7 +105,7 @@ export default function EffectsTab({ settings, updateSetting }) {
 
       {/* --- Confetti Section --- */}
       <div className="pt-6 border-t border-slate-700/50 space-y-4">
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between gap-3">
           <h4 className="text-lg font-semibold text-white flex items-center gap-2">
             <Droplet className="w-5 h-5 text-indigo-400" />
             Confetti Animation
@@ -117,30 +118,82 @@ export default function EffectsTab({ settings, updateSetting }) {
         </div>
 
         {showConfetti && (
-          <div className="space-y-2">
-            <Label className="text-slate-300 text-base">Confetti Effect Type</Label>
-            <Select
-              value={confettiEffect}
-              onValueChange={(v) => updateSetting("confettiEffect", v)}
-            >
-              <SelectTrigger className="bg-slate-800/80 border-slate-700 text-white h-12">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-700">
-                <SelectItem value="fountain" className="text-white hover:bg-slate-700">
-                  Fountain (Shooting upward)
-                </SelectItem>
-                <SelectItem value="rain" className="text-white hover:bg-slate-700">
-                  Rain (Falling from top)
-                </SelectItem>
-                <SelectItem value="spiral" className="text-white hover:bg-slate-700">
-                  Spiral (Spinning around)
-                </SelectItem>
-                <SelectItem value="blast" className="text-white hover:bg-slate-700">
-                  Blast (Explosive burst)
-                </SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-slate-300 text-base">Confetti Motion Mode</Label>
+              <Select
+                value={confettiMode}
+                onValueChange={(v) => updateSetting("confettiMode", v)}
+              >
+                <SelectTrigger className="bg-slate-800/80 border-slate-700 text-white h-12">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-700">
+                  <SelectItem value="classic" className="text-white hover:bg-slate-700">
+                    Classic (Original animation)
+                  </SelectItem>
+                  <SelectItem value="physics" className="text-white hover:bg-slate-700">
+                    Physics (Bounce & collision)
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label className="text-slate-300 text-base">Confetti Effect Type</Label>
+              <Select
+                value={confettiEffect}
+                onValueChange={(v) => updateSetting("confettiEffect", v)}
+              >
+                <SelectTrigger className="bg-slate-800/80 border-slate-700 text-white h-12">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent className="bg-slate-800 border-slate-700">
+                  <SelectItem value="fountain" className="text-white hover:bg-slate-700">
+                    Fountain (Shooting upward)
+                  </SelectItem>
+                  <SelectItem value="rain" className="text-white hover:bg-slate-700">
+                    Rain (Falling from top)
+                  </SelectItem>
+                  <SelectItem value="spiral" className="text-white hover:bg-slate-700">
+                    Spiral (Spinning around)
+                  </SelectItem>
+                  <SelectItem value="blast" className="text-white hover:bg-slate-700">
+                    Blast (Explosive burst)
+                  </SelectItem>
+                  <SelectItem value="fireworks" className="text-white hover:bg-slate-700">
+                    Fireworks (Multi burst)
+                  </SelectItem>
+                  <SelectItem value="heart_burst" className="text-white hover:bg-slate-700">
+                    Heart Burst (Love explosion)
+                  </SelectItem>
+                  <SelectItem value="money_rain" className="text-white hover:bg-slate-700">
+                    Money Rain (Coins & cash)
+                  </SelectItem>
+                  <SelectItem value="starfall" className="text-white hover:bg-slate-700">
+                    Starfall (Twinkling shower)
+                  </SelectItem>
+                  <SelectItem value="portal" className="text-white hover:bg-slate-700">
+                    Portal (Magic vortex)
+                  </SelectItem>
+                  <SelectItem value="shockwave" className="text-white hover:bg-slate-700">
+                    Shockwave (Energy ring)
+                  </SelectItem>
+                  <SelectItem value="snow" className="text-white hover:bg-slate-700">
+                    Snow Drift (Soft falling)
+                  </SelectItem>
+                  <SelectItem value="bubbles" className="text-white hover:bg-slate-700">
+                    Bubbles (Floating upward)
+                  </SelectItem>
+                  <SelectItem value="meteors" className="text-white hover:bg-slate-700">
+                    Meteor Shower (Fast diagonal)
+                  </SelectItem>
+                  <SelectItem value="comet" className="text-white hover:bg-slate-700">
+                    Comet Trails (Arc streaks)
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         )}
       </div>
@@ -159,6 +212,7 @@ EffectsTab.propTypes = {
     amountShine: PropTypes.bool,
     showConfetti: PropTypes.bool,
     confettiEffect: PropTypes.string,
+    confettiMode: PropTypes.string,
     useRanges: PropTypes.bool,
   }).isRequired,
   updateSetting: PropTypes.func.isRequired,

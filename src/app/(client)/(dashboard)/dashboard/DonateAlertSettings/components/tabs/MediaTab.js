@@ -43,7 +43,7 @@ export default function MediaTab({ settings, updateSetting }) {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl p-6 space-y-6"
+      className="rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl p-4 sm:p-6 space-y-5 sm:space-y-6"
     >
       <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
         <ImageIcon className="w-5 h-5 text-cyan-400" /> Alert Image / GIF
@@ -51,9 +51,9 @@ export default function MediaTab({ settings, updateSetting }) {
 
       <div
         onClick={() => fileInputRef.current.click()}
-        className="border-2 border-dashed border-slate-700 rounded-xl p-8 text-center hover:border-cyan-500/50 transition-colors cursor-pointer group"
+        className="border-2 border-dashed border-slate-700 rounded-xl p-5 sm:p-8 text-center hover:border-cyan-500/50 transition-colors cursor-pointer group"
       >
-        <Upload className="w-12 h-12 text-slate-500 mx-auto mb-4 group-hover:text-cyan-400 transition-colors" />
+        <Upload className="w-10 h-10 sm:w-12 sm:h-12 text-slate-500 mx-auto mb-4 group-hover:text-cyan-400 transition-colors" />
         <p className="text-white font-medium mb-2">Upload Image or GIF</p>
         <p className="text-slate-500 text-sm mb-4">Supports PNG, JPG, GIF (Max 5MB)</p>
         <Button variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800">
@@ -69,8 +69,8 @@ export default function MediaTab({ settings, updateSetting }) {
       </div>
 
       {currentImageUrl && (
-        <div className="mt-4 text-center">
-          <div className="flex items-center justify-between mb-2">
+        <div className="mt-4 text-center min-w-0">
+          <div className="flex items-center justify-between mb-2 gap-2">
             <p className="text-slate-300 text-sm">Preview</p>
             <button
               onClick={handleClearImage}
@@ -83,7 +83,7 @@ export default function MediaTab({ settings, updateSetting }) {
           <img
             src={currentImageUrl}
             alt="Alert Preview"
-            className="max-h-48 mx-auto rounded-xl border border-slate-700 shadow-lg object-contain"
+            className="max-h-48 max-w-full mx-auto rounded-xl border border-slate-700 shadow-lg object-contain"
             onError={(e) => {
               e.target.onerror = null;
               e.target.src = "https://via.placeholder.com/300x200?text=Invalid+Image";
@@ -103,7 +103,7 @@ export default function MediaTab({ settings, updateSetting }) {
         <p className="text-slate-500 text-xs mt-1">Enter a direct link to an image or GIF</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 mt-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 mt-6">
         <div
           onClick={() => handlePreset("default")}
           className="p-4 rounded-xl bg-slate-800/50 border border-slate-700/50 text-center cursor-pointer hover:border-cyan-500/30 transition-all hover:scale-105"

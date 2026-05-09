@@ -4,3 +4,4 @@ edge-tts==6.1.18
 pydantic==2.9.2
 pydantic-settings==2.5.2
 gTTS==2.5.4
+imageio-ffmpeg==0.5.1

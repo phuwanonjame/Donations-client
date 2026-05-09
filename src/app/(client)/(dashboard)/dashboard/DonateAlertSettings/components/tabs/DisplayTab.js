@@ -20,12 +20,13 @@ export default function DisplayTab({ settings, updateSetting }) {
   const showName         = settings?.showName         ?? true;
   const showAmount       = settings?.showAmount       ?? true;
   const showMessage      = settings?.showMessage      ?? true;
+  const waitsForTts      = Boolean(settings?.ttsTitleEnabled || settings?.ttsMessageEnabledField);
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl p-6 space-y-6"
+      className="rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl p-4 sm:p-6 space-y-5 sm:space-y-6"
     >
       <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
         <Sparkles className="w-5 h-5 text-cyan-400" /> Animation & Timing
@@ -39,9 +40,17 @@ export default function DisplayTab({ settings, updateSetting }) {
           <Slider
             value={[displayDuration]}
             onValueChange={(v) => updateSetting("displayDuration", v[0])}
+            disabled={waitsForTts}
             min={1} max={10} step={1} className="w-full"
           />
-          <span className="text-cyan-400 font-medium">{displayDuration}s</span>
+          <span className="text-cyan-400 font-medium">
+            {waitsForTts ? "รอเสียงอ่านจบ" : `${displayDuration}s`}
+          </span>
+          {waitsForTts && (
+            <p className="text-xs text-amber-300/80">
+              เปิด TTS อยู่ ระบบจะไม่ใช้ Display Duration เป็นตัวตัด alert
+            </p>
+          )}
         </div>
         <div className="space-y-2">
           <Label className="text-slate-300 flex items-center gap-2">
@@ -56,7 +65,7 @@ export default function DisplayTab({ settings, updateSetting }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label className="text-slate-300">Animation In</Label>
           <Select value={inAnimation} onValueChange={(v) => updateSetting("inAnimation", v)}>
@@ -75,7 +84,7 @@ export default function DisplayTab({ settings, updateSetting }) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label className="text-slate-300">Animation Out</Label>
           <Select value={outAnimation} onValueChange={(v) => updateSetting("outAnimation", v)}>
@@ -104,10 +113,10 @@ export default function DisplayTab({ settings, updateSetting }) {
           { key: "showAmount",  label: "Show Amount" },
           { key: "showMessage", label: "Show Message" },
         ].map(({ key, label }) => (
-          <div key={key} className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
-            <div className="flex items-center gap-3">
+          <div key={key} className="flex items-center justify-between gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
+            <div className="flex items-center gap-3 min-w-0">
               <Eye className="w-4 h-4 text-cyan-400" />
-              <span className="text-white">{label}</span>
+              <span className="text-white min-w-0">{label}</span>
             </div>
             <Switch
               checked={key === "showName" ? showName : key === "showAmount" ? showAmount : showMessage}

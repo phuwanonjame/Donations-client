@@ -1,6 +1,7 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { fetchAlertThemes } from "@/actions/DonateAlertapi/donateSettingsApi";
 import {
   Copy,
   Upload,
@@ -19,6 +20,88 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-react";
+
+const ICON_COMPONENTS = {
+  Crown,
+  Film,
+  Flame,
+  Gamepad2,
+  Leaf,
+  Sparkles,
+  Star,
+  Sword,
+  Tv,
+  Zap,
+};
+
+const THEME_CATEGORY_TITLES = {
+  basic: "แนวพื้นฐาน",
+  fantasy: "แนวแฟนตาซี",
+  entertainment: "แนวบันเทิง",
+  special: "แนวพิเศษ",
+  other: "อื่นๆ",
+};
+
+const THEME_CATEGORY_ORDER = [
+  { key: "basic", templates: ["basic", "nature"] },
+  { key: "fantasy", templates: ["fantasy", "dragon", "royal"] },
+  { key: "entertainment", templates: ["game", "movie", "anime"] },
+  { key: "special", templates: ["ninja", "cyberpunk"] },
+];
+
+function getIconName(iconMarkup = "") {
+  const match = String(iconMarkup).match(/<\s*([A-Za-z0-9]+)/);
+  return match?.[1] || "Sparkles";
+}
+
+function normalizeThemeItem(item) {
+  const config = item?.themeConfig || item || {};
+  const id = config.id || item?.name || item?.id;
+  const Icon = ICON_COMPONENTS[getIconName(config.icon)] || Sparkles;
+
+  if (!id || !config.settings) return null;
+
+  return {
+    id,
+    name: config.name || item?.name || id,
+    description: config.description || "",
+    icon: <Icon className="w-4 h-4" />,
+    color: config.color || "text-cyan-400",
+    bgColor: config.bgColor || "from-cyan-900/20 to-blue-800/20",
+    borderColor: config.borderColor || "border-cyan-700/50",
+    settings: config.settings,
+  };
+}
+
+function buildTemplateMap(themeItems) {
+  return themeItems.reduce((acc, item) => {
+    const template = normalizeThemeItem(item);
+    if (template) acc[template.id] = template;
+    return acc;
+  }, {});
+}
+
+function buildTemplateCategories(templateMap) {
+  const seen = new Set();
+  const categories = THEME_CATEGORY_ORDER.map((category) => {
+    const templatesInCategory = category.templates.filter((id) => templateMap[id]);
+    templatesInCategory.forEach((id) => seen.add(id));
+    return {
+      title: THEME_CATEGORY_TITLES[category.key],
+      templates: templatesInCategory,
+    };
+  }).filter((category) => category.templates.length > 0);
+
+  const otherTemplates = Object.keys(templateMap).filter((id) => !seen.has(id));
+  if (otherTemplates.length > 0) {
+    categories.push({
+      title: THEME_CATEGORY_TITLES.other,
+      templates: otherTemplates,
+    });
+  }
+
+  return categories;
+}
 
 const templates = {
   basic: {
@@ -405,22 +488,66 @@ export default function TemplateTab({
 }) {
   const [selectedTemplate, setSelectedTemplate] = useState(currentTemplate);
   const [galleryOpen, setGalleryOpen] = useState(true);
+  const [apiTemplates, setApiTemplates] = useState({});
+  const [templatesLoading, setTemplatesLoading] = useState(true);
+  const [templatesError, setTemplatesError] = useState("");
+
+  const availableTemplates = Object.keys(apiTemplates).length > 0 ? apiTemplates : templates;
+  const availableTemplateCategories = buildTemplateCategories(availableTemplates);
+  const selectedTemplateData = availableTemplates[selectedTemplate];
+
+  useEffect(() => {
+    setSelectedTemplate(currentTemplate);
+  }, [currentTemplate]);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadThemes = async () => {
+      setTemplatesLoading(true);
+      setTemplatesError("");
+
+      const payload = await fetchAlertThemes();
+      if (!active) return;
+
+      const templateMap = buildTemplateMap(payload?.data || []);
+      if (Object.keys(templateMap).length > 0) {
+        setApiTemplates(templateMap);
+      } else {
+        setTemplatesError("โหลด Template จาก API ไม่สำเร็จ กำลังใช้ค่า fallback");
+      }
+
+      setTemplatesLoading(false);
+    };
+
+    loadThemes();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const handleTemplateClick = (templateId) => {
+    const template = availableTemplates[templateId];
+    if (!template) return;
+
     setSelectedTemplate(templateId);
-    onTemplateSelect?.(templates[templateId].settings);
+    onTemplateSelect?.({
+      ...template.settings,
+      templateId,
+    });
   };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl p-6 space-y-8"
+      className="rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl p-4 sm:p-6 space-y-6 sm:space-y-8"
     >
       <div className="rounded-xl border border-slate-700/60 bg-slate-900/60 overflow-hidden">
         <button
           onClick={() => setGalleryOpen((open) => !open)}
-          className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-800/40 transition-colors"
+          className="w-full flex items-start sm:items-center justify-between gap-3 px-3 sm:px-4 py-3 hover:bg-slate-800/40 transition-colors"
         >
           <div className="flex items-center gap-2.5">
             <div className="p-1.5 rounded-lg bg-gradient-to-br from-cyan-500/30 to-blue-500/30 border border-cyan-500/30">
@@ -431,9 +558,9 @@ export default function TemplateTab({
               <p className="text-[11px] text-slate-400">เลือกรูปแบบสำเร็จรูปสำหรับ alert ทั้งชุด</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <span className="text-[10px] px-2 py-0.5 rounded-full bg-cyan-500/15 text-cyan-300 border border-cyan-500/30">
-              {Object.keys(templates).length} templates
+              {templatesLoading ? "loading..." : `${Object.keys(availableTemplates).length} templates`}
             </span>
             {galleryOpen ? (
               <ChevronUp className="w-4 h-4 text-slate-400" />
@@ -453,49 +580,66 @@ export default function TemplateTab({
               className="overflow-hidden"
             >
               <div className="p-4 pt-0 space-y-6">
-                {templateCategories.map((category) => (
-                  <div key={category.title}>
-                    <h4 className="text-[11px] font-semibold text-slate-400 mb-3 uppercase tracking-[0.18em]">
-                      {category.title}
-                    </h4>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
-                      {category.templates.map((templateId) => (
-                        <TemplateCard
-                          key={templateId}
-                          template={templates[templateId]}
-                          isSelected={selectedTemplate === templateId}
-                          onSelect={() => handleTemplateClick(templateId)}
-                        />
-                      ))}
-                    </div>
+                {templatesError && (
+                  <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+                    {templatesError}
                   </div>
-                ))}
+                )}
+
+                {templatesLoading ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                    {Array.from({ length: 6 }).map((_, index) => (
+                      <div
+                        key={index}
+                        className="h-36 rounded-2xl border border-slate-700/50 bg-slate-800/40 animate-pulse"
+                      />
+                    ))}
+                  </div>
+                ) : (
+                  availableTemplateCategories.map((category) => (
+                    <div key={category.title}>
+                      <h4 className="text-[11px] font-semibold text-slate-400 mb-3 uppercase tracking-[0.18em]">
+                        {category.title}
+                      </h4>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                        {category.templates.map((templateId) => (
+                          <TemplateCard
+                            key={templateId}
+                            template={availableTemplates[templateId]}
+                            isSelected={selectedTemplate === templateId}
+                            onSelect={() => handleTemplateClick(templateId)}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  ))
+                )}
               </div>
             </motion.div>
           )}
         </AnimatePresence>
       </div>
 
-      {selectedTemplate && (
+      {selectedTemplateData && (
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
           className="mt-6 p-4 rounded-xl border border-slate-700/50 bg-slate-800/30"
         >
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <div className={`p-2 rounded-lg bg-gradient-to-br ${templates[selectedTemplate].bgColor}`}>
-                {templates[selectedTemplate].icon}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className={`p-2 rounded-lg bg-gradient-to-br ${selectedTemplateData.bgColor}`}>
+                {selectedTemplateData.icon}
               </div>
               <div>
-                <h4 className="font-semibold text-white">{templates[selectedTemplate].name}</h4>
+                <h4 className="font-semibold text-white">{selectedTemplateData.name}</h4>
                 <p className="text-xs text-slate-400">Template selected</p>
               </div>
             </div>
             <Button
               size="sm"
               onClick={() => handleTemplateClick(selectedTemplate)}
-              className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
+              className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 w-full sm:w-auto"
             >
               Apply Template
             </Button>
@@ -521,7 +665,7 @@ export default function TemplateTab({
             <Copy className="w-4 h-4" /> Import/Export Settings
           </p>
           <p className="text-slate-400 text-sm mb-4">Share your configuration using a JSON string.</p>
-          <div className="flex flex-col sm:flex-row gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             <Button variant="outline" onClick={handleCopyJSON} className="border-slate-700 text-slate-300 hover:bg-slate-700">
               <Copy className="w-4 h-4 mr-2" /> Copy JSON
             </Button>

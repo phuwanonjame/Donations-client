@@ -1,8 +1,9 @@
 // ==================== RangeTemplateSelector.js ====================
 // Quick Templates — แต่ละ template มี config ของตัวเองครบ ไม่ทับกัน
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Sparkles, ChevronDown, ChevronUp, Check, Zap } from "lucide-react";
+import { fetchAlertRangeThemes } from "@/actions/DonateAlertapi/donateSettingsApi";
 
 /* ─────────────────────────────────────────────
    TEMPLATE DEFINITIONS
@@ -422,6 +423,41 @@ export const RANGE_TEMPLATES = [
 /* ─────────────────────────────────────────────
    TEMPLATE CARD
 ───────────────────────────────────────────── */
+function normalizeRangeThemeItem(item) {
+  const themeConfig = item?.themeConfig || item || {};
+  const id = themeConfig.id || item?.name || item?.id;
+
+  if (!id || !themeConfig.config) return null;
+
+  return {
+    id,
+    name: themeConfig.name || item?.name || id,
+    emoji: themeConfig.emoji || "✨",
+    badge: themeConfig.badge || "Custom",
+    badgeColor: themeConfig.badgeColor || themeConfig.color || "#a855f7",
+    desc: themeConfig.desc || "",
+    color: themeConfig.color || "#a855f7",
+    preview: {
+      bg: themeConfig.preview?.bg || "from-purple-600/30 to-pink-600/30",
+      border: themeConfig.preview?.border || "border-purple-400/60",
+      text: themeConfig.preview?.text || "text-purple-50",
+      accent: themeConfig.preview?.accent || "text-purple-300",
+    },
+    config: themeConfig.config,
+  };
+}
+
+function buildRangeTemplates(themeItems) {
+  return themeItems
+    .map(normalizeRangeThemeItem)
+    .filter(Boolean)
+    .sort((a, b) => {
+      const priorityA = Number(a.config?.priority ?? Number.MAX_SAFE_INTEGER);
+      const priorityB = Number(b.config?.priority ?? Number.MAX_SAFE_INTEGER);
+      return priorityA - priorityB;
+    });
+}
+
 function TemplateCard({ template, onSelect, isAdded }) {
   const { preview } = template;
   return (
@@ -521,6 +557,38 @@ function TemplateCard({ template, onSelect, isAdded }) {
 ───────────────────────────────────────────── */
 export default function RangeTemplateSelector({ onSelectTemplate, existingRanges = [] }) {
   const [open, setOpen] = useState(false);
+  const [apiTemplates, setApiTemplates] = useState([]);
+  const [templatesLoading, setTemplatesLoading] = useState(true);
+  const [templatesError, setTemplatesError] = useState("");
+
+  const availableTemplates = apiTemplates.length > 0 ? apiTemplates : RANGE_TEMPLATES;
+
+  useEffect(() => {
+    let active = true;
+
+    const loadThemes = async () => {
+      setTemplatesLoading(true);
+      setTemplatesError("");
+
+      const payload = await fetchAlertRangeThemes();
+      if (!active) return;
+
+      const templates = buildRangeTemplates(payload?.data || []);
+      if (templates.length > 0) {
+        setApiTemplates(templates);
+      } else {
+        setTemplatesError("โหลด Quick Template จาก API ไม่สำเร็จ กำลังใช้ค่า fallback");
+      }
+
+      setTemplatesLoading(false);
+    };
+
+    loadThemes();
+
+    return () => {
+      active = false;
+    };
+  }, []);
 
   const isAdded = (templateId) =>
     existingRanges.some(r => r._templateId === templateId);
@@ -530,20 +598,20 @@ export default function RangeTemplateSelector({ onSelectTemplate, existingRanges
       {/* Header toggle */}
       <button
         onClick={() => setOpen(v => !v)}
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-800/40 transition-colors"
+        className="w-full flex items-start sm:items-center justify-between gap-3 px-3 sm:px-4 py-3 hover:bg-slate-800/40 transition-colors"
       >
-        <div className="flex items-center gap-2.5">
+        <div className="flex items-start sm:items-center gap-2.5 min-w-0">
           <div className="p-1.5 rounded-lg bg-gradient-to-br from-purple-500/30 to-pink-500/30 border border-purple-500/30">
             <Sparkles className="w-4 h-4 text-purple-400" />
           </div>
-          <div className="text-left">
+          <div className="text-left min-w-0">
             <p className="text-sm font-semibold text-white">Quick Templates</p>
-            <p className="text-[11px] text-slate-400">เพิ่ม Range จาก template สำเร็จรูป — {RANGE_TEMPLATES.length} แบบ</p>
+            <p className="text-[11px] text-slate-400">เพิ่ม Range จาก template สำเร็จรูป — {availableTemplates.length} แบบ</p>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-400 border border-purple-500/30">
-            {RANGE_TEMPLATES.length} templates
+            {templatesLoading ? "loading..." : `${availableTemplates.length} templates`}
           </span>
           {open
             ? <ChevronUp className="w-4 h-4 text-slate-400" />
@@ -562,18 +630,31 @@ export default function RangeTemplateSelector({ onSelectTemplate, existingRanges
             transition={{ duration: 0.25, ease: "easeInOut" }}
             className="overflow-hidden"
           >
+            {templatesError && (
+              <div className="mx-3 mb-3 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+                {templatesError}
+              </div>
+            )}
+
             <div className="p-3 pt-0 grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {RANGE_TEMPLATES.map(template => (
-                <TemplateCard
-                  key={template.id}
-                  template={template}
-                  isAdded={isAdded(template.id)}
-                  onSelect={(config) => {
-                    onSelectTemplate({ ...config, _templateId: template.id });
-                    setOpen(false);
-                  }}
-                />
-              ))}
+              {templatesLoading
+                ? Array.from({ length: 4 }).map((_, index) => (
+                    <div
+                      key={index}
+                      className="h-36 rounded-2xl border border-slate-700/50 bg-slate-800/40 animate-pulse"
+                    />
+                  ))
+                : availableTemplates.map(template => (
+                    <TemplateCard
+                      key={template.id}
+                      template={template}
+                      isAdded={isAdded(template.id)}
+                      onSelect={(config) => {
+                        onSelectTemplate({ ...config, _templateId: template.id });
+                        setOpen(false);
+                      }}
+                    />
+                  ))}
             </div>
 
             <div className="px-4 pb-3 text-[10px] text-slate-600 text-center">

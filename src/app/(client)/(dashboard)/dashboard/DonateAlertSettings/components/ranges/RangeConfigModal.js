@@ -71,6 +71,7 @@ const getEmptyRangeConfig = () => ({
   // Effects - Empty/Default
   showConfetti: false,
   confettiEffect: "fountain",
+  confettiMode: "classic",
   particleEffect: false,
   glowIntensity: 50,
   
@@ -184,7 +185,22 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
     { value: "fountain", label: "Fountain (Shooting upward)" },
     { value: "rain", label: "Rain (Falling from top)" },
     { value: "spiral", label: "Spiral (Spinning around)" },
-    { value: "blast", label: "Blast (Explosive burst)" }
+    { value: "blast", label: "Blast (Explosive burst)" },
+    { value: "fireworks", label: "Fireworks (Multi burst)" },
+    { value: "heart_burst", label: "Heart Burst (Love explosion)" },
+    { value: "money_rain", label: "Money Rain (Coins & cash)" },
+    { value: "starfall", label: "Starfall (Twinkling shower)" },
+    { value: "portal", label: "Portal (Magic vortex)" },
+    { value: "shockwave", label: "Shockwave (Energy ring)" },
+    { value: "snow", label: "Snow Drift (Soft falling)" },
+    { value: "bubbles", label: "Bubbles (Floating upward)" },
+    { value: "meteors", label: "Meteor Shower (Fast diagonal)" },
+    { value: "comet", label: "Comet Trails (Arc streaks)" }
+  ];
+
+  const confettiModeOptions = [
+    { value: "classic", label: "Classic (Original animation)" },
+    { value: "physics", label: "Physics (Bounce & collision)" }
   ];
 
   const blurOptions = [
@@ -196,9 +212,9 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700">
+      <DialogContent className="w-[calc(100vw-1rem)] sm:w-[calc(100vw-2rem)] max-w-5xl max-h-[90vh] overflow-y-auto bg-slate-900 border-slate-700 p-4 sm:p-6">
         <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-white flex items-center gap-2">
+          <DialogTitle className="text-xl sm:text-2xl font-bold text-white flex items-center gap-2 flex-wrap">
             {range?.id ? "✏️ Edit Donation Range" : "✨ Create New Donation Range"}
             {!range?.id && (
               <span className="text-sm font-normal text-cyan-400 bg-cyan-500/20 px-2 py-1 rounded-full">
@@ -214,8 +230,8 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
         </DialogHeader>
 
         {/* Range Basic Info */}
-        <div className="grid grid-cols-4 gap-4 p-4 rounded-lg bg-slate-800/50 border border-slate-700">
-          <div className="col-span-2 space-y-2">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-3 sm:p-4 rounded-lg bg-slate-800/50 border border-slate-700">
+          <div className="sm:col-span-2 space-y-2">
             <Label className="text-slate-300">
               Range Name <span className="text-red-400">*</span>
             </Label>
@@ -250,7 +266,7 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
 
         {/* Full Settings Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-6 bg-slate-800">
+          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 bg-slate-800 h-auto">
             <TabsTrigger value="basic" className="text-slate-300 data-[state=active]:bg-slate-700">Basic</TabsTrigger>
             <TabsTrigger value="media" className="text-slate-300 data-[state=active]:bg-slate-700">Media</TabsTrigger>
             <TabsTrigger value="text" className="text-slate-300 data-[state=active]:bg-slate-700">Text</TabsTrigger>
@@ -261,7 +277,7 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
 
           {/* Basic Tab */}
           <TabsContent value="basic" className="space-y-4 mt-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-slate-300">Priority (1-10)</Label>
                 <Input
@@ -276,7 +292,7 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
               </div>
               <div className="space-y-2">
                 <Label className="text-slate-300">Status</Label>
-                <div className="flex items-center justify-between p-2 rounded-lg bg-slate-800/50">
+                <div className="flex items-center justify-between gap-3 p-2 rounded-lg bg-slate-800/50">
                   <span className="text-slate-300">Enable this range</span>
                   <Switch
                     checked={config.enabled}
@@ -328,7 +344,7 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
               <p className="text-slate-500 text-xs">Leave empty to use default alert image</p>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-slate-300">Image Size</Label>
                 <Select value={config.imageSize} onValueChange={(v) => setConfig({...config, imageSize: v})}>
@@ -357,7 +373,7 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50">
+            <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-slate-800/50">
               <div className="flex items-center gap-3">
                 <Image className="w-5 h-5 text-fuchsia-400" />
                 <Label className="text-slate-300">Image Glow Effect</Label>
@@ -383,7 +399,7 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
 
           {/* Text Tab */}
           <TabsContent value="text" className="space-y-4 mt-4">
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-slate-300">Text Color</Label>
                 <div className="flex gap-2">
@@ -417,7 +433,7 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-slate-300">Font Size</Label>
                 <Select value={config.fontSize} onValueChange={(v) => setConfig({...config, fontSize: v})}>
@@ -489,7 +505,7 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
               </Select>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-slate-300">Position</Label>
                 <Select value={config.position} onValueChange={(v) => setConfig({...config, position: v})}>
@@ -534,7 +550,7 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
 
           {/* Sound Tab */}
           <TabsContent value="sound" className="space-y-4 mt-4">
-            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50">
+            <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-slate-800/50">
               <div className="flex items-center gap-3">
                 <Volume2 className="w-5 h-5 text-green-400" />
                 <Label className="text-slate-300">Enable Sound</Label>
@@ -582,7 +598,7 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
 
           {/* Effects Tab */}
           <TabsContent value="effects" className="space-y-4 mt-4">
-            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50">
+            <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-slate-800/50">
               <div className="flex items-center gap-3">
                 <Droplet className="w-5 h-5 text-indigo-400" />
                 <Label className="text-slate-300">Show Confetti</Label>
@@ -594,22 +610,38 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
             </div>
 
             {config.showConfetti && (
-              <div className="space-y-2 pl-8">
-                <Label className="text-slate-300">Confetti Type</Label>
-                <Select value={config.confettiEffect} onValueChange={(v) => setConfig({...config, confettiEffect: v})}>
-                  <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-slate-800 border-slate-700">
-                    {confettiOptions.map(opt => (
-                      <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pl-0 sm:pl-8">
+                <div className="space-y-2">
+                  <Label className="text-slate-300">Confetti Mode</Label>
+                  <Select value={config.confettiMode ?? "classic"} onValueChange={(v) => setConfig({...config, confettiMode: v})}>
+                    <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-700">
+                      {confettiModeOptions.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-slate-300">Confetti Type</Label>
+                  <Select value={config.confettiEffect} onValueChange={(v) => setConfig({...config, confettiEffect: v})}>
+                    <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-700">
+                      {confettiOptions.map(opt => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
             )}
 
-            <div className="flex items-center justify-between p-3 rounded-lg bg-slate-800/50">
+            <div className="flex items-center justify-between gap-3 p-3 rounded-lg bg-slate-800/50">
               <div className="flex items-center gap-3">
                 <Sparkles className="w-5 h-5 text-yellow-400" />
                 <Label className="text-slate-300">Particle Effect</Label>
@@ -662,7 +694,7 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
           </div>
         </div>
 
-        <DialogFooter className="mt-6">
+        <DialogFooter className="mt-6 flex-col sm:flex-row gap-2">
           <div className="flex gap-2 mr-auto">
             {range?.id && (
               <>

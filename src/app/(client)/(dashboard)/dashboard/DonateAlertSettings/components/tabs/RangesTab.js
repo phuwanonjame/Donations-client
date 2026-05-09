@@ -1,6 +1,6 @@
 // ==================== RangesTab.js (UPDATED) ====================
 // แก้: ใช้ RangeTemplateSelector ใหม่ + ส่ง existingRanges เพื่อ track ว่า template ไหน added แล้ว
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Layers, Plus, Trash2, Edit2, Copy,
@@ -66,6 +66,19 @@ function buildDefaultRangeConfig(settings) {
   };
 }
 
+function createRangeId(ranges, prefix = "range") {
+  const existingIds = new Set((ranges || []).map((range) => String(range.id)));
+  let index = (ranges?.length || 0) + 1;
+  let candidate = `${prefix}-${index}`;
+
+  while (existingIds.has(candidate)) {
+    index += 1;
+    candidate = `${prefix}-${index}`;
+  }
+
+  return candidate;
+}
+
 /* ─────────────────────────────────────────────
    RANGE CARD
 ───────────────────────────────────────────── */
@@ -91,7 +104,7 @@ function RangeCard({ range, onEdit, onEditConfig, onDelete, onDuplicate, onReset
       exit={{ opacity: 0, y: -10 }}
       className="rounded-xl border border-slate-700/60 bg-slate-800/40 overflow-hidden"
     >
-      <div className="flex items-center gap-3 p-3">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3">
         {/* Color dot */}
         <span
           className="w-3 h-3 rounded-full shrink-0 border border-white/20"
@@ -99,7 +112,7 @@ function RangeCard({ range, onEdit, onEditConfig, onDelete, onDuplicate, onReset
         />
 
         {/* Info */}
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 w-full">
           <div className="flex items-center gap-2 flex-wrap">
             <p className="text-white font-medium text-sm truncate">
               {range.name || `Range #${range.id}`}
@@ -122,11 +135,11 @@ function RangeCard({ range, onEdit, onEditConfig, onDelete, onDuplicate, onReset
         }
 
         {/* Actions */}
-        <div className="flex items-center gap-1 shrink-0">
+        <div className="grid grid-cols-[1fr_auto_auto] sm:flex sm:items-center gap-1 shrink-0 w-full sm:w-auto">
           <Button
             size="sm"
             onClick={onEditConfig}
-            className="h-7 px-2.5 text-xs bg-gradient-to-r from-cyan-500/80 to-blue-500/80 hover:from-cyan-500 hover:to-blue-500 text-white gap-1"
+            className="h-8 sm:h-7 px-2.5 text-xs bg-gradient-to-r from-cyan-500/80 to-blue-500/80 hover:from-cyan-500 hover:to-blue-500 text-white gap-1"
           >
             <Settings2 className="w-3 h-3" />Config<ArrowRight className="w-3 h-3" />
           </Button>
@@ -158,7 +171,7 @@ function RangeCard({ range, onEdit, onEditConfig, onDelete, onDuplicate, onReset
           >
             <div className="p-3 space-y-3">
               {/* Quick config pills */}
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                 {configKeys.map(({ key, label, isColor, suffix }) => {
                   const val = range[key];
                   if (val === undefined) return null;
@@ -190,22 +203,22 @@ function RangeCard({ range, onEdit, onEditConfig, onDelete, onDuplicate, onReset
               </div>
 
               {/* Buttons */}
-              <div className="flex items-center gap-2 pt-1 border-t border-slate-700/40">
+              <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 pt-1 border-t border-slate-700/40">
                 <button
                   onClick={onEditConfig}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 transition-colors"
+                  className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 transition-colors"
                 >
                   <Settings2 className="w-3 h-3" /> Edit Config
                 </button>
                 <button
                   onClick={onResetToDefault}
-                  className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs bg-slate-700/50 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
+                  className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs bg-slate-700/50 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
                 >
                   <RotateCcw className="w-3 h-3" /> Reset to Default
                 </button>
                 <button
                   onClick={onDuplicate}
-                  className="p-1.5 rounded-lg hover:bg-slate-700 text-slate-500 hover:text-slate-300 transition-colors ml-auto"
+                  className="p-1.5 rounded-lg hover:bg-slate-700 text-slate-500 hover:text-slate-300 transition-colors sm:ml-auto"
                   title="Duplicate"
                 >
                   <Copy className="w-3.5 h-3.5" />
@@ -230,19 +243,14 @@ function RangeCard({ range, onEdit, onEditConfig, onDelete, onDuplicate, onReset
    MAIN COMPONENT
 ───────────────────────────────────────────── */
 export default function RangesTab({ settings, updateSetting, onEditRange }) {
-  const [ranges, setRanges]           = useState(settings?.donationRanges || []);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRange, setEditingRange] = useState(null);
 
   // sync เมื่อ donationRanges จาก props เปลี่ยน
-  useEffect(() => {
-    setRanges(settings?.donationRanges || []);
-  }, [settings?.donationRanges]);
-
   const useRanges = settings?.useRanges ?? false;
+  const ranges = settings?.donationRanges || [];
 
   const syncRanges = (updatedRanges) => {
-    setRanges(updatedRanges);
     updateSetting("donationRanges", updatedRanges);
   };
 
@@ -254,7 +262,7 @@ export default function RangesTab({ settings, updateSetting, onEditRange }) {
       updated = [...ranges, {
         ...buildDefaultRangeConfig(settings),
         ...rangeConfig,
-        id: rangeConfig.id || Date.now(),
+        id: rangeConfig.id || createRangeId(ranges),
       }];
     }
     syncRanges(updated);
@@ -270,7 +278,7 @@ export default function RangesTab({ settings, updateSetting, onEditRange }) {
   const handleDuplicateRange = (range) => {
     const newRange = {
       ...range,
-      id: Date.now(),
+      id: createRangeId(ranges, `${range.id}-copy`),
       name: `${range.name} (Copy)`,
       priority: ranges.length + 1,
       _templateId: undefined, // reset template origin
@@ -314,14 +322,14 @@ export default function RangesTab({ settings, updateSetting, onEditRange }) {
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
 
       {/* ── Header Toggle ── */}
-      <div className="flex items-center justify-between p-4 rounded-xl bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20">
-        <div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3 sm:p-4 rounded-xl bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20">
+        <div className="min-w-0">
           <h3 className="text-lg font-semibold text-white flex items-center gap-2">
             <Layers className="w-5 h-5 text-cyan-400" /> Donation Ranges System
           </h3>
           <p className="text-slate-400 text-sm mt-1">กำหนด config ต่างกันตามจำนวนเงิน donate</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center justify-between sm:justify-start gap-3 w-full sm:w-auto">
           <Badge
             variant={useRanges ? "default" : "secondary"}
             className={useRanges ? "bg-cyan-500" : "bg-slate-600"}
@@ -341,7 +349,7 @@ export default function RangesTab({ settings, updateSetting, onEditRange }) {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className="flex items-start gap-3 p-3.5 rounded-xl bg-blue-500/8 border border-blue-500/20 text-sm"
+          className="flex items-start gap-3 p-3 sm:p-3.5 rounded-xl bg-blue-500/8 border border-blue-500/20 text-sm"
         >
           <Info className="w-4 h-4 mt-0.5 shrink-0 text-blue-400" />
           <div className="space-y-0.5 text-blue-300/80 text-xs">
@@ -365,7 +373,7 @@ export default function RangesTab({ settings, updateSetting, onEditRange }) {
             existingRanges={ranges}
             onSelectTemplate={(templateConfig) => {
               const newRange = {
-                id: Date.now(),
+                id: createRangeId(ranges),
                 ...buildDefaultRangeConfig(settings), // base
                 ...templateConfig,                    // template override (config ของ template เอง)
                 isCustomized: true,
@@ -375,7 +383,7 @@ export default function RangesTab({ settings, updateSetting, onEditRange }) {
           />
 
           {/* Range list header */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <h4 className="text-white font-medium flex items-center gap-2">
               <Zap className="w-4 h-4 text-yellow-400" />
               Ranges ที่ตั้งค่าไว้
@@ -384,7 +392,7 @@ export default function RangesTab({ settings, updateSetting, onEditRange }) {
             <Button
               onClick={handleOpenNewRange}
               size="sm"
-              className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600"
+              className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 w-full sm:w-auto"
             >
               <Plus className="w-4 h-4 mr-1" /> Add Range
             </Button>

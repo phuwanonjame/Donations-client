@@ -51,7 +51,7 @@ export const FALLBACK_TTS_STYLES = [
     id: "elder_male",
     name: "ผู้ชายสูงอายุ",
     description: "ชัดถ้อยชัดคำ ช้าลงและทุ้มขึ้นอีกระดับ",
-    rate: 0.8,
+    rate: 1.08,
     pitch: 0.68,
     recommended_voice: "th-TH-NiwatNeural",
   },

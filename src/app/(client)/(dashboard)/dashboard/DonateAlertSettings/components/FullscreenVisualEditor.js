@@ -247,10 +247,24 @@ const EFFECTS = [
   { id:"none",           name:"No Effect" },
 ];
 const CONFETTI = [
-  { id:"fountain", name:"Fountain" },
-  { id:"rain",     name:"Rain" },
-  { id:"spiral",   name:"Spiral" },
-  { id:"blast",    name:"Blast" },
+  { id:"fountain",    name:"Fountain" },
+  { id:"rain",        name:"Rain" },
+  { id:"spiral",      name:"Spiral" },
+  { id:"blast",       name:"Blast" },
+  { id:"fireworks",   name:"Fireworks" },
+  { id:"heart_burst", name:"Heart Burst" },
+  { id:"money_rain",  name:"Money Rain" },
+  { id:"starfall",    name:"Starfall" },
+  { id:"portal",      name:"Portal" },
+  { id:"shockwave",   name:"Shockwave" },
+  { id:"snow",        name:"Snow Drift" },
+  { id:"bubbles",     name:"Bubbles" },
+  { id:"meteors",     name:"Meteor Shower" },
+  { id:"comet",       name:"Comet Trails" },
+];
+const CONFETTI_MODES = [
+  { id:"classic", name:"Classic" },
+  { id:"physics", name:"Physics" },
 ];
 const TTS_VOICES = [
   ...voiceOptions,
@@ -343,6 +357,7 @@ const ZONES = [
     fields:[
       { key:"imageGlow",         label:"Glow รูปภาพ",         type:"boolean" },
       { key:"showConfetti",      label:"แสดง Confetti",       type:"boolean" },
+      { key:"confettiMode",      label:"โหมด Confetti",       type:"select",  options:CONFETTI_MODES },
       { key:"confettiEffect",    label:"รูปแบบ Confetti",     type:"select",  options:CONFETTI },
       { key:"useRanges",         label:"ใช้ระบบช่วงเงิน",    type:"boolean" },
       { key:"minAmountForAlert", label:"จำนวนเงินขั้นต่ำ",   type:"slider",  min:1, max:1000, step:1 },

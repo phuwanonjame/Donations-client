@@ -59,6 +59,7 @@ export const defaultSettings = {
     imageGlow: false,
     showConfetti: false,
     confettiEffect: "fountain",
+    confettiMode: "classic",
   },
 };
 
@@ -138,6 +139,7 @@ function flatRangeToGrouped(range) {
     imageGlow:      range.imageGlow      ?? false,
     showConfetti:   range.showConfetti   ?? false,
     confettiEffect: range.confettiEffect ?? "fountain",
+    confettiMode:   range.confettiMode   ?? "classic",
   };
 }
 
@@ -197,6 +199,7 @@ function groupedRangeToFlat(r) {
     imageGlow:      r.imageGlow      ?? false,
     showConfetti:   r.showConfetti   ?? false,
     confettiEffect: r.confettiEffect ?? "fountain",
+    confettiMode:   r.confettiMode   ?? "classic",
 
     alertSound:    notif.sound       ?? "bb_spirit",
     volume:        [notif.volume     ?? 75],
@@ -281,6 +284,7 @@ export const transformToGroupedStructure = (flatSettings) => {
       imageGlow:      flatSettings.imageGlow         ?? false,
       showConfetti:   flatSettings.showConfetti      ?? false,
       confettiEffect: flatSettings.confettiEffect    ?? "fountain",
+      confettiMode:   flatSettings.confettiMode      ?? "classic",
     },
   };
 };
@@ -350,6 +354,7 @@ export const transformToFlatStructure = (groupedSettings) => {
     imageGlow:      metadata.imageGlow      ?? false,
     showConfetti:   metadata.showConfetti   ?? false,
     confettiEffect: metadata.confettiEffect ?? "fountain",
+    confettiMode:   metadata.confettiMode   ?? "classic",
 
     // ── audio ──────────────────────────────────────────────────────────────
     alertSound:    notification.sound      || "bb_spirit",

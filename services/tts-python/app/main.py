@@ -1,4 +1,5 @@
 from io import BytesIO
+import shutil
 import subprocess
 
 import edge_tts
@@ -88,6 +89,18 @@ def _apply_ffmpeg_voice_style(
     target_rate: float,
     target_pitch: float,
 ) -> bytes:
+    ffmpeg_path = shutil.which(settings.ffmpeg_path)
+    if not ffmpeg_path:
+        try:
+            import imageio_ffmpeg
+
+            ffmpeg_path = imageio_ffmpeg.get_ffmpeg_exe()
+        except Exception:
+            ffmpeg_path = None
+
+    if not ffmpeg_path:
+        raise FileNotFoundError("ffmpeg is not installed or not available in PATH")
+
     tempo = max(0.5, min(2.0, target_rate / max(target_pitch, 0.1)))
     filters = [
         f"asetrate=24000*{target_pitch}",
@@ -97,7 +110,7 @@ def _apply_ffmpeg_voice_style(
 
     proc = subprocess.run(
         [
-            settings.ffmpeg_path,
+            ffmpeg_path,
             "-y",
             "-i",
             "pipe:0",
@@ -197,14 +210,17 @@ async def synthesize(payload: SynthesizeRequest) -> StreamingResponse:
             fallback = gTTS(text=payload.text, lang=_voice_to_gtts_lang(voice))
             fallback.write_to_fp(audio_buffer)
             if style:
-                processed = _apply_ffmpeg_voice_style(
-                    audio_buffer.getvalue(),
-                    target_rate=style.rate,
-                    target_pitch=style.pitch,
-                )
-                audio_buffer = BytesIO(processed)
-                media_type = "audio/wav"
-                filename = "tts.wav"
+                try:
+                    processed = _apply_ffmpeg_voice_style(
+                        audio_buffer.getvalue(),
+                        target_rate=style.rate,
+                        target_pitch=style.pitch,
+                    )
+                    audio_buffer = BytesIO(processed)
+                    media_type = "audio/wav"
+                    filename = "tts.wav"
+                except FileNotFoundError:
+                    audio_buffer.seek(0)
         except Exception as fallback_exc:
             raise HTTPException(
                 status_code=400,

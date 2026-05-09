@@ -222,8 +222,8 @@ export default function DonateAlertSettings() {
         )}
       </AnimatePresence>
 
-      <div className="h-full w-full overflow-y-auto">
-        <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+      <div className="h-full w-full overflow-y-auto overflow-x-hidden">
+        <div className="w-full max-w-[1800px] mx-auto px-3 sm:px-5 lg:px-6 2xl:px-8 py-3 sm:py-5 lg:py-6 2xl:py-8">
           <div className="mb-6">
             <SettingsHeader 
               settings={settings} 
@@ -233,9 +233,9 @@ export default function DonateAlertSettings() {
             />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 xl:gap-5">
+          <div className="grid grid-cols-1 xl:grid-cols-12 gap-5 2xl:gap-6">
             <motion.div
-              className="lg:col-span-7 xl:col-span-6 space-y-6"
+              className="xl:col-span-6 2xl:col-span-7 min-w-0 space-y-5 sm:space-y-6"
               initial={{ opacity:0, x:-20 }}
               animate={{ opacity:1, x:0 }}
               transition={{ delay:0.1 }}
@@ -249,16 +249,16 @@ export default function DonateAlertSettings() {
                 onEffectiveSettingsChange={handleEffectiveSettingsChange}
               />
 
-              <div className="flex flex-wrap items-center justify-between gap-3 p-4 bg-slate-900/50 rounded-xl border border-slate-800">
-                <div className="flex items-center gap-2 text-sm text-slate-400">
+              <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center justify-between gap-3 p-3 sm:p-4 bg-slate-900/50 rounded-xl border border-slate-800">
+                <div className="flex items-center gap-2 text-sm text-slate-400 min-w-0">
                   <AlertCircle className="w-4 h-4" />
-                  <span>Changes are automatically reflected in preview</span>
+                  <span className="min-w-0">Changes are automatically reflected in preview</span>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
                   <Button
                     variant="outline"
                     onClick={handleCopyJSON}
-                    className="bg-slate-800/50 border-slate-700 hover:bg-slate-700/50 text-slate-300"
+                    className="bg-slate-800/50 border-slate-700 hover:bg-slate-700/50 text-slate-300 w-full sm:w-auto"
                     disabled={copied}
                   >
                     {copied ? <><Check className="w-4 h-4 mr-2" />Copied!</> : <><Copy className="w-4 h-4 mr-2" />Copy JSON</>}
@@ -266,7 +266,7 @@ export default function DonateAlertSettings() {
                   <Button
                     variant="outline"
                     onClick={handleResetSettings}
-                    className="bg-slate-800/50 border-slate-700 hover:bg-slate-700/50 text-slate-300"
+                    className="bg-slate-800/50 border-slate-700 hover:bg-slate-700/50 text-slate-300 w-full sm:w-auto"
                   >
                     <RotateCcw className="w-4 h-4 mr-2" />
                     Reset All
@@ -276,12 +276,12 @@ export default function DonateAlertSettings() {
             </motion.div>
 
             <motion.div
-              className="lg:col-span-5 xl:col-span-6"
+              className="xl:col-span-6 2xl:col-span-5 min-w-0"
               initial={{ opacity:0, x:20 }}
               animate={{ opacity:1, x:0 }}
               transition={{ delay:0.2 }}
             >
-              <div className="sticky top-6 space-y-6">
+              <div className="xl:sticky xl:top-6 space-y-5 sm:space-y-6">
                 <PreviewPanel
                   settings={previewSettings}
                   handleSave={handleSave}
@@ -305,7 +305,7 @@ export default function DonateAlertSettings() {
                     </li>
                     <li className="flex items-start gap-2">
                       <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 mt-1.5" />
-                      <span>กดปุ่ม "Config →" บน Range เพื่อแก้ไข</span>
+                      <span>กดปุ่ม &quot;Config →&quot; บน Range เพื่อแก้ไข</span>
                     </li>
                     <li className="flex items-start gap-2">
                       <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 mt-1.5" />

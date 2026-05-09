@@ -35,26 +35,26 @@ export default function SettingsHeader({ settings, updateSetting, hasChanges, sa
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10 border border-cyan-500/20 p-6"
+      className="rounded-2xl bg-gradient-to-r from-cyan-500/10 via-blue-500/10 to-purple-500/10 border border-cyan-500/20 p-4 sm:p-6"
     >
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-        <div className="flex items-center gap-4">
-          <div className="p-4 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/25">
-            <Bell className="w-8 h-8 text-white" />
+      <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+        <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
+          <div className="p-3 sm:p-4 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 shadow-lg shadow-cyan-500/25 shrink-0">
+            <Bell className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
           </div>
-          <div>
-            <h2 className="text-2xl font-bold text-white">
+          <div className="min-w-0">
+            <h2 className="text-xl sm:text-2xl font-bold text-white leading-tight">
               Donate Alert Settings
             </h2>
-            <p className="text-slate-400">
+            <p className="text-sm sm:text-base text-slate-400">
               Customize how donation alerts appear on your stream
             </p>
           </div>
         </div>
         
-        <div className="flex items-center gap-3">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 w-full lg:w-auto">
           {/* Status Indicators */}
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {hasChanges && (
               <motion.div
                 initial={{ opacity: 0, scale: 0.9 }}
@@ -78,7 +78,7 @@ export default function SettingsHeader({ settings, updateSetting, hasChanges, sa
           </div>
           
           {/* Enable/Disable Switch */}
-          <div className="flex items-center gap-3 pl-3 border-l border-slate-700">
+          <div className="flex items-center gap-3 sm:pl-3 sm:border-l border-slate-700 justify-between sm:justify-start">
             <Switch
               checked={isEnabled}
               onCheckedChange={handleEnabledChange}

@@ -44,12 +44,12 @@ function RangeContextSelector({ ranges, activeRangeId, onSelect, onClear }) {
   const activeRange = ranges.find(r => r.id === activeRangeId);
 
   return (
-    <div className="relative">
+    <div className="relative w-full sm:w-auto">
       <button
         onClick={() => setOpen(v => !v)}
         className={`
           flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-medium
-          transition-all duration-200 min-w-[180px] justify-between
+          transition-all duration-200 w-full sm:min-w-[180px] justify-between
           ${activeRange
             ? "bg-cyan-500/15 border-cyan-500/50 text-cyan-300 hover:bg-cyan-500/20"
             : "bg-slate-800/60 border-slate-600/50 text-slate-300 hover:border-slate-500"
@@ -79,7 +79,7 @@ function RangeContextSelector({ ranges, activeRangeId, onSelect, onClear }) {
             animate={{ opacity:1, y:0, scale:1 }}
             exit={{ opacity:0, y:-6, scale:0.97 }}
             transition={{ duration:0.15 }}
-            className="absolute top-full mt-1.5 left-0 w-full min-w-[220px] z-50
+            className="absolute top-full mt-1.5 left-0 w-full sm:min-w-[220px] z-50
                        bg-slate-900 border border-slate-700/70 rounded-xl shadow-2xl overflow-hidden"
           >
             <button
@@ -158,10 +158,10 @@ function RangeContextBanner({ range, onClear, onResetToDefault }) {
       transition={{ duration:0.2 }}
       className="overflow-hidden"
     >
-      <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-3 sm:px-4 py-2.5 rounded-xl
                       bg-gradient-to-r from-cyan-500/10 to-blue-500/10
                       border border-cyan-500/30 text-sm">
-        <div className="flex items-center gap-2 min-w-0">
+        <div className="flex items-center gap-2 min-w-0 w-full sm:w-auto">
           <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: range.color||"#00e5ff" }} />
           <span className="text-cyan-300 font-medium truncate">
             กำลังแก้ Range: {range.name||`Range #${range.id}`}
@@ -174,11 +174,11 @@ function RangeContextBanner({ range, onClear, onResetToDefault }) {
             : <Badge className="bg-slate-700/50 text-slate-400 border-0 text-[10px] px-1.5 py-0.5">= Default</Badge>
           }
         </div>
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="grid grid-cols-[1fr_auto] sm:flex sm:items-center gap-1.5 shrink-0 w-full sm:w-auto">
           <button
             onClick={onResetToDefault}
             title="Reset ค่า Range นี้กลับเป็น Default settings"
-            className="flex items-center gap-1.5 px-2.5 py-1.5 text-xs rounded-lg
+            className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-xs rounded-lg
                        bg-slate-700/60 hover:bg-slate-700 text-slate-300 hover:text-white
                        border border-slate-600/50 transition-all"
           >
@@ -206,8 +206,8 @@ function TabNav({ tabs, activeTab, onSelect }) {
   return (
     <div className="relative">
       <div className="absolute inset-0 bg-gradient-to-r from-slate-800/50 to-slate-900/50 rounded-xl blur" />
-      <div className="relative bg-slate-800/40 backdrop-blur-sm rounded-xl p-1 border border-slate-700/50">
-        <div className="grid grid-cols-4 md:grid-cols-7 gap-1">
+      <div className="relative bg-slate-800/40 backdrop-blur-sm rounded-xl p-1 border border-slate-700/50 overflow-x-auto">
+        <div className="grid min-w-max grid-flow-col auto-cols-[72px] sm:auto-cols-[88px] lg:grid-flow-row lg:grid-cols-7 lg:min-w-0 gap-1">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
@@ -216,7 +216,7 @@ function TabNav({ tabs, activeTab, onSelect }) {
                 key={tab.id}
                 onClick={() => onSelect(tab.id)}
                 className={`
-                  relative px-3 py-3 rounded-lg transition-all duration-300 group
+                  relative px-2 sm:px-3 py-2.5 sm:py-3 rounded-lg transition-all duration-300 group
                   ${isActive ? "text-white" : "text-slate-400 hover:text-slate-200 hover:bg-slate-700/50"}
                 `}
                 whileHover={{ scale:1.02 }}
@@ -230,7 +230,7 @@ function TabNav({ tabs, activeTab, onSelect }) {
                   />
                 )}
                 <div className="relative z-10 flex flex-col items-center gap-1">
-                  <Icon className={`w-5 h-5 transition-all duration-300 ${isActive?"scale-110":"group-hover:scale-105"}`} />
+                  <Icon className={`w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300 ${isActive?"scale-110":"group-hover:scale-105"}`} />
                   <span className="text-xs font-medium hidden sm:block">{tab.label}</span>
                   <span className="text-[10px] font-medium block sm:hidden">{tab.label}</span>
                 </div>
@@ -350,17 +350,17 @@ export default function SettingsTabs({
         onMouseLeave={() => setIsHoveringVisual(false)}
       >
         <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-        <div className="relative p-5 bg-gradient-to-r from-slate-800/90 to-slate-900/90 backdrop-blur-sm rounded-2xl border border-slate-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:border-cyan-500/50">
-          <div className="flex items-center justify-between flex-wrap gap-4">
-            <div className="flex items-center gap-4">
+        <div className="relative p-4 sm:p-5 bg-gradient-to-r from-slate-800/90 to-slate-900/90 backdrop-blur-sm rounded-2xl border border-slate-700/50 shadow-xl hover:shadow-2xl transition-all duration-300 hover:border-cyan-500/50">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-start sm:items-center gap-3 sm:gap-4 min-w-0">
               <div className="relative">
                 <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl blur-md opacity-50 animate-pulse" />
                 <div className="relative p-3 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-xl shadow-lg">
                   <Pencil className="w-5 h-5 text-white" />
                 </div>
               </div>
-              <div>
-                <h3 className="text-lg font-semibold text-white flex items-center gap-2">
+              <div className="min-w-0">
+                <h3 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2 flex-wrap">
                   Visual Editor
                   <span className="px-2 py-0.5 text-xs font-medium bg-cyan-500/20 text-cyan-300 rounded-full border border-cyan-500/30">NEW</span>
                 </h3>
@@ -376,7 +376,7 @@ export default function SettingsTabs({
             </div>
             <Button
               onClick={handleOpenVisualEditor}
-              className="group/btn relative overflow-hidden bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white shadow-lg hover:shadow-cyan-500/25 transition-all duration-300"
+              className="group/btn relative overflow-hidden bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white shadow-lg hover:shadow-cyan-500/25 transition-all duration-300 w-full sm:w-auto"
               size="lg"
             >
               <span className="relative z-10 flex items-center">
@@ -441,7 +441,7 @@ export default function SettingsTabs({
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="bg-slate-800/30 rounded-xl border border-slate-700/50 p-6"
+            className="bg-slate-800/30 rounded-xl border border-slate-700/50 p-3 sm:p-5 lg:p-6 min-w-0 overflow-hidden"
           >
             {safeActiveTab === "media"    && <MediaTab    settings={effectiveSettings} updateSetting={handleUpdateSetting} />}
             {safeActiveTab === "sound"    && <SoundTab    settings={effectiveSettings} updateSetting={handleUpdateSetting} />}
