@@ -12,6 +12,24 @@ import {
 } from "lucide-react";
 import AlertPreview from "./AlertPreview";
 
+function DeviceButton({ device, preset, isActive, onClick }) {
+  const { icon: Icon, label } = preset;
+
+  return (
+    <button
+      onClick={() => onClick(device)}
+      className={`relative p-2 rounded-lg transition-all duration-200 ${
+        isActive
+          ? "bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-400 border border-cyan-500/30"
+          : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-300"
+      }`}
+      title={`${label} view`}
+    >
+      <Icon className="w-4 h-4" />
+    </button>
+  );
+}
+
 export default function PreviewPanel({
   settings,
   handleSave,
@@ -63,7 +81,16 @@ export default function PreviewPanel({
 
   const refreshPreview = () => setKey(prev => prev + 1);
 
-  const handlePlayPause = () => setIsPlaying(!isPlaying);
+  const handlePlayPause = () => {
+    if (isPlaying) {
+      setIsPlaying(false);
+      return;
+    }
+
+    setIsVisible(true);
+    setAnimationStep("in");
+    setIsPlaying(true);
+  };
 
   const handleStep = (step) => {
     setIsPlaying(false);
@@ -74,24 +101,8 @@ export default function PreviewPanel({
       setIsVisible(true);
       setTimeout(() => setIsVisible(false), 50);
     }
-  };
 
-  const DeviceButton = ({ device }) => {
-    const { icon: Icon, label } = devicePresets[device];
-    const isActive = deviceSize === device;
-    return (
-      <button
-        onClick={() => setDeviceSize(device)}
-        className={`relative p-2 rounded-lg transition-all duration-200 ${
-          isActive
-            ? "bg-gradient-to-r from-cyan-500/20 to-blue-500/20 text-cyan-400 border border-cyan-500/30"
-            : "text-slate-400 hover:bg-slate-800/50 hover:text-slate-300"
-        }`}
-        title={`${label} view`}
-      >
-        <Icon className="w-4 h-4" />
-      </button>
-    );
+    alertPreviewRef.current?.handleStep?.(step);
   };
 
   return (
@@ -119,9 +130,24 @@ export default function PreviewPanel({
             <div className="flex items-center gap-2">
               {/* Device Size Controls */}
               <div className="flex items-center gap-1 px-2 py-1 bg-black/30 rounded-xl border border-white/5">
-                <DeviceButton device="mobile" />
-                <DeviceButton device="tablet" />
-                <DeviceButton device="desktop" />
+                <DeviceButton
+                  device="mobile"
+                  preset={devicePresets.mobile}
+                  isActive={deviceSize === "mobile"}
+                  onClick={setDeviceSize}
+                />
+                <DeviceButton
+                  device="tablet"
+                  preset={devicePresets.tablet}
+                  isActive={deviceSize === "tablet"}
+                  onClick={setDeviceSize}
+                />
+                <DeviceButton
+                  device="desktop"
+                  preset={devicePresets.desktop}
+                  isActive={deviceSize === "desktop"}
+                  onClick={setDeviceSize}
+                />
               </div>
 
               {/* Zoom Control */}

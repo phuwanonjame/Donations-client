@@ -24,7 +24,9 @@ import {
 } from "@/components/ui/select";
 import AlertPreview from "./AlertPreview";
 import { playAlertSound } from "../../../../../../utils/audioUtils";
+import { resolveTtsVoiceId } from "../../../../../../utils/ttsService";
 import { thaiGoogleFonts, fontWeights } from "./utils/fontUtils";
+import { voiceOptions } from "./utils/settingsUtils";
 
 /* ─────────────────────────────────────────────
    FONT UTILITIES
@@ -251,8 +253,7 @@ const CONFETTI = [
   { id:"blast",    name:"Blast" },
 ];
 const TTS_VOICES = [
-  { id:"female", name:"Female (ผู้หญิง)" },
-  { id:"male",   name:"Male (ผู้ชาย)" },
+  ...voiceOptions,
 ];
 
 /* ─────────────────────────────────────────────
@@ -330,8 +331,6 @@ const ZONES = [
       { key:"useCustomSound",         label:"ใช้เสียงที่อัปโหลด", type:"boolean" },
       { key:"volume",                 label:"ระดับเสียง",           type:"slider",  min:0, max:100, isArr:true },
       { key:"ttsVoice",               label:"เสียง TTS",            type:"select",  options:TTS_VOICES },
-      { key:"ttsRate",                label:"ความเร็วพูด",          type:"slider",  min:0.1, max:2, step:0.1 },
-      { key:"ttsPitch",               label:"ระดับเสียงสูงต่ำ",    type:"slider",  min:0.1, max:2, step:0.1 },
       { key:"ttsTitleEnabled",        label:"อ่านชื่อและจำนวน",    type:"boolean" },
       { key:"ttsMessageEnabledField", label:"อ่านข้อความ",          type:"boolean" },
       { key:"ttsVolume",              label:"ระดับเสียง TTS",      type:"slider",  min:0, max:100, isArr:true },
@@ -587,6 +586,8 @@ const BadgeButton = memo(function BadgeButton({
 const Connectors = memo(function Connectors({
   zones, badgeRects, elemRects, previewBox, selectedId,
 }) {
+  if (!selectedId || !previewBox) return null;
+
   return (
     <svg style={{
       position:"fixed", inset:0, width:"100vw", height:"100vh",
@@ -602,11 +603,11 @@ const Connectors = memo(function Connectors({
         </filter>
       </defs>
       {zones.map(zone => {
+        if (zone.id !== selectedId) return null;
         const badge = badgeRects[zone.id];
         const elem  = elemRects[zone.posKey];
-        if (!badge || !elem || !previewBox) return null;
+        if (!badge || !elem) return null;
         const isL = zone.side === "left";
-        const isSel = selectedId === zone.id;
         const bx = isL ? badge.right : badge.left;
         const by = badge.top + badge.height / 2;
         const dx = elem.cx - bx, dy = elem.cy - by;
@@ -618,12 +619,12 @@ const Connectors = memo(function Connectors({
           ? Math.min(pe-6, bx+(pe-bx)*0.6)
           : Math.max(pe+6, bx+(pe-bx)*0.6);
         return (
-          <g key={zone.id} filter={isSel?"url(#cvGlow)":undefined}>
+          <g key={zone.id} filter="url(#cvGlow)">
             <path
               d={`M ${bx} ${by} H ${ew} L ${ex} ${ey}`}
               fill="none"
-              stroke={isSel?"#22d3ee":"rgba(6,182,212,0.32)"}
-              strokeWidth={isSel?2:1.3}
+              stroke="#22d3ee"
+              strokeWidth={2}
               strokeDasharray="5,3"
               markerEnd="url(#cvDot)"
             />
@@ -698,7 +699,10 @@ export default function FullscreenVisualEditor({
 
   // ── ls = local snapshot สำหรับ preview ──────────────────
   // sync จาก settings prop (ซึ่ง parent ส่ง effectiveSettings มาแล้ว)
-  const [ls, setLs] = useState(() => ({ ...settings }));
+  const [ls, setLs] = useState(() => ({
+    ...settings,
+    ttsVoice: resolveTtsVoiceId(settings?.ttsVoice),
+  }));
 
   const [hasChanges,   setHasChanges]   = useState(false);
   const [testingSound, setTestingSound] = useState(false);
@@ -741,7 +745,10 @@ export default function FullscreenVisualEditor({
     const next = JSON.stringify(settings);
     if (settingsJsonRef.current !== next) {
       settingsJsonRef.current = next;
-      setLs({ ...settings });
+      setLs({
+        ...settings,
+        ttsVoice: resolveTtsVoiceId(settings?.ttsVoice),
+      });
     }
   }, [settings]);
 
@@ -944,11 +951,13 @@ export default function FullscreenVisualEditor({
               </div>
             </div>
 
-            <div className="absolute bottom-3 left-1/2 -translate-x-1/2 pointer-events-none">
+            {selectedId && (
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 pointer-events-none">
               <div className="px-3 py-1.5 bg-slate-900/90 backdrop-blur-sm rounded-full border border-slate-700/60 text-[10px] text-slate-500">
                 เส้นชี้จาก badge → element จริง
               </div>
-            </div>
+              </div>
+            )}
           </div>
 
           {/* Right */}

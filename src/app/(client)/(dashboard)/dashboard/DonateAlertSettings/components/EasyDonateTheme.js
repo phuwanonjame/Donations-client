@@ -133,7 +133,7 @@ const EasyDonateTheme = forwardRef(({
   const msgBorderW     = parseFloat(settings.messageBorderWidth ?? 2.5);
   const msgBorderC     = settings.messageBorderColor ?? "#000000";
   const showMessage    = settings.showMessage        ?? true;
-  const messageText    = settings.messageText        ?? "ขอบคุณสำหรับการใช้งาน FastDonate";
+  const messageText    = settings.messageText        ?? "เล็กพาฟร้องไปไหน เพื่อนรอเล่นเกม";
 
   const effect         = settings.effect       ?? "realistic_look";
   const imageGlow      = settings.imageGlow    ?? false;

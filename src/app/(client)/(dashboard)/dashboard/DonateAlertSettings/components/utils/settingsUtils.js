@@ -1,5 +1,7 @@
 // ==================== settingsUtils.js ====================
 
+import { FALLBACK_TTS_VOICES, resolveTtsVoiceId } from "@/utils/ttsService";
+
 export const defaultSettings = {
   type: "ALERT",
   metadata: {
@@ -43,9 +45,9 @@ export const defaultSettings = {
         volume: 75,
       },
       tts: {
-        voice: "female",
-        rate: 0.5,
-        pitch: 0.5,
+        voice: FALLBACK_TTS_VOICES[0].id,
+        rate: 0.95,
+        pitch: 1.05,
         title:   { enabled: true },
         message: { enabled: false },
         volume: 50,
@@ -124,9 +126,9 @@ function flatRangeToGrouped(range) {
         volume:      getNumVal(range.volume, 75),
       },
       tts: {
-        voice:   range.ttsVoice  ?? "female",
-        rate:    range.ttsRate   ?? 0.5,
-        pitch:   range.ttsPitch  ?? 0.5,
+        voice:   resolveTtsVoiceId(range.ttsVoice) ?? FALLBACK_TTS_VOICES[0].id,
+        rate:    range.ttsRate   ?? 0.95,
+        pitch:   range.ttsPitch  ?? 1.05,
         title:   { enabled: range.ttsTitleEnabled        ?? true },
         message: { enabled: range.ttsMessageEnabledField ?? false },
         volume:  getNumVal(range.ttsVolume, 50),
@@ -203,9 +205,9 @@ function groupedRangeToFlat(r) {
 
     ttsTitleEnabled:        tts.title?.enabled   ?? true,
     ttsMessageEnabledField: tts.message?.enabled ?? false,
-    ttsVoice:  tts.voice ?? "female",
-    ttsRate:   tts.rate  ?? 0.5,
-    ttsPitch:  tts.pitch ?? 0.5,
+    ttsVoice:  resolveTtsVoiceId(tts.voice) ?? FALLBACK_TTS_VOICES[0].id,
+    ttsRate:   tts.rate  ?? 0.95,
+    ttsPitch:  tts.pitch ?? 1.05,
     ttsVolume: tts.volume ?? 50,
   };
 }
@@ -261,9 +263,9 @@ export const transformToGroupedStructure = (flatSettings) => {
           volume:      getNumVal(flatSettings.volume, 75),
         },
         tts: {
-          voice:   flatSettings.ttsVoice ?? "female",
-          rate:    flatSettings.ttsRate  ?? 0.5,
-          pitch:   flatSettings.ttsPitch ?? 0.5,
+          voice:   resolveTtsVoiceId(flatSettings.ttsVoice) ?? FALLBACK_TTS_VOICES[0].id,
+          rate:    flatSettings.ttsRate  ?? 0.95,
+          pitch:   flatSettings.ttsPitch ?? 1.05,
           title:   { enabled: flatSettings.ttsTitleEnabled        ?? true },
           message: { enabled: flatSettings.ttsMessageEnabledField ?? false },
           volume:  getNumVal(flatSettings.ttsVolume, 50),
@@ -358,9 +360,9 @@ export const transformToFlatStructure = (groupedSettings) => {
     ttsEnabled:              tts.title?.enabled ?? true,
     ttsTitleEnabled:         tts.title?.enabled ?? true,
     ttsMessageEnabledField:  tts.message?.enabled ?? false,
-    ttsVoice:  tts.voice || "female",
-    ttsRate:   tts.rate  || 0.5,
-    ttsPitch:  tts.pitch || 0.5,
+    ttsVoice:  resolveTtsVoiceId(tts.voice) || FALLBACK_TTS_VOICES[0].id,
+    ttsRate:   tts.rate  || 0.95,
+    ttsPitch:  tts.pitch || 1.05,
     ttsVolume: tts.volume || 50,
 
     // ✅ ranges: useRanges + donationRanges (flat) อยู่ที่ root ของ flat structure
@@ -414,6 +416,8 @@ export const effectOptions = [
 ];
 
 export const voiceOptions = [
-  { id: "female", name: "Female" },
-  { id: "male",   name: "Male" },
+  ...FALLBACK_TTS_VOICES.map((voice) => ({
+    id: voice.id,
+    name: `${voice.name} (${voice.locale})`,
+  })),
 ];

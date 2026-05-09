@@ -10,7 +10,7 @@ export default function AlertManager() {
     donorNameColor: "#FF9500",
     amountColor: "#0EA5E9",
     suffixText: "โดเนทมา",
-    messageText: "ขอบคุณสำหรับการใช้งาน FastDonate",
+    messageText: "เล็กพาฟร้องไปไหน เพื่อนรอเล่นเกม",
     showName: true,
     showAmount: true,
     showMessage: true,

@@ -9,6 +9,7 @@ import EasyDonateTheme from "./EasyDonateTheme";
 import { getMotionVariants } from "./utils/animationUtils";
 import { getFontFamilyCss, getFontWeight, getDisplayName, getAmountText } from "./utils/fontUtils";
 import { playAlertSound } from "../../../../../../utils/audioUtils";
+import { findMatchingTtsStyleId, synthesizeTtsAudio } from "../../../../../../utils/ttsService";
 
 function readNum(raw, fallback) {
   if (Array.isArray(raw)) return raw[0] ?? fallback;
@@ -39,7 +40,7 @@ function buildSettings(settings) {
     messageColor:       settings.messageColor       ?? "#FFFFFF",
     messageBorderWidth: settings.messageBorderWidth ?? 2.5,
     messageBorderColor: settings.messageBorderColor ?? "#000000",
-    messageText:        settings.messageText        ?? "ขอบคุณสำหรับการใช้งาน FastDonate",
+    messageText:        settings.messageText        ?? "เล็กพาฟร้องไปไหน เพื่อนรอเล่นเกม",
     showMessage:        settings.showMessage        ?? true,
     inAnimation:        settings.inAnimation        ?? "fadeInUp",
     inDuration:         settings.inDuration         ?? 1,
@@ -50,8 +51,11 @@ function buildSettings(settings) {
     volume:             readNum(settings.volume, 75),
     useCustomSound:     settings.useCustomSound     ?? false,
     ttsVoice:           settings.ttsVoice           ?? "female",
-    ttsRate:            settings.ttsRate            ?? 0.5,
-    ttsPitch:           settings.ttsPitch           ?? 0.5,
+    ttsRate:            settings.ttsRate            ?? 0.95,
+    ttsPitch:           settings.ttsPitch           ?? 1.05,
+    ttsTitleEnabled:    settings.ttsTitleEnabled    ?? true,
+    ttsMessageEnabled:  settings.ttsMessageEnabledField ?? false,
+    ttsVolume:          settings.ttsVolume          ?? 50,
     // ✅ รองรับทั้ง alertImage และ image (flat ใช้ทั้งสองอย่าง)
     image:              settings.alertImage ?? settings.image
                         ?? "https://media.tenor.com/k_UsDt9xfWIAAAAM/i-will-eat-you-cat.gif",
@@ -72,6 +76,8 @@ const AlertPreview = forwardRef(({
   externalIsVisible,
 }, ref) => {
   const themeRef  = useRef(null);
+  const ttsAudioRef = useRef(null);
+  const ttsRequestIdRef = useRef(0);
   const [cycleKey, setCycleKey] = useState(0);
   const [step,  setStep]   = useState("display");
   const [visible, setVisible] = useState(true);
@@ -85,16 +91,103 @@ const AlertPreview = forwardRef(({
   const amountText   = getAmountText({ amountText: s.amountText, amountSuffix: settings.amountSuffix ?? "฿" });
   const mainVariants = getMotionVariants(s.inAnimation, s.outAnimation, s.inDuration, s.outDuration);
 
+  const stopTtsAudio = () => {
+    const activeAudio = ttsAudioRef.current;
+    if (!activeAudio) return;
+
+    try {
+      activeAudio.pause();
+      activeAudio.currentTime = 0;
+    } catch {}
+
+    if (activeAudio._blobUrl) {
+      URL.revokeObjectURL(activeAudio._blobUrl);
+    }
+
+    ttsAudioRef.current = null;
+  };
+
+  const buildPreviewTtsText = () => {
+    const parts = [];
+
+    if (s.ttsTitleEnabled) {
+      parts.push(`${displayName} ${amountText}`.replace(/\s+/g, " ").trim());
+    }
+
+    if (s.ttsMessageEnabled) {
+      const message = (s.messageText || "")
+        .replace("{{user}}", displayName)
+        .trim();
+
+      if (message) {
+        parts.push(message);
+      }
+    }
+
+    return parts.join(" ").trim();
+  };
+
+  const triggerEnterAudio = async () => {
+    try {
+      playAlertSound(s.alertSound, s.volume);
+    } catch {}
+
+    const previewText = buildPreviewTtsText();
+    if (!previewText) return;
+
+    const requestId = ++ttsRequestIdRef.current;
+    stopTtsAudio();
+
+    try {
+      const blob = await synthesizeTtsAudio({
+        text: previewText,
+        voice: s.ttsVoice,
+        styleId: findMatchingTtsStyleId(s.ttsRate, s.ttsPitch),
+        rate: s.ttsRate,
+        pitch: s.ttsPitch,
+        volume: s.ttsVolume,
+      });
+
+      if (ttsRequestIdRef.current !== requestId) {
+        return;
+      }
+
+      const blobUrl = URL.createObjectURL(blob);
+      const audio = new Audio(blobUrl);
+      audio.volume = Math.max(0, Math.min(1, Number(s.ttsVolume) / 100));
+      audio._blobUrl = blobUrl;
+      ttsAudioRef.current = audio;
+
+      const cleanup = () => {
+        if (audio._blobUrl) {
+          URL.revokeObjectURL(audio._blobUrl);
+        }
+
+        if (ttsAudioRef.current === audio) {
+          ttsAudioRef.current = null;
+        }
+      };
+
+      audio.onended = cleanup;
+      audio.onerror = cleanup;
+
+      await audio.play();
+    } catch (error) {
+      console.warn("Preview TTS playback failed:", error);
+    }
+  };
+
   useImperativeHandle(ref, () => ({
     handleStep: (step) => {
       if (step === "in" || step === "display") {
         setVisible(true);
         setCycleKey(k => k + 1);
         if (step === "in") {
-          try { playAlertSound(s.alertSound, s.volume); } catch {}
+          triggerEnterAudio();
         }
         setStep(step);
       } else if (step === "out") {
+        stopTtsAudio();
         setVisible(true);
         setCycleKey(k => k + 1);
         setTimeout(() => setVisible(false), 50);
@@ -109,7 +202,7 @@ const AlertPreview = forwardRef(({
     if (!isPlaying) return;
     let timer;
     if (animStep === "in") {
-      try { playAlertSound(s.alertSound, s.volume); } catch {}
+      triggerEnterAudio();
       timer = setTimeout(() => {
         setStep("display");
         onAnimationStepChange?.("display");
@@ -139,10 +232,16 @@ const AlertPreview = forwardRef(({
       setVisible(true);
       setCycleKey(k => k + 1);
     } else {
+      stopTtsAudio();
       setStep("display");
       setVisible(true);
     }
   }, [isPlaying]);
+
+  useEffect(() => () => {
+    ttsRequestIdRef.current += 1;
+    stopTtsAudio();
+  }, []);
 
   return (
     <div className="w-full mx-auto">

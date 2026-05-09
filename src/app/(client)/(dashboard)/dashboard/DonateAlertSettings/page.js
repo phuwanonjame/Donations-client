@@ -24,6 +24,9 @@ import {
   fetchDonateSettings,
 } from "../../../../../actions/DonateAlertapi/donateSettingsApi";
 
+const FIXED_USER_ID = "bc0aa07f-439d-4ea6-bcf1-2904363c6d03";
+const FIXED_WIDGET_ID = "aa05b5ea-9c2b-44d9-89c1-64aaa8e1cbb2";
+
 /* ─────────────────────────────────────────────
    HELPERS
 ───────────────────────────────────────────── */
@@ -33,6 +36,26 @@ function buildSavePayload(flatSettings) {
     ...grouped,
     updatedAt: new Date().toISOString(),
   };
+}
+
+function buildWidgetPatchRequest(userId, flatSettings) {
+  const grouped = buildSavePayload(flatSettings);
+  return {
+    userId,
+    metadata: grouped.metadata,
+  };
+}
+
+function extractUserId(currentUser) {
+  return (
+    currentUser?.data?.data?.id ||
+    currentUser?.data?.data?.user?.id ||
+    currentUser?.data?.id ||
+    currentUser?.data?.user?.id ||
+    currentUser?.user?.id ||
+    currentUser?.id ||
+    null
+  );
 }
 
 /* ─────────────────────────────────────────────
@@ -63,12 +86,13 @@ export default function DonateAlertSettings() {
     const load = async () => {
       setLoading(true);
       try {
-        const res = await fetchDonateSettings();
-        if (!res?.settings) {
+        const res = await fetchDonateSettings(FIXED_USER_ID);
+
+        if (!res?.metadata) {
           setSettings(transformToFlatStructure(defaultSettings));
           toast.success("Using default settings");
         } else {
-          const flat = transformToFlatStructure(res.settings);
+          const flat = transformToFlatStructure(res);
           setSettings(flat);
           setLastSaved(new Date());
           toast.success("Settings loaded");
@@ -116,8 +140,9 @@ export default function DonateAlertSettings() {
 
   const handleCopyJSON = async () => {
     try {
-      const payload = buildSavePayload(settings);
-      await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+      const grouped = buildSavePayload(settings);
+      const payload = grouped;
+      await navigator.clipboard.writeText(JSON.stringify(grouped, null, 2));
       setCopied(true);
       toast.success("Copied to clipboard!");
       setTimeout(() => setCopied(false), 2000);
@@ -129,9 +154,12 @@ export default function DonateAlertSettings() {
   const handleSave = useCallback(async () => {
     setSaving(true);
     try {
-      const payload = buildSavePayload(settings);
+      const grouped = buildSavePayload(settings);
+      const payload = grouped;
       console.log("💾 Saving:", payload);
-      const res = await saveDonateSettings(payload);
+      const widgetId = settings.id || FIXED_WIDGET_ID;
+      const requestPayload = buildWidgetPatchRequest(FIXED_USER_ID, settings);
+      const res = await saveDonateSettings(widgetId, requestPayload);
       if (!res) throw new Error("Save failed");
 
       setSaveSuccess(true);
@@ -205,9 +233,9 @@ export default function DonateAlertSettings() {
             />
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 xl:gap-5">
             <motion.div
-              className="lg:col-span-8 space-y-6"
+              className="lg:col-span-7 xl:col-span-6 space-y-6"
               initial={{ opacity:0, x:-20 }}
               animate={{ opacity:1, x:0 }}
               transition={{ delay:0.1 }}
@@ -248,7 +276,7 @@ export default function DonateAlertSettings() {
             </motion.div>
 
             <motion.div
-              className="lg:col-span-4"
+              className="lg:col-span-5 xl:col-span-6"
               initial={{ opacity:0, x:20 }}
               animate={{ opacity:1, x:0 }}
               transition={{ delay:0.2 }}

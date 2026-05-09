@@ -90,7 +90,7 @@ export default function VisualEditorOverlay({ settings, updateSetting, isActive 
       flatPath: "messageText",
       groupedPath: "message.text",
       type: "text",
-      getValue: () => settings.messageText || "ขอบคุณสำหรับการใช้งาน FastDonate",
+      getValue: () => settings.messageText || "เล็กพาฟร้องไปไหน เพื่อนรอเล่นเกม",
       getPosition: () => ({ x: "50%", y: "70%" }),
       area: "message",
       icon: Type,
