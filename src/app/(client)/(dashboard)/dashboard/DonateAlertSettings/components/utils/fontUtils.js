@@ -9,6 +9,16 @@ export const getFontWeight = (weight) => {
     case "medium": return "500";
     case "bold": return "700";
     case "extrabold": return "800";
+    case "100":
+    case "200":
+    case "300":
+    case "400":
+    case "500":
+    case "600":
+    case "700":
+    case "800":
+    case "900":
+      return weight;
     default: return "400";
   }
 };
@@ -97,6 +107,32 @@ export const fontWeights = ["normal", "medium", "bold", "extrabold"];
 export const getFontFamilyCss = (fontId) => {
   const found = thaiGoogleFonts.find(f => f.id === fontId);
   return found ? found.cssFamily : "sans-serif";
+};
+
+const injectedFonts = new Set();
+
+export const injectFontFamily = (family) => {
+  if (!family || typeof document === "undefined") return;
+
+  const normalizedFamily = String(family).trim().replace(/^['"]|['"]$/g, "");
+  if (!normalizedFamily) return;
+
+  const lowered = normalizedFamily.toLowerCase();
+  if (["sans-serif", "serif", "monospace", "cursive", "fantasy", "system-ui"].includes(lowered)) {
+    return;
+  }
+
+  if (injectedFonts.has(normalizedFamily) || document.querySelector(`link[data-gf="${normalizedFamily}"]`)) {
+    injectedFonts.add(normalizedFamily);
+    return;
+  }
+
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(normalizedFamily).replace(/%20/g, "+")}:wght@300;400;500;600;700;800;900&display=swap`;
+  link.setAttribute("data-gf", normalizedFamily);
+  document.head.appendChild(link);
+  injectedFonts.add(normalizedFamily);
 };
 
 // ======================================================

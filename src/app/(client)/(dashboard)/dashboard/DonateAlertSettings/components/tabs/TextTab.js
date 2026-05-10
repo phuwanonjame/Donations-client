@@ -6,19 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { MessageSquare } from "lucide-react";
-import { thaiGoogleFonts, fontWeights } from "../utils/fontUtils";
-
-const _injected = new Set();
-function injectFont(family) {
-  if (!family || _injected.has(family) || typeof document === "undefined") return;
-  _injected.add(family);
-  if (document.querySelector(`link[data-gf="${family}"]`)) return;
-  const l = document.createElement("link");
-  l.rel = "stylesheet";
-  l.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family).replace(/%20/g, "+")}:wght@300;400;500;600;700;800;900&display=swap`;
-  l.setAttribute("data-gf", family);
-  document.head.appendChild(l);
-}
+import { thaiGoogleFonts, fontWeights, injectFontFamily } from "../utils/fontUtils";
 
 function optFamily(opt) {
   return opt?.family || opt?.name || opt?.id || "";
@@ -50,13 +38,18 @@ export default function TextTab({ settings, updateSetting }) {
   const currentTextSize = Array.isArray(textSize) ? (textSize[0] ?? 36) : (parseInt(textSize) || 36);
   const currentMsgSize  = Array.isArray(messageFontSize) ? (messageFontSize[0] ?? 24) : (parseInt(messageFontSize) || 24);
 
+  React.useEffect(() => {
+    injectFontFamily(fontFamily);
+    injectFontFamily(messageFontFamily);
+  }, [fontFamily, messageFontFamily]);
+
   const handleFontChange = (familyString) => {
-    injectFont(familyString);
+    injectFontFamily(familyString);
     updateSetting("font", familyString);
   };
 
   const handleMessageFontChange = (familyString) => {
-    injectFont(familyString);
+    injectFontFamily(familyString);
     updateSetting("messageFont", familyString);
   };
 
@@ -64,7 +57,7 @@ export default function TextTab({ settings, updateSetting }) {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl p-4 sm:p-6 space-y-5 sm:space-y-6"
+      className="space-y-5 sm:space-y-6"
     >
       <div>
         <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">

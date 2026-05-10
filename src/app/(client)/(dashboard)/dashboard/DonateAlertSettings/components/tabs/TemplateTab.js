@@ -542,12 +542,12 @@ export default function TemplateTab({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl p-4 sm:p-6 space-y-6 sm:space-y-8"
+      className="space-y-6 sm:space-y-8"
     >
-      <div className="rounded-xl border border-slate-700/60 bg-slate-900/60 overflow-hidden">
+      <div className="space-y-4">
         <button
           onClick={() => setGalleryOpen((open) => !open)}
-          className="w-full flex items-start sm:items-center justify-between gap-3 px-3 sm:px-4 py-3 hover:bg-slate-800/40 transition-colors"
+          className="w-full flex items-start sm:items-center justify-between gap-3 px-1 py-1"
         >
           <div className="flex items-center gap-2.5">
             <div className="p-1.5 rounded-lg bg-gradient-to-br from-cyan-500/30 to-blue-500/30 border border-cyan-500/30">
@@ -579,7 +579,7 @@ export default function TemplateTab({
               transition={{ duration: 0.25, ease: "easeInOut" }}
               className="overflow-hidden"
             >
-              <div className="p-4 pt-0 space-y-6">
+              <div className="space-y-6">
                 {templatesError && (
                   <div className="rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
                     {templatesError}
@@ -624,7 +624,7 @@ export default function TemplateTab({
         <motion.div
           initial={{ opacity: 0, height: 0 }}
           animate={{ opacity: 1, height: "auto" }}
-          className="mt-6 p-4 rounded-xl border border-slate-700/50 bg-slate-800/30"
+          className="mt-2 p-4 rounded-xl bg-slate-800/30"
         >
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-3">
             <div className="flex items-center gap-2 min-w-0">

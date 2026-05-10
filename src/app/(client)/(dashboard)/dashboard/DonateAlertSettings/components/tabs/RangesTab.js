@@ -322,7 +322,7 @@ export default function RangesTab({ settings, updateSetting, onEditRange }) {
     <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="space-y-5">
 
       {/* ── Header Toggle ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3 sm:p-4 rounded-xl bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/20">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-1">
         <div className="min-w-0">
           <h3 className="text-lg font-semibold text-white flex items-center gap-2">
             <Layers className="w-5 h-5 text-cyan-400" /> Donation Ranges System

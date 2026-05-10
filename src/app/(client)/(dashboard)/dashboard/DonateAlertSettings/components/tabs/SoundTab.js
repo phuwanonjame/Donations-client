@@ -188,7 +188,7 @@ export default function SoundTab({ settings, updateSetting }) {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl p-4 sm:p-6 space-y-5 sm:space-y-6"
+      className="space-y-5 sm:space-y-6"
     >
       <div>
         <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">

@@ -1,7 +1,7 @@
 // ==================== PreviewPanel.js ====================
 // แก้เฉพาะ getDuration — เอา metadata branch ออก
 "use client";
-import React, { useState, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import {
@@ -66,6 +66,58 @@ const previewBackgrounds = {
   light: "bg-slate-200",
 };
 
+const PREVIEW_OPTIONS_STORAGE_KEY = "donate-alert-preview-options";
+const DEFAULT_PREVIEW_OPTIONS = {
+  deviceSize: "desktop",
+  previewScale: 1,
+  showSettings: false,
+  showGrid: false,
+  showSafeZone: true,
+  backgroundMode: "default",
+};
+
+function sanitizePreviewOptions(rawOptions = {}) {
+  const safeDeviceSize = ["mobile", "tablet", "desktop"].includes(rawOptions.deviceSize)
+    ? rawOptions.deviceSize
+    : DEFAULT_PREVIEW_OPTIONS.deviceSize;
+  const safeBackgroundMode = ["default", "dark", "light"].includes(rawOptions.backgroundMode)
+    ? rawOptions.backgroundMode
+    : DEFAULT_PREVIEW_OPTIONS.backgroundMode;
+  const parsedScale = Number(rawOptions.previewScale);
+  const safePreviewScale = Number.isFinite(parsedScale)
+    ? Math.min(1.5, Math.max(0.5, parsedScale))
+    : DEFAULT_PREVIEW_OPTIONS.previewScale;
+
+  return {
+    deviceSize: safeDeviceSize,
+    previewScale: safePreviewScale,
+    showSettings: typeof rawOptions.showSettings === "boolean"
+      ? rawOptions.showSettings
+      : DEFAULT_PREVIEW_OPTIONS.showSettings,
+    showGrid: typeof rawOptions.showGrid === "boolean"
+      ? rawOptions.showGrid
+      : DEFAULT_PREVIEW_OPTIONS.showGrid,
+    showSafeZone: typeof rawOptions.showSafeZone === "boolean"
+      ? rawOptions.showSafeZone
+      : DEFAULT_PREVIEW_OPTIONS.showSafeZone,
+    backgroundMode: safeBackgroundMode,
+  };
+}
+
+function loadPreviewOptions() {
+  if (typeof window === "undefined") {
+    return DEFAULT_PREVIEW_OPTIONS;
+  }
+
+  try {
+    const stored = window.localStorage.getItem(PREVIEW_OPTIONS_STORAGE_KEY);
+    if (!stored) return DEFAULT_PREVIEW_OPTIONS;
+    return sanitizePreviewOptions(JSON.parse(stored));
+  } catch {
+    return DEFAULT_PREVIEW_OPTIONS;
+  }
+}
+
 export default function PreviewPanel({
   settings,
   handleSave,
@@ -73,19 +125,22 @@ export default function PreviewPanel({
   hasChanges = false
 }) {
   const alertPreviewRef = useRef();
+  const [previewOptions, setPreviewOptions] = useState(loadPreviewOptions);
   const [isFullscreen, setIsFullscreen] = useState(false);
-  const [deviceSize, setDeviceSize] = useState("desktop");
   const [showSaveSuccess, setShowSaveSuccess] = useState(false);
   const [key, setKey] = useState(0);
-  const [previewScale, setPreviewScale] = useState(1);
-  const [showSettings, setShowSettings] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [animationStep, setAnimationStep] = useState("display");
   const [isVisible, setIsVisible] = useState(true);
   const [showControls] = useState(true);
-  const [showGrid, setShowGrid] = useState(false);
-  const [showSafeZone, setShowSafeZone] = useState(true);
-  const [backgroundMode, setBackgroundMode] = useState("default");
+  const {
+    deviceSize,
+    previewScale,
+    showSettings,
+    showGrid,
+    showSafeZone,
+    backgroundMode,
+  } = previewOptions;
 
   const devicePresets = {
     mobile:  { width: "375px", icon: Smartphone, label: "Mobile" },
@@ -111,6 +166,18 @@ export default function PreviewPanel({
   const activePhaseIndex = phaseControls.findIndex((item) => item.step === animationStep);
   const previewScaleLabel = `${Math.round(previewScale * 100)}%`;
   const waitsForTts = Boolean(settings?.ttsTitleEnabled || settings?.ttsMessageEnabledField);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(PREVIEW_OPTIONS_STORAGE_KEY, JSON.stringify(previewOptions));
+  }, [previewOptions]);
+
+  const updatePreviewOptions = (patch) => {
+    setPreviewOptions((prev) => sanitizePreviewOptions({
+      ...prev,
+      ...(typeof patch === "function" ? patch(prev) : patch),
+    }));
+  };
 
   const handleSaveWithFeedback = async () => {
     try {
@@ -177,26 +244,26 @@ export default function PreviewPanel({
                   device="mobile"
                   preset={devicePresets.mobile}
                   isActive={deviceSize === "mobile"}
-                  onClick={setDeviceSize}
+                  onClick={(nextDevice) => updatePreviewOptions({ deviceSize: nextDevice })}
                 />
                 <DeviceButton
                   device="tablet"
                   preset={devicePresets.tablet}
                   isActive={deviceSize === "tablet"}
-                  onClick={setDeviceSize}
+                  onClick={(nextDevice) => updatePreviewOptions({ deviceSize: nextDevice })}
                 />
                 <DeviceButton
                   device="desktop"
                   preset={devicePresets.desktop}
                   isActive={deviceSize === "desktop"}
-                  onClick={setDeviceSize}
+                  onClick={(nextDevice) => updatePreviewOptions({ deviceSize: nextDevice })}
                 />
               </div>
 
               {/* Zoom Control */}
               <div className="flex items-center gap-1 px-2 py-1 bg-black/30 rounded-xl border border-white/5">
                 <button
-                  onClick={() => setPreviewScale(prev => Math.max(0.5, prev - 0.1))}
+                  onClick={() => updatePreviewOptions((prev) => ({ previewScale: prev.previewScale - 0.1 }))}
                   className="p-1 rounded-lg hover:bg-white/10 text-slate-400 transition-colors"
                 >
                   <Minimize2 className="w-3.5 h-3.5" />
@@ -205,7 +272,7 @@ export default function PreviewPanel({
                   {previewScaleLabel}
                 </span>
                 <button
-                  onClick={() => setPreviewScale(prev => Math.min(1.5, prev + 0.1))}
+                  onClick={() => updatePreviewOptions((prev) => ({ previewScale: prev.previewScale + 0.1 }))}
                   className="p-1 rounded-lg hover:bg-white/10 text-slate-400 transition-colors"
                 >
                   <Maximize2 className="w-3.5 h-3.5" />
@@ -221,7 +288,7 @@ export default function PreviewPanel({
                   {isFullscreen ? <Minimize2 className="w-3.5 h-3.5" /> : <Maximize2 className="w-3.5 h-3.5" />}
                 </button>
                 <button
-                  onClick={() => setShowSettings(!showSettings)}
+                  onClick={() => updatePreviewOptions((prev) => ({ showSettings: !prev.showSettings }))}
                   className={`p-1 rounded-lg transition-colors ${showSettings ? "bg-cyan-500/20 text-cyan-400" : "hover:bg-white/10 text-slate-400"}`}
                 >
                   <Settings2 className="w-3.5 h-3.5" />
@@ -246,7 +313,7 @@ export default function PreviewPanel({
                   <input
                     type="checkbox"
                     checked={showGrid}
-                    onChange={(event) => setShowGrid(event.target.checked)}
+                    onChange={(event) => updatePreviewOptions({ showGrid: event.target.checked })}
                     className="rounded bg-slate-700"
                   />
                   <Grid3X3 className="w-3.5 h-3.5" />
@@ -256,7 +323,7 @@ export default function PreviewPanel({
                   <input
                     type="checkbox"
                     checked={showSafeZone}
-                    onChange={(event) => setShowSafeZone(event.target.checked)}
+                    onChange={(event) => updatePreviewOptions({ showSafeZone: event.target.checked })}
                     className="rounded bg-slate-700"
                   />
                   <ShieldCheck className="w-3.5 h-3.5" />
@@ -264,7 +331,7 @@ export default function PreviewPanel({
                 </label>
                 <select
                   value={backgroundMode}
-                  onChange={(event) => setBackgroundMode(event.target.value)}
+                  onChange={(event) => updatePreviewOptions({ backgroundMode: event.target.value })}
                   className="bg-slate-800 rounded px-2 py-1 text-slate-300 border border-slate-700 text-xs"
                 >
                   <option value="default">Default background</option>

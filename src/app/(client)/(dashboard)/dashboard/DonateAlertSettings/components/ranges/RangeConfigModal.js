@@ -28,7 +28,9 @@ import {
   Type, Layout, Music, Video, Trash2, RotateCcw, Copy,
   RefreshCw, Gift, Star, Trophy
 } from "lucide-react";
-import { toast } from 'react-hot-toast';
+import { createWidgetSettingsNotifier } from "@/lib/notifications/widget-settings-toast";
+
+const rangeNotifier = createWidgetSettingsNotifier("Range settings");
 
 // Default empty config for new range (เหมือนการรีเซ็ตทั้งหมด)
 const getEmptyRangeConfig = () => ({
@@ -98,11 +100,11 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
   const handleSave = () => {
     // Validation
     if (!config.name.trim()) {
-      toast.error("Please enter a range name");
+      rangeNotifier.error("Please enter a range name");
       return;
     }
     if (config.minAmount >= config.maxAmount) {
-      toast.error("Minimum amount must be less than maximum amount");
+      rangeNotifier.error("Minimum amount must be less than maximum amount");
       return;
     }
     onSave(config);
@@ -114,7 +116,7 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
       setIsResetting(true);
       setConfig(getEmptyRangeConfig());
       setTimeout(() => setIsResetting(false), 500);
-      toast.success("Range settings reset to empty. You can now configure from scratch.");
+      rangeNotifier.success("Range settings reset to empty. You can now configure from scratch.");
     }
   };
 

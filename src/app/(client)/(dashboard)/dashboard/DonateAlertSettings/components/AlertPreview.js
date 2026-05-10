@@ -7,7 +7,13 @@ import React, {
 import { AnimatePresence, motion } from "framer-motion";
 import EasyDonateTheme from "./EasyDonateTheme";
 import { getMotionVariants } from "./utils/animationUtils";
-import { getFontFamilyCss, getFontWeight, getDisplayName, getAmountText } from "./utils/fontUtils";
+import {
+  getFontFamilyCss,
+  getFontWeight,
+  getDisplayName,
+  getAmountText,
+  injectFontFamily,
+} from "./utils/fontUtils";
 import { playAlertSound } from "../../../../../../utils/audioUtils";
 import { findMatchingTtsStyleId, synthesizeTtsAudio } from "../../../../../../utils/ttsService";
 
@@ -90,6 +96,11 @@ const AlertPreview = forwardRef(({
   const isVis    = externalIsVisible     ?? visible;
 
   const s = buildSettings(settings);
+
+  useEffect(() => {
+    injectFontFamily(s.font);
+    injectFontFamily(s.messageFont);
+  }, [s.font, s.messageFont]);
 
   const displayName  = getDisplayName(s.prefixText);
   const amountText   = getAmountText({ amountText: s.amountText, amountSuffix: settings.amountSuffix ?? "฿" });

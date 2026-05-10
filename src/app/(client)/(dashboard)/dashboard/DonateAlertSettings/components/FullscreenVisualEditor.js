@@ -25,7 +25,7 @@ import {
 import AlertPreview from "./AlertPreview";
 import { playAlertSound } from "../../../../../../utils/audioUtils";
 import { resolveTtsVoiceId } from "../../../../../../utils/ttsService";
-import { thaiGoogleFonts, fontWeights } from "./utils/fontUtils";
+import { thaiGoogleFonts, fontWeights, injectFontFamily } from "./utils/fontUtils";
 import { voiceOptions } from "./utils/settingsUtils";
 
 /* ─────────────────────────────────────────────
@@ -33,18 +33,6 @@ import { voiceOptions } from "./utils/settingsUtils";
 ───────────────────────────────────────────── */
 function optFamily(opt) {
   return opt?.family || opt?.name || opt?.id || "";
-}
-
-const _injected = new Set();
-function injectFont(family) {
-  if (!family || _injected.has(family) || typeof document === "undefined") return;
-  _injected.add(family);
-  if (document.querySelector(`link[data-gf="${family}"]`)) return;
-  const l = document.createElement("link");
-  l.rel  = "stylesheet";
-  l.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family).replace(/%20/g,"+")}:wght@300;400;500;600;700;800;900&display=swap`;
-  l.setAttribute("data-gf", family);
-  document.head.appendChild(l);
 }
 
 /* ─────────────────────────────────────────────
@@ -740,8 +728,8 @@ export default function FullscreenVisualEditor({
   // ── lifecycle ──────────────────────────────────────────
   useEffect(() => {
     mountedRef.current = true;
-    injectFont(settings.font);
-    injectFont(settings.messageFont);
+    injectFontFamily(settings.font);
+    injectFontFamily(settings.messageFont);
     return () => {
       mountedRef.current = false;
       cancelAnimationFrame(rafRef.current);
@@ -823,7 +811,7 @@ export default function FullscreenVisualEditor({
   const handleUpdate = useCallback((key, value) => {
     let final = value;
     if (key === "font" || key === "messageFont") {
-      injectFont(value);
+      injectFontFamily(value);
     } else if (ARR_KEYS.has(key) && typeof value === "number") {
       final = [value];
     }

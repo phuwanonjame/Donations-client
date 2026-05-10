@@ -7,7 +7,6 @@ import {
   Sparkles, MonitorSmartphone, Edit3, Save
 } from "lucide-react";
 import { Button } from '@/components/ui/button';
-import { toast } from 'react-hot-toast';
 
 import SettingsTabs from "./components/SettingsTabs";
 import PreviewPanel from "./components/PreviewPanel";
@@ -23,9 +22,11 @@ import {
   saveDonateSettings,
   fetchDonateSettings,
 } from "../../../../../actions/DonateAlertapi/donateSettingsApi";
+import { createWidgetSettingsNotifier } from "@/lib/notifications/widget-settings-toast";
 
-const FIXED_USER_ID = "bc0aa07f-439d-4ea6-bcf1-2904363c6d03";
-const FIXED_WIDGET_ID = "aa05b5ea-9c2b-44d9-89c1-64aaa8e1cbb2";
+const FIXED_USER_ID = "244bad71-4990-4a79-9a19-9ff983a55442";
+const FIXED_WIDGET_ID = "676669ee-9634-44cd-bd08-6aa40afe32a9";
+const alertNotifier = createWidgetSettingsNotifier("Alert settings");
 
 /* ─────────────────────────────────────────────
    HELPERS
@@ -90,16 +91,16 @@ export default function DonateAlertSettings() {
 
         if (!res?.metadata) {
           setSettings(transformToFlatStructure(defaultSettings));
-          toast.success("Using default settings");
+          alertNotifier.defaultLoaded();
         } else {
           const flat = transformToFlatStructure(res);
           setSettings(flat);
           setLastSaved(new Date());
-          toast.success("Settings loaded");
+          alertNotifier.loadSuccess();
         }
       } catch (err) {
         console.error(err);
-        toast.error("Failed to load settings");
+        alertNotifier.loadError(err);
       } finally {
         setLoading(false);
       }
@@ -135,7 +136,7 @@ export default function DonateAlertSettings() {
     if (!window.confirm("Reset all settings to default?")) return;
     setSettings(transformToFlatStructure(defaultSettings));
     setHasChanges(true);
-    toast.success("Settings reset");
+    alertNotifier.resetSuccess();
   };
 
   const handleCopyJSON = async () => {
@@ -144,10 +145,10 @@ export default function DonateAlertSettings() {
       const payload = grouped;
       await navigator.clipboard.writeText(JSON.stringify(grouped, null, 2));
       setCopied(true);
-      toast.success("Copied to clipboard!");
+      alertNotifier.copySuccess();
       setTimeout(() => setCopied(false), 2000);
-    } catch {
-      toast.error("Failed to copy");
+    } catch (err) {
+      alertNotifier.copyError(err);
     }
   };
 
@@ -166,11 +167,11 @@ export default function DonateAlertSettings() {
       setHasChanges(false);
       setLastSaved(new Date());
       setShowSaveNotification(true);
-      toast.success("Saved!");
+      alertNotifier.saveSuccess();
       setTimeout(() => setSaveSuccess(false), 2000);
     } catch (err) {
       console.error(err);
-      toast.error("Failed to save");
+      alertNotifier.saveError(err);
     } finally {
       setSaving(false);
     }
