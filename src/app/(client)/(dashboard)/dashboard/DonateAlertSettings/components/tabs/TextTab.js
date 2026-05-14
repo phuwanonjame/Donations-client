@@ -13,27 +13,26 @@ function optFamily(opt) {
 }
 
 export default function TextTab({ settings, updateSetting }) {
-  // ✅ flat structure เท่านั้น
-  const prefixText   = settings?.prefixText     ?? "{{user}}";
-  const suffixText   = settings?.suffixText     ?? "โดเนทมา";
-  const amountText   = settings?.amountText     ?? "{{amount}}฿";
+  const titleText   = settings?.titleText     ?? "{{user}}";
+  const titleSuffixText   = settings?.titleSuffixText     ?? "โดเนทมา";
+  const amountText   = settings?.titleAmountText     ?? "{{amount}}฿";
   const amountSuffix = settings?.amountSuffix   ?? "฿";
 
-  const fontFamily   = settings?.font           ?? "IBM Plex Sans Thai";
-  const fontWeight   = settings?.fontWeight     ?? "700";
-  const textSize     = settings?.textSize;
-  const textColor    = settings?.textColor      ?? "#FFFFFF";
-  const donorNameColor = settings?.donorNameColor ?? "#FF9500";
-  const amountColor  = settings?.amountColor    ?? "#0EA5E9";
-  const borderWidth  = settings?.borderWidth    ?? 2.5;
-  const borderColor  = settings?.borderColor    ?? "#000000";
+  const fontFamily   = settings?.titleFontFamily           ?? "IBM Plex Sans Thai";
+  const fontWeight   = settings?.titleFontWeight     ?? "700";
+  const textSize     = settings?.titleFontSize;
+  const textColor    = settings?.titleMainColor      ?? "#FFFFFF";
+  const donorNameColor = settings?.titleUsernameColor ?? "#FF9500";
+  const amountColor  = settings?.titleAmountColor    ?? "#0EA5E9";
+  const borderWidth  = settings?.titleStrokeWidth    ?? 2.5;
+  const borderColor  = settings?.titleStrokeColor    ?? "#000000";
 
-  const messageFontFamily  = settings?.messageFont        ?? "IBM Plex Sans Thai";
+  const messageFontFamily  = settings?.messageFontFamily        ?? "IBM Plex Sans Thai";
   const messageFontWeight  = settings?.messageFontWeight  ?? "500";
   const messageFontSize    = settings?.messageFontSize    ?? 24;
   const messageColor       = settings?.messageColor       ?? "#FFFFFF";
-  const messageBorderWidth = settings?.messageBorderWidth ?? 2.5;
-  const messageBorderColor = settings?.messageBorderColor ?? "#000000";
+  const messageBorderWidth = settings?.messageStrokeWidth ?? 2.5;
+  const messageBorderColor = settings?.messageStrokeColor ?? "#000000";
 
   const currentTextSize = Array.isArray(textSize) ? (textSize[0] ?? 36) : (parseInt(textSize) || 36);
   const currentMsgSize  = Array.isArray(messageFontSize) ? (messageFontSize[0] ?? 24) : (parseInt(messageFontSize) || 24);
@@ -45,12 +44,12 @@ export default function TextTab({ settings, updateSetting }) {
 
   const handleFontChange = (familyString) => {
     injectFontFamily(familyString);
-    updateSetting("font", familyString);
+    updateSetting("titleFontFamily", familyString);
   };
 
   const handleMessageFontChange = (familyString) => {
     injectFontFamily(familyString);
-    updateSetting("messageFont", familyString);
+    updateSetting("messageFontFamily", familyString);
   };
 
   return (
@@ -66,20 +65,20 @@ export default function TextTab({ settings, updateSetting }) {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
-            <Label className="text-slate-300">Prefix Text</Label>
+              <Label className="text-slate-300">Prefix Text</Label>
             <Input
-              value={prefixText}
-              onChange={(e) => updateSetting("prefixText", e.target.value)}
+              value={titleText}
+              onChange={(e) => updateSetting("titleText", e.target.value)}
               placeholder="{{user}}"
               className="bg-slate-800/80 border-slate-700 text-white"
             />
             <p className="text-slate-500 text-xs">Use {"{{user}}"} for donor name</p>
           </div>
           <div className="space-y-2">
-            <Label className="text-slate-300">Suffix Text</Label>
+              <Label className="text-slate-300">Suffix Text</Label>
             <Input
-              value={suffixText}
-              onChange={(e) => updateSetting("suffixText", e.target.value)}
+              value={titleSuffixText}
+              onChange={(e) => updateSetting("titleSuffixText", e.target.value)}
               placeholder="โดเนทมา"
               className="bg-slate-800/80 border-slate-700 text-white"
             />
@@ -87,10 +86,10 @@ export default function TextTab({ settings, updateSetting }) {
         </div>
 
         <div className="space-y-2 mt-4">
-          <Label className="text-slate-300">Amount Text Format</Label>
+            <Label className="text-slate-300">Amount Text Format</Label>
           <Input
             value={amountText}
-            onChange={(e) => updateSetting("amountText", e.target.value)}
+            onChange={(e) => updateSetting("titleAmountText", e.target.value)}
             placeholder="{{amount}}฿"
             className="bg-slate-800/80 border-slate-700 text-white"
           />
@@ -123,7 +122,7 @@ export default function TextTab({ settings, updateSetting }) {
 
           <div className="space-y-2">
             <Label className="text-slate-300">Font Weight</Label>
-            <Select value={fontWeight} onValueChange={(v) => updateSetting("fontWeight", v)}>
+            <Select value={fontWeight} onValueChange={(v) => updateSetting("titleFontWeight", v)}>
               <SelectTrigger className="bg-slate-800/80 border-slate-700 text-white">
                 <SelectValue />
               </SelectTrigger>
@@ -145,7 +144,7 @@ export default function TextTab({ settings, updateSetting }) {
           </div>
           <Slider
             value={[currentTextSize]}
-            onValueChange={(v) => updateSetting("textSize", v)}
+            onValueChange={(v) => updateSetting("titleFontSize", v)}
             min={12} max={72} step={1} className="w-full"
           />
         </div>
@@ -153,7 +152,7 @@ export default function TextTab({ settings, updateSetting }) {
         <div className="space-y-2 mt-4">
           <Label className="text-slate-300">Text Color</Label>
           <div className="flex items-center gap-3 min-w-0">
-            <Input type="color" value={textColor} onChange={(e) => updateSetting("textColor", e.target.value)}
+            <Input type="color" value={textColor} onChange={(e) => updateSetting("titleMainColor", e.target.value)}
               className="w-16 sm:w-20 h-10 p-1 bg-slate-800/80 border-slate-700 shrink-0" />
             <span className="text-slate-400 font-mono text-xs sm:text-sm truncate">{textColor}</span>
           </div>
@@ -162,12 +161,12 @@ export default function TextTab({ settings, updateSetting }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
           <div className="space-y-2">
             <Label className="text-slate-300">Border Width ({borderWidth}px)</Label>
-            <Slider value={[borderWidth]} onValueChange={(v) => updateSetting("borderWidth", v[0])}
+            <Slider value={[borderWidth]} onValueChange={(v) => updateSetting("titleStrokeWidth", v[0])}
               min={0} max={10} step={0.5} className="w-full" />
           </div>
           <div className="space-y-2">
             <Label className="text-slate-300">Border Color</Label>
-            <Input type="color" value={borderColor} onChange={(e) => updateSetting("borderColor", e.target.value)}
+            <Input type="color" value={borderColor} onChange={(e) => updateSetting("titleStrokeColor", e.target.value)}
               className="w-12 h-10 p-1 bg-slate-800/80 border-slate-700" />
           </div>
         </div>
@@ -175,12 +174,12 @@ export default function TextTab({ settings, updateSetting }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
           <div className="space-y-2">
             <Label className="text-slate-300">Donor Name Color</Label>
-            <Input type="color" value={donorNameColor} onChange={(e) => updateSetting("donorNameColor", e.target.value)}
+            <Input type="color" value={donorNameColor} onChange={(e) => updateSetting("titleUsernameColor", e.target.value)}
               className="w-12 h-10 p-1 bg-slate-800/80 border-slate-700" />
           </div>
           <div className="space-y-2">
             <Label className="text-slate-300">Amount Color</Label>
-            <Input type="color" value={amountColor} onChange={(e) => updateSetting("amountColor", e.target.value)}
+            <Input type="color" value={amountColor} onChange={(e) => updateSetting("titleAmountColor", e.target.value)}
               className="w-12 h-10 p-1 bg-slate-800/80 border-slate-700" />
           </div>
         </div>
@@ -251,12 +250,12 @@ export default function TextTab({ settings, updateSetting }) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-4">
           <div className="space-y-2">
             <Label className="text-slate-300">Message Border Width ({messageBorderWidth}px)</Label>
-            <Slider value={[messageBorderWidth]} onValueChange={(v) => updateSetting("messageBorderWidth", v[0])}
+            <Slider value={[messageBorderWidth]} onValueChange={(v) => updateSetting("messageStrokeWidth", v[0])}
               min={0} max={10} step={0.5} className="w-full" />
           </div>
           <div className="space-y-2">
             <Label className="text-slate-300">Message Border Color</Label>
-            <Input type="color" value={messageBorderColor} onChange={(e) => updateSetting("messageBorderColor", e.target.value)}
+            <Input type="color" value={messageBorderColor} onChange={(e) => updateSetting("messageStrokeColor", e.target.value)}
               className="w-12 h-10 p-1 bg-slate-800/80 border-slate-700" />
           </div>
         </div>

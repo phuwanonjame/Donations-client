@@ -3,6 +3,7 @@
 // ============================================
 import React, { forwardRef, useRef, useImperativeHandle, useEffect, useMemo } from "react";
 import { motion } from "framer-motion";
+import { confettiPresets } from "./utils/settingsUtils";
 
 // ── helpers ─────────────────────────────────────────────
 function resolveNum(raw, fallback) {
@@ -40,102 +41,38 @@ function seededRange(index, salt, min, max) {
   return min + seededUnit(index, salt) * (max - min);
 }
 
-const CONFETTI_PRESETS = {
-  fountain: {
-    count: 56,
-    size: [16, 32],
-    origin: "center",
-    emojis: ["✨","⭐","💎","🎉","🎊","💖","🔥","⚡","🌟","🍬","🍭","👑"],
-  },
-  rain: {
-    count: 60,
-    size: [16, 30],
-    origin: "top",
-    emojis: ["✨","⭐","💎","🎉","🎊","💖","🌟","🍬","🍭"],
-  },
-  spiral: {
-    count: 58,
-    size: [16, 31],
-    origin: "top",
-    emojis: ["✨","⭐","💎","🎊","💖","⚡","🌟","👑"],
-  },
-  blast: {
-    count: 68,
-    size: [18, 36],
-    origin: "center",
-    emojis: ["✨","⭐","💎","🎉","🎊","💖","🔥","⚡","🌟","👑"],
-  },
-  fireworks: {
-    count: 84,
-    size: [14, 30],
-    origin: "center",
-    emojis: ["✨","💥","🎆","🎇","⭐","🌟","⚡","🔥"],
-  },
-  heart_burst: {
-    count: 62,
-    size: [18, 34],
-    origin: "center",
-    emojis: ["💖","💗","💘","💕","💞","✨","⭐"],
-  },
-  money_rain: {
-    count: 72,
-    size: [18, 34],
-    origin: "top",
-    emojis: ["💸","💰","🪙","💵","✨","👑"],
-  },
-  starfall: {
-    count: 76,
-    size: [14, 28],
-    origin: "top",
-    emojis: ["✨","⭐","🌟","💫","✦","✧"],
-  },
-  portal: {
-    count: 70,
-    size: [14, 30],
-    origin: "center",
-    emojis: ["✨","🔮","💫","⭐","🌟","⚡"],
-  },
-  shockwave: {
-    count: 64,
-    size: [16, 32],
-    origin: "center",
-    emojis: ["⚡","✨","💥","🔥","⭐","🌟"],
-  },
-  snow: {
-    count: 70,
-    size: [14, 28],
-    origin: "top",
-    emojis: ["❄️","✦","✨","⭐"],
-  },
-  bubbles: {
-    count: 60,
-    size: [16, 34],
-    origin: "bottom",
-    emojis: ["🫧","○","◌","✨","💎"],
-  },
-  meteors: {
-    count: 58,
-    size: [16, 32],
-    origin: "top",
-    emojis: ["☄️","🔥","⚡","✨","💫"],
-  },
-  comet: {
-    count: 54,
-    size: [18, 36],
-    origin: "top",
-    emojis: ["💫","☄️","✨","⭐","⚡"],
-  },
-};
-
 function clamp(value, min, max) {
   return Math.max(min, Math.min(max, value));
+}
+
+function hexToRgb(hex) {
+  if (!hex || typeof hex !== "string") return null;
+  const normalized = hex.replace("#", "").trim();
+  const value = normalized.length === 3
+    ? normalized.split("").map((char) => char + char).join("")
+    : normalized;
+
+  if (!/^[0-9a-fA-F]{6}$/.test(value)) return null;
+
+  const int = parseInt(value, 16);
+  return {
+    r: (int >> 16) & 255,
+    g: (int >> 8) & 255,
+    b: int & 255,
+  };
+}
+
+function rgba(hex, alpha) {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return `rgba(255,255,255,${alpha})`;
+  return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
 }
 
 // ── ConfettiLayer ────────────────────────────────────────
 const PhysicsConfettiLayer = ({ settings, collisionRefs = [] }) => {
   const canvasRef = useRef(null);
   const effectType = settings.confettiEffect || settings.effect || "fountain";
-  const preset     = CONFETTI_PRESETS[effectType] || CONFETTI_PRESETS.fountain;
+  const preset     = confettiPresets[effectType] || confettiPresets.fountain;
   const color      = settings.amountColor || "#FF6B00";
 
   useEffect(() => {
@@ -417,7 +354,7 @@ function getClassicOrigin(origin) {
 
 const ClassicConfettiLayer = ({ settings }) => {
   const effectType = settings.confettiEffect || settings.effect || "fountain";
-  const preset     = CONFETTI_PRESETS[effectType] || CONFETTI_PRESETS.fountain;
+  const preset     = confettiPresets[effectType] || confettiPresets.fountain;
   const color      = settings.amountColor || "#FF6B00";
 
   const variants = (i) => {
@@ -611,29 +548,31 @@ const EasyDonateTheme = forwardRef(({
   }));
 
   // ── read settings (settings มาจาก buildSettings แล้ว — ค่า flat) ──
-  const fontRaw        = settings.font        ?? "IBM Plex Sans Thai";
-  const msgFontRaw     = settings.messageFont ?? fontRaw;
-  const fontWeight     = settings.fontWeight  ?? "700";
-  const textSize       = resolveNum(settings.textSize, 36);
-  const textColor      = settings.textColor      ?? "#FFFFFF";
-  const donorColor     = settings.donorNameColor ?? "#FF9500";
-  const amountColor    = settings.amountColor    ?? "#0EA5E9";
-  const borderW        = parseFloat(settings.borderWidth ?? 2.5);
-  const borderC        = settings.borderColor    ?? "#000000";
-  const amountShine    = settings.amountShine    ?? true;
-  const suffixText     = settings.suffixText     ?? "โดเนทมา";
-  const showName       = settings.showName       ?? true;
-  const showAmount     = settings.showAmount     ?? true;
+  const fontRaw        = settings.titleFontFamily        ?? "IBM Plex Sans Thai";
+  const msgFontRaw     = settings.messageFontFamily ?? fontRaw;
+  const fontWeight     = settings.titleFontWeight  ?? "700";
+  const textSize       = resolveNum(settings.titleFontSize, 36);
+  const textColor      = settings.titleMainColor      ?? "#FFFFFF";
+  const donorColor     = settings.titleUsernameColor ?? "#FF9500";
+  const amountColor    = settings.titleAmountColor    ?? "#0EA5E9";
+  const borderW        = parseFloat(settings.titleStrokeWidth ?? 2.5);
+  const borderC        = settings.titleStrokeColor    ?? "#000000";
+  const amountShine    = settings.titleAmountShine    ?? true;
+  const amountEffect   = settings.titleAmountEffect   ?? (amountShine ? "sweep" : "none");
+  const textEffect     = settings.titleTextEffect     ?? settings.effect ?? "realistic_look";
+  const suffixText     = settings.titleSuffixText     ?? "โดเนทมา";
+  const showName       = settings.titleShowName       ?? true;
+  const showAmount     = settings.titleShowAmount     ?? true;
 
   const msgFontWeight  = settings.messageFontWeight  ?? "500";
   const msgFontSize    = resolveNum(settings.messageFontSize, 24);
   const msgColor       = settings.messageColor       ?? "#FFFFFF";
-  const msgBorderW     = parseFloat(settings.messageBorderWidth ?? 2.5);
-  const msgBorderC     = settings.messageBorderColor ?? "#000000";
-  const showMessage    = settings.showMessage        ?? true;
+  const msgBorderW     = parseFloat(settings.messageStrokeWidth ?? 2.5);
+  const msgBorderC     = settings.messageStrokeColor ?? "#000000";
+  const showMessage    = settings.messageShowMessage        ?? true;
   const messageText    = settings.messageText        ?? "เล็กพาฟร้องไปไหน เพื่อนรอเล่นเกม";
 
-  const effect         = settings.effect       ?? "realistic_look";
+  const effect         = textEffect;
   const imageGlow      = settings.imageGlow    ?? false;
   const showConfetti   = settings.showConfetti ?? false;
   const confettiMode   = settings.confettiMode ?? "classic";
@@ -659,6 +598,33 @@ const EasyDonateTheme = forwardRef(({
     return n || "500";
   })();
 
+  const realisticTitleShadow = `${buildTextStroke(borderC, borderW)}, 0 1px 0 rgba(255,255,255,0.25), 0 6px 18px rgba(0,0,0,0.35)`;
+  const realisticAmountShadow = amountShine
+    ? `${buildTextStroke(borderC, borderW)}, 0 1px 0 rgba(255,255,255,0.45), 0 0 12px ${rgba(amountColor, 0.55)}, 0 0 28px ${rgba(amountColor, 0.35)}, 0 10px 24px rgba(0,0,0,0.32)`
+    : `${buildTextStroke(borderC, borderW)}, 0 1px 0 rgba(255,255,255,0.22), 0 8px 20px rgba(0,0,0,0.3)`;
+  const messageFilter = msgBorderW > 0
+    ? "url(#message-stroke-filter) drop-shadow(0 4px 6px rgba(0,0,0,0.6))"
+    : "none";
+  const messageStrokeStyle = msgBorderW > 0
+    ? {
+        WebkitTextStroke: `${msgBorderW}px ${msgBorderC}`,
+        textStroke: `${msgBorderW}px ${msgBorderC}`,
+        paintOrder: "stroke fill",
+      }
+    : {
+        WebkitTextStroke: "0px transparent",
+        WebkitTextStrokeWidth: "0px",
+        WebkitTextStrokeColor: "transparent",
+        textStroke: "0px transparent",
+        textStrokeWidth: "0px",
+        textStrokeColor: "transparent",
+        WebkitTextFillColor: msgColor,
+        textShadow: "none",
+        paintOrder: "normal",
+        WebkitFontSmoothing: "antialiased",
+        MozOsxFontSmoothing: "grayscale",
+      };
+
   const amountShadow = (() => {
     const stroke = buildTextStroke(borderC, borderW);
     switch (effect) {
@@ -668,16 +634,204 @@ const EasyDonateTheme = forwardRef(({
       case "shadow":
         return `${stroke}, 3px 3px 6px rgba(0,0,0,0.5)`;
       case "realistic_look":
-        return amountShine
-          ? `${stroke}, 0 0 10px ${amountColor}, 0 0 20px ${amountColor}80, 0 0 30px ${amountColor}40`
-          : stroke;
+        return realisticAmountShadow;
       default: return stroke;
+    }
+  })();
+
+  const titleShadow = (() => {
+    const stroke = buildTextStroke(borderC, borderW);
+    switch (effect) {
+      case "glow":
+      case "neon":
+        return `${stroke}, 0 0 10px ${rgba(donorColor, 0.35)}, 0 0 18px ${rgba(amountColor, 0.2)}`;
+      case "shadow":
+        return `${stroke}, 0 8px 18px rgba(0,0,0,0.45)`;
+      case "realistic_look":
+        return realisticTitleShadow;
+      default:
+        return `${stroke}, 0 6px 16px rgba(0,0,0,0.28)`;
     }
   })();
 
   const imgShadow = (imageGlow || ["glow","neon"].includes(effect))
     ? `0 0 10px ${amountColor}, 0 0 15px ${amountColor}80`
     : effect === "shadow" ? "0 5px 15px rgba(0,0,0,0.5)" : "none";
+
+  const renderAmountEffectOverlay = () => {
+    if (!amountShine || amountEffect === "none") return null;
+
+    if (amountEffect === "pulse") {
+      return (
+        <motion.h1
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-[2] w-fit"
+          style={{
+            fontFamily: mainFont,
+            fontWeight: mainFW,
+            fontSize: `${textSize * 1.33}px`,
+            lineHeight: `${textSize * 1.33}px`,
+            color: "#fff7d6",
+            opacity: 0.74,
+            textShadow: `0 0 16px ${rgba(amountColor, 0.82)}, 0 0 34px ${rgba(amountColor, 0.5)}, 0 0 50px ${rgba("#FFFFFF", 0.28)}`,
+            mixBlendMode: "screen",
+          }}
+          animate={{
+            opacity: [0.28, 0.95, 0.28],
+            scale: [1, 1.055, 1],
+            y: [0, -1.5, 0],
+          }}
+          transition={{
+            duration: 1.6,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          <span>{cleanAmount}</span><span>฿</span>
+        </motion.h1>
+      );
+    }
+
+    if (amountEffect === "sparkle") {
+      const sparkles = [
+        { left: "-10%", top: "8%", delay: 0 },
+        { left: "84%", top: "4%", delay: 0.35 },
+        { left: "16%", top: "72%", delay: 0.6 },
+        { left: "92%", top: "76%", delay: 0.95 },
+      ];
+
+      return (
+        <>
+          <motion.h1
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 z-[2] w-fit"
+            style={{
+              fontFamily: mainFont,
+              fontWeight: mainFW,
+              fontSize: `${textSize * 1.33}px`,
+              lineHeight: `${textSize * 1.33}px`,
+              color: "#fff9e8",
+              opacity: 0.48,
+              textShadow: `0 0 10px ${rgba(amountColor, 0.65)}, 0 0 26px ${rgba(amountColor, 0.36)}`,
+              mixBlendMode: "screen",
+            }}
+            animate={{ opacity: [0.3, 0.62, 0.3] }}
+            transition={{ duration: 1.8, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <span>{cleanAmount}</span><span>฿</span>
+          </motion.h1>
+
+          {sparkles.map((sparkle, index) => (
+            <motion.span
+              key={`sparkle-${index}`}
+              aria-hidden="true"
+              className="pointer-events-none absolute z-[3] text-white"
+              style={{
+                left: sparkle.left,
+                top: sparkle.top,
+                textShadow: `0 0 10px ${rgba(amountColor, 0.85)}, 0 0 20px ${rgba("#FFFFFF", 0.4)}`,
+                fontSize: `${Math.max(12, textSize * 0.22)}px`,
+              }}
+              animate={{
+                opacity: [0, 1, 0],
+                scale: [0.4, 1.2, 0.4],
+                rotate: [0, 90, 180],
+              }}
+              transition={{
+                duration: 1.45,
+                repeat: Infinity,
+                delay: sparkle.delay,
+                ease: "easeInOut",
+              }}
+            >
+              ✦
+            </motion.span>
+          ))}
+        </>
+      );
+    }
+
+    if (amountEffect === "pop") {
+      return (
+        <motion.h1
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-[2] w-fit"
+          style={{
+            fontFamily: mainFont,
+            fontWeight: mainFW,
+            fontSize: `${textSize * 1.33}px`,
+            lineHeight: `${textSize * 1.33}px`,
+            color: "#fff4cc",
+            opacity: 0.52,
+            textShadow: `0 0 10px ${rgba(amountColor, 0.45)}, 0 10px 18px rgba(0,0,0,0.18)`,
+          }}
+          animate={{
+            opacity: [0.18, 0.65, 0.18],
+            scale: [1, 1.085, 1],
+            rotate: [0, -1.2, 0],
+          }}
+          transition={{
+            duration: 1.25,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          <span>{cleanAmount}</span><span>฿</span>
+        </motion.h1>
+      );
+    }
+
+    return (
+      <>
+        <motion.h1
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-0 z-[2] w-fit"
+          style={{
+            fontFamily: mainFont,
+            fontWeight: mainFW,
+            fontSize: `${textSize * 1.33}px`,
+            lineHeight: `${textSize * 1.33}px`,
+            color: "#fff7d6",
+            opacity: 0.72,
+            textShadow: `0 0 14px ${rgba(amountColor, 0.78)}, 0 0 30px ${rgba(amountColor, 0.45)}, 0 0 42px ${rgba("#FFFFFF", 0.35)}`,
+            mixBlendMode: "screen",
+          }}
+          animate={{
+            opacity: [0.32, 0.98, 0.32],
+            scale: [1, 1.045, 1],
+            y: [0, -1.5, 0],
+          }}
+          transition={{
+            duration: 1.85,
+            repeat: Infinity,
+            ease: "easeInOut",
+          }}
+        >
+          <span>{cleanAmount}</span><span>฿</span>
+        </motion.h1>
+
+        <motion.div
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-y-0 left-[-14%] z-[3] w-[42%]"
+          style={{
+            background: `linear-gradient(115deg, ${rgba("#FFFFFF", 0)} 0%, ${rgba("#FFFFFF", 0.14)} 28%, ${rgba("#FFFFFF", 0.95)} 50%, ${rgba("#FFFFFF", 0.18)} 72%, ${rgba("#FFFFFF", 0)} 100%)`,
+            filter: `blur(${Math.max(6, textSize * 0.08)}px)`,
+            transform: "skewX(-18deg)",
+          }}
+          animate={{
+            x: ["-60%", "240%"],
+            opacity: [0, 0.95, 0],
+          }}
+          transition={{
+            duration: 1.55,
+            repeat: Infinity,
+            repeatDelay: 0.45,
+            ease: "easeInOut",
+          }}
+        />
+      </>
+    );
+  };
 
   return (
     <motion.div
@@ -716,10 +870,17 @@ const EasyDonateTheme = forwardRef(({
                 fontSize: `${textSize}px`, lineHeight: `${textSize*1.2}px`,
                 color: textColor,
                 filter: "url(#stroke-filter) drop-shadow(0 4px 6px rgba(0,0,0,0.6))",
+                textShadow: titleShadow,
               }}
             >
               {showName && (
-                <span style={{ color: donorColor, fontWeight: mainFW, fontFamily: mainFont }}>
+                <span
+                  style={{
+                    color: donorColor,
+                    fontWeight: mainFW,
+                    fontFamily: mainFont,
+                  }}
+                >
                   {displayName}
                 </span>
               )}
@@ -727,19 +888,24 @@ const EasyDonateTheme = forwardRef(({
             </h1>
 
             {showAmount && (
-              <h1
-                ref={amountRef}
-                className="w-fit"
-                style={{
-                  fontFamily: mainFont, fontWeight: mainFW,
-                  fontSize: `${textSize*1.33}px`, lineHeight: `${textSize*1.33}px`,
-                  color: amountColor,
-                  filter: "url(#stroke-filter) drop-shadow(0 4px 6px rgba(0,0,0,0.6))",
-                  textShadow: amountShadow,
-                }}
-              >
-                <span>{cleanAmount}</span><span>฿</span>
-              </h1>
+              <div ref={amountRef} className="relative w-fit">
+                <h1
+                  className="relative z-[1] w-fit"
+                  style={{
+                    fontFamily: mainFont,
+                    fontWeight: mainFW,
+                    fontSize: `${textSize * 1.33}px`,
+                    lineHeight: `${textSize * 1.33}px`,
+                    color: amountColor,
+                    filter: "url(#stroke-filter) drop-shadow(0 4px 6px rgba(0,0,0,0.6))",
+                    textShadow: amountShadow,
+                    letterSpacing: amountShine ? "0.02em" : "0.01em",
+                  }}
+                >
+                  <span>{cleanAmount}</span><span>฿</span>
+                </h1>
+                {renderAmountEffectOverlay()}
+              </div>
             )}
           </div>
 
@@ -751,7 +917,9 @@ const EasyDonateTheme = forwardRef(({
                 fontFamily: msgFont, fontWeight: msgFW,
                 color: msgColor,
                 fontSize: `${msgFontSize}px`, lineHeight: `${msgFontSize*1.4}px`,
-                filter: "url(#message-stroke-filter) drop-shadow(0 4px 6px rgba(0,0,0,0.6))",
+                filter: messageFilter,
+                textShadow: "none",
+                ...messageStrokeStyle,
               }}
             >
               {displayMsg}
@@ -768,12 +936,14 @@ const EasyDonateTheme = forwardRef(({
             <feComposite in="f" in2="t" operator="in" result="s"/>
             <feMerge><feMergeNode in="s"/><feMergeNode in="SourceGraphic"/></feMerge>
           </filter>
-          <filter id="message-stroke-filter">
-            <feMorphology operator="dilate" radius={msgBorderW} in="SourceAlpha" result="t"/>
-            <feFlood floodColor={msgBorderC} floodOpacity="1" result="f"/>
-            <feComposite in="f" in2="t" operator="in" result="s"/>
-            <feMerge><feMergeNode in="s"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
+          {msgBorderW > 0 && (
+            <filter id="message-stroke-filter">
+              <feMorphology operator="dilate" radius={msgBorderW} in="SourceAlpha" result="t"/>
+              <feFlood floodColor={msgBorderC} floodOpacity="1" result="f"/>
+              <feComposite in="f" in2="t" operator="in" result="s"/>
+              <feMerge><feMergeNode in="s"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          )}
         </defs>
       </svg>
 

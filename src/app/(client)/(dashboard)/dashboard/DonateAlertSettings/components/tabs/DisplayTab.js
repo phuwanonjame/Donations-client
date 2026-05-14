@@ -10,17 +10,17 @@ import { Sparkles, Clock, Palette, Eye } from "lucide-react";
 
 export default function DisplayTab({ settings, updateSetting }) {
   // ✅ flat structure เท่านั้น
-  const displayDuration  = settings?.displayDuration  ?? 3;
-  const inAnimation      = settings?.inAnimation      ?? "fadeInUp";
-  const inDuration       = settings?.inDuration       ?? 1;
-  const outAnimation     = settings?.outAnimation     ?? "fadeOutUp";
-  const outDuration      = settings?.outDuration      ?? 1;
+  const displayDuration  = settings?.animationDisplayDuration  ?? 3;
+  const inAnimation      = settings?.animationEnterType      ?? "fadeInUp";
+  const inDuration       = settings?.animationEnterDuration       ?? 1;
+  const outAnimation     = settings?.animationExitType     ?? "fadeOutUp";
+  const outDuration      = settings?.animationExitDuration      ?? 1;
   const backgroundColor  = settings?.backgroundColor  ?? "transparent";
-  const minAmountForAlert = settings?.minAmountForAlert ?? 10;
-  const showName         = settings?.showName         ?? true;
-  const showAmount       = settings?.showAmount       ?? true;
-  const showMessage      = settings?.showMessage      ?? true;
-  const waitsForTts      = Boolean(settings?.ttsTitleEnabled || settings?.ttsMessageEnabledField);
+  const minAmountForAlert = settings?.minimumDonation ?? 10;
+  const showName         = settings?.titleShowName         ?? true;
+  const showAmount       = settings?.titleShowAmount       ?? true;
+  const showMessage      = settings?.messageShowMessage      ?? true;
+  const waitsForTts      = Boolean(settings?.ttsTitleEnabled || settings?.ttsMessageEnabled);
 
   return (
     <motion.div
@@ -39,7 +39,7 @@ export default function DisplayTab({ settings, updateSetting }) {
           </Label>
           <Slider
             value={[displayDuration]}
-            onValueChange={(v) => updateSetting("displayDuration", v[0])}
+            onValueChange={(v) => updateSetting("animationDisplayDuration", v[0])}
             disabled={waitsForTts}
             min={1} max={10} step={1} className="w-full"
           />
@@ -68,7 +68,7 @@ export default function DisplayTab({ settings, updateSetting }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label className="text-slate-300">Animation In</Label>
-          <Select value={inAnimation} onValueChange={(v) => updateSetting("inAnimation", v)}>
+          <Select value={inAnimation} onValueChange={(v) => updateSetting("animationEnterType", v)}>
             <SelectTrigger className="bg-slate-800/80 border-slate-700 text-white"><SelectValue /></SelectTrigger>
             <SelectContent className="bg-slate-800 border-slate-700">
               {["fadeIn","fadeInDown","fadeInUp","bounceIn","zoomIn","slideInLeft","slideInRight","rollIn"].map(v => (
@@ -79,7 +79,7 @@ export default function DisplayTab({ settings, updateSetting }) {
         </div>
         <div className="space-y-2">
           <Label className="text-slate-300">In Duration ({inDuration}s)</Label>
-          <Slider value={[inDuration]} onValueChange={(v) => updateSetting("inDuration", v[0])}
+          <Slider value={[inDuration]} onValueChange={(v) => updateSetting("animationEnterDuration", v[0])}
             min={0.5} max={3} step={0.1} className="w-full" />
         </div>
       </div>
@@ -87,7 +87,7 @@ export default function DisplayTab({ settings, updateSetting }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label className="text-slate-300">Animation Out</Label>
-          <Select value={outAnimation} onValueChange={(v) => updateSetting("outAnimation", v)}>
+          <Select value={outAnimation} onValueChange={(v) => updateSetting("animationExitType", v)}>
             <SelectTrigger className="bg-slate-800/80 border-slate-700 text-white"><SelectValue /></SelectTrigger>
             <SelectContent className="bg-slate-800 border-slate-700">
               {["fadeOut","fadeOutUp","fadeOutDown","bounceOut","zoomOut"].map(v => (
@@ -98,7 +98,7 @@ export default function DisplayTab({ settings, updateSetting }) {
         </div>
         <div className="space-y-2">
           <Label className="text-slate-300">Out Duration ({outDuration}s)</Label>
-          <Slider value={[outDuration]} onValueChange={(v) => updateSetting("outDuration", v[0])}
+          <Slider value={[outDuration]} onValueChange={(v) => updateSetting("animationExitDuration", v[0])}
             min={0.5} max={3} step={0.1} className="w-full" />
         </div>
       </div>
@@ -109,9 +109,9 @@ export default function DisplayTab({ settings, updateSetting }) {
           <Eye className="w-4 h-4 text-cyan-400" /> Visibility Settings
         </h4>
         {[
-          { key: "showName",    label: "Show Donor Name" },
-          { key: "showAmount",  label: "Show Amount" },
-          { key: "showMessage", label: "Show Message" },
+          { key: "titleShowName",    label: "Show Donor Name" },
+          { key: "titleShowAmount",  label: "Show Amount" },
+          { key: "messageShowMessage", label: "Show Message" },
         ].map(({ key, label }) => (
           <div key={key} className="flex items-center justify-between gap-3 p-3 rounded-lg bg-slate-800/50 border border-slate-700/50">
             <div className="flex items-center gap-3 min-w-0">
@@ -119,7 +119,7 @@ export default function DisplayTab({ settings, updateSetting }) {
               <span className="text-white min-w-0">{label}</span>
             </div>
             <Switch
-              checked={key === "showName" ? showName : key === "showAmount" ? showAmount : showMessage}
+              checked={key === "titleShowName" ? showName : key === "titleShowAmount" ? showAmount : showMessage}
               onCheckedChange={(v) => updateSetting(key, v)}
               className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-cyan-500 data-[state=checked]:to-blue-500"
             />
@@ -132,7 +132,7 @@ export default function DisplayTab({ settings, updateSetting }) {
         <Label className="text-slate-300">Minimum Donation Amount ({minAmountForAlert}฿)</Label>
         <Slider
           value={[minAmountForAlert]}
-          onValueChange={(v) => updateSetting("minAmountForAlert", v[0])}
+          onValueChange={(v) => updateSetting("minimumDonation", v[0])}
           min={1} max={1000} step={1} className="w-full"
         />
         <p className="text-slate-500 text-sm">Alerts will only show for donations above this amount</p>

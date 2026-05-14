@@ -1,49 +1,16 @@
-/**
- * Maps the sound key (used in the Select component) to the path of the audio file.
- * Assuming all sound files are placed in the public/sounds/ directory.
- */
-export const SOUND_SOURCES = {
-  // Key from <SelectItem value="..."> : URL Path (relative to public folder)
-  "bb_spirit": "/sounds/bb_spirit.mp3",
-  "chime": "/sounds/chime.mp3",
-  "cash": "/sounds/cash_register.mp3",
-  "bell": "/sounds/bell_ring.mp3",
-  "fanfare": "/sounds/fanfare.mp3",
-};
+export const SOUND_LIBRARY = [
+  { id: "bb_spirit", name: "BB Spirit", path: "/sounds/bb_spirit.mp3", filename: "bb_spirit.mp3" },
+  { id: "chime", name: "Chime", path: "/sounds/chime.mp3", filename: "chime.mp3" },
+  { id: "cash", name: "Cash Register", path: "/sounds/cash_register.mp3", filename: "cash_register.mp3" },
+  { id: "bell", name: "Bell Ring", path: "/sounds/bell_ring.mp3", filename: "bell_ring.mp3" },
+  { id: "fanfare", name: "Fanfare", path: "/sounds/fanfare.mp3", filename: "fanfare.mp3" },
+];
 
-/**
- * Plays the specified alert sound using the HTML Audio API.
- * * @param {string} soundKey - The key of the sound to play (e.g., "chime", "fanfare").
- * @param {number} volume - The playback volume (0 to 100, which will be converted to 0.0 to 1.0).
- */
-export function playAlertSound(soundKey, volume) {
-  const soundPath = SOUND_SOURCES[soundKey];
-  
-  // 1. ตรวจสอบว่ามี Sound Key นี้อยู่หรือไม่
-  if (!soundPath) {
-    console.error(`Sound source not found for key: ${soundKey}`);
-    return;
-  }
+export const SOUND_SOURCES = Object.fromEntries(
+  SOUND_LIBRARY.map(({ id, path }) => [id, path])
+);
 
-  try {
-    // 2. สร้าง Audio object ใหม่
-    // **NOTE:** เพื่อหลีกเลี่ยงการติดค้างของเสียงเก่า, ควรสร้าง instance ใหม่ทุกครั้ง
-    const audio = new Audio(soundPath);
-    
-    // 3. ตั้งค่าระดับเสียง (Volume must be between 0.0 and 1.0)
-    const playbackVolume = volume / 100;
-    
-    // Clamp volume to ensure it's within [0.0, 1.0]
-    audio.volume = Math.min(1.0, Math.max(0.0, playbackVolume));
-
-    // 4. เล่นเสียง
-    audio.play()
-      .catch(error => {
-        // จัดการข้อผิดพลาด (เช่น Autoplay blocked by browser)
-        console.warn(`Could not play sound (${soundKey}):`, error.message);
-      });
-      
-  } catch (error) {
-    console.error("Error creating or playing audio:", error);
-  }
-}
+export const SOUND_OPTIONS = SOUND_LIBRARY.map(({ id, name }) => ({
+  id,
+  name,
+}));

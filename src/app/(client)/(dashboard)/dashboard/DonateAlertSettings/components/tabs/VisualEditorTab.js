@@ -26,11 +26,11 @@ export default function VisualEditorOverlay({
     {
       id: "donorName",
       name: "Donor Name",
-      path: "donorNameColor",
-      flatPath: "donorNameColor",
+      path: "titleUsernameColor",
+      flatPath: "titleUsernameColor",
       groupedPath: "title.usernameColor",
       type: "color",
-      getValue: () => settings.donorNameColor,
+      getValue: () => settings.titleUsernameColor,
       getPosition: () => ({ x: "50%", y: "30%" }),
       area: "text",
       icon: Type
@@ -38,11 +38,11 @@ export default function VisualEditorOverlay({
     {
       id: "amount",
       name: "Amount",
-      path: "amountColor",
-      flatPath: "amountColor",
+      path: "titleAmountColor",
+      flatPath: "titleAmountColor",
       groupedPath: "title.amountColor",
       type: "color",
-      getValue: () => settings.amountColor,
+      getValue: () => settings.titleAmountColor,
       getPosition: () => ({ x: "70%", y: "30%" }),
       area: "text",
       icon: Type
@@ -50,11 +50,11 @@ export default function VisualEditorOverlay({
     {
       id: "suffixText",
       name: "Suffix Text",
-      path: "suffixText",
-      flatPath: "suffixText",
+      path: "titleSuffixText",
+      flatPath: "titleSuffixText",
       groupedPath: "title.suffixText",
       type: "text",
-      getValue: () => settings.suffixText,
+      getValue: () => settings.titleSuffixText,
       getPosition: () => ({ x: "50%", y: "30%" }),
       area: "text",
       icon: Type
@@ -86,11 +86,11 @@ export default function VisualEditorOverlay({
     {
       id: "image",
       name: "Alert Image",
-      path: "alertImage",
-      flatPath: "alertImage",
+      path: "image",
+      flatPath: "image",
       groupedPath: "image",
       type: "image",
-      getValue: () => settings.alertImage,
+      getValue: () => settings.image,
       getPosition: () => ({ x: "50%", y: "15%" }),
       area: "image",
       icon: Image
@@ -98,13 +98,13 @@ export default function VisualEditorOverlay({
     {
       id: "fontSize",
       name: "Font Size",
-      path: "textSize",
-      flatPath: "textSize",
+      path: "titleFontSize",
+      flatPath: "titleFontSize",
       groupedPath: "title.fontSize",
       type: "slider",
       min: 12,
       max: 72,
-      getValue: () => settings.textSize?.[0] || 36,
+      getValue: () => settings.titleFontSize?.[0] || 36,
       getPosition: () => ({ x: "50%", y: "30%" }),
       area: "text",
       icon: Type
@@ -112,12 +112,12 @@ export default function VisualEditorOverlay({
     {
       id: "font",
       name: "Font Family",
-      path: "font",
-      flatPath: "font",
+      path: "titleFontFamily",
+      flatPath: "titleFontFamily",
       groupedPath: "title.fontFamily",
       type: "select",
       options: thaiGoogleFonts,
-      getValue: () => settings.font,
+      getValue: () => settings.titleFontFamily,
       getPosition: () => ({ x: "50%", y: "30%" }),
       area: "text",
       icon: Type

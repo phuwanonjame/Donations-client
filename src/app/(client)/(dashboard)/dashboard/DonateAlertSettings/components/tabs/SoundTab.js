@@ -1,6 +1,7 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { playAlertSound } from "@/utils/audioUtils";
+import { SOUND_OPTIONS } from "@/utils/audioSources";
 import {
   FALLBACK_TTS_STYLES,
   FALLBACK_TTS_VOICES,
@@ -26,16 +27,16 @@ import {
 import { Loader2, Music, RefreshCw, Upload, Volume2 } from "lucide-react";
 
 export default function SoundTab({ settings, updateSetting }) {
-  const alertSound = settings?.alertSound ?? "bb_spirit";
-  const useCustomSound = settings?.useCustomSound ?? false;
-  const customSound = settings?.customSound ?? null;
-  const volume = settings?.volume ?? [75];
+  const alertSound = settings?.notificationSound ?? "bb_spirit";
+  const useCustomSound = settings?.notificationUseCustom ?? false;
+  const customSound = settings?.notificationCustomSound ?? null;
+  const volume = settings?.notificationVolume ?? [75];
   const ttsVoice = settings?.ttsVoice ?? "female";
   const ttsStyleId = settings?.ttsStyleId ?? null;
   const ttsRate = settings?.ttsRate ?? 0.95;
   const ttsPitch = settings?.ttsPitch ?? 1.05;
   const ttsTitleEnabled = settings?.ttsTitleEnabled ?? true;
-  const ttsMessageEnabled = settings?.ttsMessageEnabledField ?? false;
+  const ttsMessageEnabled = settings?.ttsMessageEnabled ?? false;
   const ttsVolume = settings?.ttsVolume ?? 50;
 
   const currentVolume = Number(Array.isArray(volume) ? volume[0] : volume);
@@ -106,14 +107,14 @@ export default function SoundTab({ settings, updateSetting }) {
 
   const handleAlertSoundChange = (newSoundKey) => {
     if (alertSound !== newSoundKey) {
-      updateSetting("alertSound", newSoundKey);
+      updateSetting("notificationSound", newSoundKey);
       playAlertSound(newSoundKey, currentVolume);
     }
   };
 
   const handleVolumeChange = (newVolumeArray) => {
     const newVolume = newVolumeArray[0];
-    updateSetting("volume", [newVolume]);
+    updateSetting("notificationVolume", [newVolume]);
     playAlertSound(alertSound, newVolume);
   };
 
@@ -125,7 +126,7 @@ export default function SoundTab({ settings, updateSetting }) {
       return;
     }
     const reader = new FileReader();
-    reader.onload = () => updateSetting("customSound", reader.result);
+    reader.onload = () => updateSetting("notificationCustomSound", reader.result);
     reader.readAsDataURL(file);
   };
 
@@ -203,7 +204,7 @@ export default function SoundTab({ settings, updateSetting }) {
             </div>
             <Switch
               checked={useCustomSound}
-              onCheckedChange={(value) => updateSetting("useCustomSound", value)}
+              onCheckedChange={(value) => updateSetting("notificationUseCustom", value)}
               className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-cyan-500 data-[state=checked]:to-blue-500"
             />
           </div>
@@ -217,11 +218,11 @@ export default function SoundTab({ settings, updateSetting }) {
               <SelectValue placeholder="Select a sound" />
             </SelectTrigger>
             <SelectContent className="bg-slate-800 border-slate-700">
-              <SelectItem value="bb_spirit" className="text-white hover:bg-slate-700">BB Spirit</SelectItem>
-              <SelectItem value="chime" className="text-white hover:bg-slate-700">Chime</SelectItem>
-              <SelectItem value="cash" className="text-white hover:bg-slate-700">Cash Register</SelectItem>
-              <SelectItem value="bell" className="text-white hover:bg-slate-700">Bell Ring</SelectItem>
-              <SelectItem value="fanfare" className="text-white hover:bg-slate-700">Fanfare</SelectItem>
+              {SOUND_OPTIONS.map((sound) => (
+                <SelectItem key={sound.id} value={sound.id} className="text-white hover:bg-slate-700">
+                  {sound.name}
+                </SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
@@ -391,7 +392,7 @@ export default function SoundTab({ settings, updateSetting }) {
             </div>
             <Switch
               checked={ttsMessageEnabled}
-              onCheckedChange={(value) => updateSetting("ttsMessageEnabledField", value)}
+              onCheckedChange={(value) => updateSetting("ttsMessageEnabled", value)}
               className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-cyan-500 data-[state=checked]:to-blue-500"
             />
           </div>

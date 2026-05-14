@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
-import { 
+import {
   Select, 
   SelectContent, 
   SelectItem, 
@@ -23,14 +23,82 @@ import {
   DialogTitle 
 } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
+import {
   Zap, Sparkles, Image, Droplet, Volume2, Palette, Eye,
   Type, Layout, Music, Video, Trash2, RotateCcw, Copy,
   RefreshCw, Gift, Star, Trophy
 } from "lucide-react";
 import { createWidgetSettingsNotifier } from "@/lib/notifications/widget-settings-toast";
+import {
+  animationStyleOptions,
+  blurOptions,
+  confettiEffectOptions,
+  confettiModeOptions,
+  effectOptions,
+  fontSizePresetOptions,
+  gradientOptions,
+  imageShapeOptions,
+  imageSizeOptions,
+  positionOptions,
+  rangeModalFontOptions,
+  toValueLabelOptions,
+  normalizeFlatSettings,
+} from "../utils/settingsUtils";
 
 const rangeNotifier = createWidgetSettingsNotifier("Range settings");
+
+const FONT_SIZE_CLASS_TO_PX = {
+  "text-sm": 18,
+  "text-base": 24,
+  "text-xl": 30,
+  "text-2xl": 36,
+  "text-4xl": 48,
+};
+
+function resolveTitleFontSizeClass(titleFontSize) {
+  const px = Array.isArray(titleFontSize) ? titleFontSize[0] : titleFontSize;
+  const match = Object.entries(FONT_SIZE_CLASS_TO_PX).find(([, value]) => value === Number(px));
+  return match?.[0] || "text-2xl";
+}
+
+function normalizeRangeConfig(config = {}) {
+  const normalized = normalizeFlatSettings({
+    ...config,
+    image: config.image ?? config.imageUrl ?? "",
+    titleFontFamily: config.titleFontFamily ?? config.fontFamily ?? "IBM Plex Sans Thai",
+    titleFontSize: config.titleFontSize ?? [FONT_SIZE_CLASS_TO_PX[config.titleFontSizeClass ?? config.fontSize] ?? 36],
+    titleMainColor: config.titleMainColor ?? config.textColor ?? "#ffffff",
+    titleAmountShine: config.titleAmountShine ?? config.amountShine ?? false,
+    animationEnterType: config.animationEnterType ?? "fadeInUp",
+    animationEnterDuration: config.animationEnterDuration ?? 0.8,
+    animationExitType: config.animationExitType ?? "fadeOutUp",
+    animationExitDuration: config.animationExitDuration ?? 0.8,
+    animationDisplayDuration: config.animationDisplayDuration ?? Math.max(1, Math.round((config.duration ?? 5000) / 1000)),
+    notificationSound: config.notificationSound ?? (config.notificationUseCustom || config.soundEnabled ? "custom" : "bb_spirit"),
+    notificationVolume: config.notificationVolume ?? [config.soundVolume ?? 70],
+    notificationUseCustom: config.notificationUseCustom ?? Boolean(config.notificationCustomSound ?? config.soundUrl),
+    notificationCustomSound: config.notificationCustomSound ?? config.soundUrl ?? null,
+  });
+
+  return {
+    ...normalized,
+    titleFontSizeClass: config.titleFontSizeClass ?? resolveTitleFontSizeClass(normalized.titleFontSize),
+    imageSize: config.imageSize ?? "md",
+    imageShape: config.imageShape ?? "circle",
+    soundLoop: config.soundLoop ?? false,
+    textEffect: config.textEffect ?? normalized.titleTextEffect ?? "realistic_look",
+    textShadow: config.textShadow ?? false,
+    textGlow: config.textGlow ?? false,
+    backgroundColor: config.backgroundColor ?? "from-purple-500 to-pink-500",
+    backgroundBlur: config.backgroundBlur ?? "backdrop-blur-md",
+    animationStyle: config.animationStyle ?? "slide-up",
+    position: config.position ?? "top-center",
+    particleEffect: config.particleEffect ?? false,
+    glowIntensity: config.glowIntensity ?? 50,
+    customCSS: config.customCSS ?? "",
+    customClass: config.customClass ?? "",
+  };
+}
 
 // Default empty config for new range (เหมือนการรีเซ็ตทั้งหมด)
 const getEmptyRangeConfig = () => ({
@@ -43,31 +111,35 @@ const getEmptyRangeConfig = () => ({
   enabled: true,
   
   // Media Settings - Empty/Default
-  imageUrl: "",
+  image: "",
   imageSize: "md",
   imageShape: "circle",
   imageGlow: false,
   
   // Sound Settings - Empty/Default
-  soundEnabled: false,
-  soundUrl: "",
-  soundVolume: 70,
+  notificationUseCustom: false,
+  notificationCustomSound: "",
+  notificationVolume: [70],
+  notificationSound: "bb_spirit",
   soundLoop: false,
   
   // Text Settings - Empty/Default
   textEffect: "realistic_look",
-  textColor: "#ffffff",
+  titleTextEffect: "realistic_look",
+  effect: "realistic_look",
+  titleMainColor: "#ffffff",
   textShadow: false,
   textGlow: false,
-  amountShine: false,
-  fontFamily: "Inter",
-  fontSize: "text-2xl",
+  titleAmountShine: false,
+  titleFontFamily: "Inter",
+  titleFontSize: [36],
+  titleFontSizeClass: "text-2xl",
   
   // Display Settings - Empty/Default
   backgroundColor: "from-purple-500 to-pink-500",
   backgroundBlur: "backdrop-blur-md",
   animationStyle: "slide-up",
-  duration: 5000,
+  animationDisplayDuration: 5,
   position: "top-center",
   
   // Effects - Empty/Default
@@ -87,7 +159,7 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
   const [config, setConfig] = useState(() => {
     if (range) {
       // แก้ไข range เดิม - ใช้ config เดิม
-      return { ...range };
+      return normalizeRangeConfig(range);
     } else {
       // สร้าง range ใหม่ - เริ่มจาก empty config
       return getEmptyRangeConfig();
@@ -107,7 +179,7 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
       rangeNotifier.error("Minimum amount must be less than maximum amount");
       return;
     }
-    onSave(config);
+    onSave(normalizeFlatSettings(config));
   };
 
   // รีเซ็ต config ใหม่ทั้งหมด (เหมือนสร้าง range ใหม่)
@@ -120,97 +192,17 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
     }
   };
 
-  const textEffects = [
-    { value: "realistic_look", label: "Realistic Look" },
-    { value: "glow", label: "Glow Effect" },
-    { value: "shadow", label: "Shadow Effect" },
-    { value: "neon", label: "Neon Effect" },
-    { value: "none", label: "No Effect" }
-  ];
-
-  const fontOptions = [
-    { value: "Inter", label: "Inter" },
-    { value: "Poppins", label: "Poppins" },
-    { value: "Roboto", label: "Roboto" },
-    { value: "Montserrat", label: "Montserrat" },
-    { value: "Prompt", label: "Prompt" }
-  ];
-
-  const fontSizeOptions = [
-    { value: "text-sm", label: "Small" },
-    { value: "text-base", label: "Medium" },
-    { value: "text-xl", label: "Large" },
-    { value: "text-2xl", label: "Extra Large" },
-    { value: "text-4xl", label: "Huge" }
-  ];
-
-  const gradientOptions = [
-    { value: "from-purple-500 to-pink-500", label: "Purple to Pink" },
-    { value: "from-blue-500 to-cyan-500", label: "Blue to Cyan" },
-    { value: "from-green-500 to-emerald-500", label: "Green to Emerald" },
-    { value: "from-orange-500 to-red-500", label: "Orange to Red" },
-    { value: "from-yellow-500 to-amber-500", label: "Yellow to Amber" },
-    { value: "from-indigo-500 to-purple-500", label: "Indigo to Purple" }
-  ];
-
-  const animationOptions = [
-    { value: "slide-up", label: "Slide Up" },
-    { value: "slide-down", label: "Slide Down" },
-    { value: "fade-in", label: "Fade In" },
-    { value: "scale", label: "Scale" },
-    { value: "bounce", label: "Bounce" },
-    { value: "flip", label: "Flip" }
-  ];
-
-  const positionOptions = [
-    { value: "top-center", label: "Top Center" },
-    { value: "top-right", label: "Top Right" },
-    { value: "top-left", label: "Top Left" },
-    { value: "center", label: "Center" },
-    { value: "bottom-center", label: "Bottom Center" }
-  ];
-
-  const imageSizeOptions = [
-    { value: "sm", label: "Small (40px)" },
-    { value: "md", label: "Medium (60px)" },
-    { value: "lg", label: "Large (80px)" },
-    { value: "xl", label: "Extra Large (100px)" }
-  ];
-
-  const imageShapeOptions = [
-    { value: "circle", label: "Circle" },
-    { value: "rounded", label: "Rounded" },
-    { value: "square", label: "Square" }
-  ];
-
-  const confettiOptions = [
-    { value: "fountain", label: "Fountain (Shooting upward)" },
-    { value: "rain", label: "Rain (Falling from top)" },
-    { value: "spiral", label: "Spiral (Spinning around)" },
-    { value: "blast", label: "Blast (Explosive burst)" },
-    { value: "fireworks", label: "Fireworks (Multi burst)" },
-    { value: "heart_burst", label: "Heart Burst (Love explosion)" },
-    { value: "money_rain", label: "Money Rain (Coins & cash)" },
-    { value: "starfall", label: "Starfall (Twinkling shower)" },
-    { value: "portal", label: "Portal (Magic vortex)" },
-    { value: "shockwave", label: "Shockwave (Energy ring)" },
-    { value: "snow", label: "Snow Drift (Soft falling)" },
-    { value: "bubbles", label: "Bubbles (Floating upward)" },
-    { value: "meteors", label: "Meteor Shower (Fast diagonal)" },
-    { value: "comet", label: "Comet Trails (Arc streaks)" }
-  ];
-
-  const confettiModeOptions = [
-    { value: "classic", label: "Classic (Original animation)" },
-    { value: "physics", label: "Physics (Bounce & collision)" }
-  ];
-
-  const blurOptions = [
-    { value: "backdrop-blur-none", label: "No Blur" },
-    { value: "backdrop-blur-sm", label: "Light Blur" },
-    { value: "backdrop-blur-md", label: "Medium Blur" },
-    { value: "backdrop-blur-lg", label: "Heavy Blur" }
-  ];
+  const textEffects = toValueLabelOptions(effectOptions);
+  const fontOptions = toValueLabelOptions(rangeModalFontOptions);
+  const fontSizeOptions = toValueLabelOptions(fontSizePresetOptions);
+  const gradientOptionItems = toValueLabelOptions(gradientOptions);
+  const animationOptionItems = toValueLabelOptions(animationStyleOptions);
+  const positionOptionItems = toValueLabelOptions(positionOptions);
+  const imageSizeOptionItems = toValueLabelOptions(imageSizeOptions);
+  const imageShapeOptionItems = toValueLabelOptions(imageShapeOptions);
+  const confettiOptions = toValueLabelOptions(confettiEffectOptions);
+  const confettiModeOptionItems = toValueLabelOptions(confettiModeOptions);
+  const blurOptionItems = toValueLabelOptions(blurOptions);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -306,7 +298,15 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
 
             <div className="space-y-2">
               <Label className="text-slate-300">Text Effect</Label>
-              <Select value={config.textEffect} onValueChange={(v) => setConfig({...config, textEffect: v})}>
+              <Select
+                value={config.titleTextEffect ?? config.textEffect}
+                onValueChange={(v) => setConfig({
+                  ...config,
+                  textEffect: v,
+                  titleTextEffect: v,
+                  effect: v,
+                })}
+              >
                 <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
                   <SelectValue />
                 </SelectTrigger>
@@ -325,7 +325,7 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-700">
-                  {animationOptions.map(anim => (
+                  {animationOptionItems.map(anim => (
                     <SelectItem key={anim.value} value={anim.value}>{anim.label}</SelectItem>
                   ))}
                 </SelectContent>
@@ -338,8 +338,8 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
             <div className="space-y-2">
               <Label className="text-slate-300">Image URL (Optional)</Label>
               <Input
-                value={config.imageUrl}
-                onChange={(e) => setConfig({...config, imageUrl: e.target.value})}
+                value={config.image}
+                onChange={(e) => setConfig({...config, image: e.target.value})}
                 placeholder="https://example.com/image.gif or leave empty for default"
                 className="bg-slate-800 border-slate-700 text-white"
               />
@@ -354,7 +354,7 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-slate-800 border-slate-700">
-                    {imageSizeOptions.map(size => (
+                    {imageSizeOptionItems.map(size => (
                       <SelectItem key={size.value} value={size.value}>{size.label}</SelectItem>
                     ))}
                   </SelectContent>
@@ -367,7 +367,7 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-slate-800 border-slate-700">
-                    {imageShapeOptions.map(shape => (
+                    {imageShapeOptionItems.map(shape => (
                       <SelectItem key={shape.value} value={shape.value}>{shape.label}</SelectItem>
                     ))}
                   </SelectContent>
@@ -386,11 +386,11 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
               />
             </div>
 
-            {config.imageUrl && (
+            {config.image && (
               <div className="p-4 rounded-lg bg-slate-800/30 border border-slate-700">
                 <p className="text-slate-400 text-sm mb-2">Preview:</p>
                 <img 
-                  src={config.imageUrl} 
+                  src={config.image} 
                   alt="Preview" 
                   className={`${config.imageSize === 'sm' ? 'w-10 h-10' : config.imageSize === 'md' ? 'w-12 h-12' : config.imageSize === 'lg' ? 'w-16 h-16' : 'w-20 h-20'} ${config.imageShape === 'circle' ? 'rounded-full' : config.imageShape === 'rounded' ? 'rounded-lg' : ''}`}
                   onError={(e) => { e.target.style.display = 'none'; }}
@@ -407,20 +407,20 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
                 <div className="flex gap-2">
                   <Input
                     type="color"
-                    value={config.textColor}
-                    onChange={(e) => setConfig({...config, textColor: e.target.value})}
+                    value={config.titleMainColor}
+                    onChange={(e) => setConfig({...config, titleMainColor: e.target.value})}
                     className="w-12 h-10 p-1 bg-slate-800 border-slate-700"
                   />
                   <Input
-                    value={config.textColor}
-                    onChange={(e) => setConfig({...config, textColor: e.target.value})}
+                    value={config.titleMainColor}
+                    onChange={(e) => setConfig({...config, titleMainColor: e.target.value})}
                     className="flex-1 bg-slate-800 border-slate-700 text-white"
                   />
                 </div>
               </div>
               <div className="space-y-2">
                 <Label className="text-slate-300">Font Family</Label>
-                <Select value={config.fontFamily} onValueChange={(v) => setConfig({...config, fontFamily: v})}>
+                <Select value={config.titleFontFamily} onValueChange={(v) => setConfig({...config, titleFontFamily: v})}>
                   <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
                     <SelectValue />
                   </SelectTrigger>
@@ -438,7 +438,14 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label className="text-slate-300">Font Size</Label>
-                <Select value={config.fontSize} onValueChange={(v) => setConfig({...config, fontSize: v})}>
+                <Select
+                  value={config.titleFontSizeClass}
+                  onValueChange={(v) => setConfig({
+                    ...config,
+                    titleFontSizeClass: v,
+                    titleFontSize: [FONT_SIZE_CLASS_TO_PX[v] ?? 36],
+                  })}
+                >
                   <SelectTrigger className="bg-slate-800 border-slate-700 text-white">
                     <SelectValue />
                   </SelectTrigger>
@@ -478,8 +485,8 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
               </div>
               <div className="flex items-center gap-2">
                 <Switch
-                  checked={config.amountShine}
-                  onCheckedChange={(v) => setConfig({...config, amountShine: v})}
+                  checked={config.titleAmountShine}
+                  onCheckedChange={(v) => setConfig({...config, titleAmountShine: v})}
                 />
                 <Label className="text-slate-300">Amount Shine</Label>
               </div>
@@ -495,7 +502,7 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-700">
-                  {gradientOptions.map(grad => (
+                    {gradientOptionItems.map(grad => (
                     <SelectItem key={grad.value} value={grad.value}>
                       <div className="flex items-center gap-2">
                         <div className={`w-4 h-4 rounded bg-gradient-to-r ${grad.value}`} />
@@ -515,7 +522,7 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent className="bg-slate-800 border-slate-700">
-                    {positionOptions.map(pos => (
+                    {positionOptionItems.map(pos => (
                       <SelectItem key={pos.value} value={pos.value}>{pos.label}</SelectItem>
                     ))}
                   </SelectContent>
@@ -524,14 +531,14 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
               <div className="space-y-2">
                 <Label className="text-slate-300">Duration (ms)</Label>
                 <Slider
-                  value={[config.duration]}
-                  onValueChange={(v) => setConfig({...config, duration: v[0]})}
+                  value={[Math.max(2000, Number(config.animationDisplayDuration ?? 5) * 1000)]}
+                  onValueChange={(v) => setConfig({...config, animationDisplayDuration: Math.max(1, Math.round(v[0] / 1000))})}
                   min={2000}
                   max={10000}
                   step={500}
                   className="bg-slate-700"
                 />
-                <p className="text-slate-500 text-xs text-center">{config.duration}ms ({Math.floor(config.duration / 1000)} seconds)</p>
+                <p className="text-slate-500 text-xs text-center">{Number(config.animationDisplayDuration ?? 5) * 1000}ms ({config.animationDisplayDuration ?? 5} seconds)</p>
               </div>
             </div>
 
@@ -542,7 +549,7 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-700">
-                  {blurOptions.map(blur => (
+                  {blurOptionItems.map(blur => (
                     <SelectItem key={blur.value} value={blur.value}>{blur.label}</SelectItem>
                   ))}
                 </SelectContent>
@@ -558,18 +565,18 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
                 <Label className="text-slate-300">Enable Sound</Label>
               </div>
               <Switch
-                checked={config.soundEnabled}
-                onCheckedChange={(v) => setConfig({...config, soundEnabled: v})}
+                checked={config.notificationUseCustom}
+                onCheckedChange={(v) => setConfig({...config, notificationUseCustom: v})}
               />
             </div>
 
-            {config.soundEnabled && (
+            {config.notificationUseCustom && (
               <>
                 <div className="space-y-2">
                   <Label className="text-slate-300">Sound URL</Label>
                   <Input
-                    value={config.soundUrl}
-                    onChange={(e) => setConfig({...config, soundUrl: e.target.value})}
+                    value={config.notificationCustomSound ?? ""}
+                    onChange={(e) => setConfig({...config, notificationCustomSound: e.target.value})}
                     placeholder="/sounds/donation.mp3 or https://..."
                     className="bg-slate-800 border-slate-700 text-white"
                   />
@@ -577,10 +584,10 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
                 </div>
 
                 <div className="space-y-2">
-                  <Label className="text-slate-300">Volume ({config.soundVolume}%)</Label>
+                  <Label className="text-slate-300">Volume ({Array.isArray(config.notificationVolume) ? config.notificationVolume[0] : config.notificationVolume}%)</Label>
                   <Slider
-                    value={[config.soundVolume]}
-                    onValueChange={(v) => setConfig({...config, soundVolume: v[0]})}
+                    value={Array.isArray(config.notificationVolume) ? config.notificationVolume : [config.notificationVolume ?? 70]}
+                    onValueChange={(v) => setConfig({...config, notificationVolume: v})}
                     max={100}
                     step={1}
                     className="bg-slate-700"
@@ -620,7 +627,7 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-800 border-slate-700">
-                      {confettiModeOptions.map(opt => (
+                      {confettiModeOptionItems.map(opt => (
                         <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
                       ))}
                     </SelectContent>
@@ -674,25 +681,25 @@ export default function RangeConfigModal({ range, onSave, onDelete, onDuplicate,
           </h4>
           <div className={`p-4 rounded-lg bg-gradient-to-r ${config.backgroundColor} ${config.backgroundBlur}`}>
             <div className="flex items-center gap-3">
-              {config.imageUrl && (
+              {config.image && (
                 <img 
-                  src={config.imageUrl} 
+                  src={config.image} 
                   alt="Preview" 
                   className={`${config.imageSize === 'sm' ? 'w-10 h-10' : config.imageSize === 'md' ? 'w-12 h-12' : config.imageSize === 'lg' ? 'w-16 h-16' : 'w-20 h-20'} ${config.imageShape === 'circle' ? 'rounded-full' : config.imageShape === 'rounded' ? 'rounded-lg' : ''}`}
                   onError={(e) => { e.target.style.display = 'none'; }}
                 />
               )}
               <div>
-                <p className={`font-bold ${config.fontSize}`} style={{ color: config.textColor, fontFamily: config.fontFamily }}>
+                <p className={`font-bold ${config.titleFontSizeClass}`} style={{ color: config.titleMainColor, fontFamily: config.titleFontFamily }}>
                   🎉 {config.name || "New Donation"}!
                 </p>
-                <p className={`text-lg`} style={{ color: config.textColor }}>
+                <p className={`text-lg`} style={{ color: config.titleMainColor }}>
                   ฿{config.minAmount} - ฿{config.maxAmount}
                 </p>
               </div>
             </div>
             {config.showConfetti && <div className="text-xs mt-2 text-white/70">🎊 Confetti will appear</div>}
-            {config.soundEnabled && <div className="text-xs mt-1 text-white/70">🔊 Sound enabled</div>}
+            {config.notificationUseCustom && <div className="text-xs mt-1 text-white/70">🔊 Sound enabled</div>}
           </div>
         </div>
 

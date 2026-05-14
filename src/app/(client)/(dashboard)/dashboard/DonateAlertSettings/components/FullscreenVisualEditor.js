@@ -24,9 +24,18 @@ import {
 } from "@/components/ui/select";
 import AlertPreview from "./AlertPreview";
 import { playAlertSound } from "../../../../../../utils/audioUtils";
+import { SOUND_OPTIONS } from "../../../../../../utils/audioSources";
 import { resolveTtsVoiceId } from "../../../../../../utils/ttsService";
 import { thaiGoogleFonts, fontWeights, injectFontFamily } from "./utils/fontUtils";
-import { voiceOptions } from "./utils/settingsUtils";
+import {
+  amountEffectOptions,
+  confettiEffectOptions,
+  confettiModeOptions,
+  effectOptions,
+  enterAnimationOptions,
+  exitAnimationOptions,
+  voiceOptions,
+} from "./utils/settingsUtils";
 
 /* ─────────────────────────────────────────────
    FONT UTILITIES
@@ -40,7 +49,7 @@ function optFamily(opt) {
 ───────────────────────────────────────────── */
 function isHex(v) { return typeof v === "string" && /^#[0-9a-fA-F]{3,8}$/.test(v); }
 
-const ARR_KEYS = new Set(["textSize","messageFontSize","volume","ttsVolume"]);
+const ARR_KEYS = new Set(["titleFontSize","messageFontSize","notificationVolume","ttsVolume"]);
 
 function readArr(raw, fb = 0) {
   if (Array.isArray(raw)) return raw[0] ?? fb;
@@ -204,56 +213,12 @@ const OnboardingModal = memo(function OnboardingModal({ onClose }) {
 /* ─────────────────────────────────────────────
    STATIC DATA
 ───────────────────────────────────────────── */
-const SOUNDS = [
-  { id:"chime",     name:"Chime" },
-  { id:"cash",      name:"Cash Register" },
-  { id:"bell",      name:"Bell Ring" },
-  { id:"fanfare",   name:"Fanfare" },
-  { id:"bb_spirit", name:"BB Spirit" },
-];
-const ANIM_IN = [
-  { id:"fadeIn",       name:"Fade In" },
-  { id:"fadeInUp",     name:"Fade In Up" },
-  { id:"fadeInDown",   name:"Fade In Down" },
-  { id:"slideInLeft",  name:"Slide In Left" },
-  { id:"slideInRight", name:"Slide In Right" },
-  { id:"zoomIn",       name:"Zoom In" },
-  { id:"bounceIn",     name:"Bounce In" },
-];
-const ANIM_OUT = [
-  { id:"fadeOut",     name:"Fade Out" },
-  { id:"fadeOutUp",   name:"Fade Out Up" },
-  { id:"fadeOutDown", name:"Fade Out Down" },
-  { id:"bounceOut",   name:"Bounce Out" },
-  { id:"zoomOut",     name:"Zoom Out" },
-];
-const EFFECTS = [
-  { id:"realistic_look", name:"Realistic Look" },
-  { id:"glow",           name:"Glow Effect" },
-  { id:"shadow",         name:"Shadow Effect" },
-  { id:"neon",           name:"Neon Effect" },
-  { id:"none",           name:"No Effect" },
-];
-const CONFETTI = [
-  { id:"fountain",    name:"Fountain" },
-  { id:"rain",        name:"Rain" },
-  { id:"spiral",      name:"Spiral" },
-  { id:"blast",       name:"Blast" },
-  { id:"fireworks",   name:"Fireworks" },
-  { id:"heart_burst", name:"Heart Burst" },
-  { id:"money_rain",  name:"Money Rain" },
-  { id:"starfall",    name:"Starfall" },
-  { id:"portal",      name:"Portal" },
-  { id:"shockwave",   name:"Shockwave" },
-  { id:"snow",        name:"Snow Drift" },
-  { id:"bubbles",     name:"Bubbles" },
-  { id:"meteors",     name:"Meteor Shower" },
-  { id:"comet",       name:"Comet Trails" },
-];
-const CONFETTI_MODES = [
-  { id:"classic", name:"Classic" },
-  { id:"physics", name:"Physics" },
-];
+const SOUNDS = SOUND_OPTIONS;
+const ANIM_IN = enterAnimationOptions;
+const ANIM_OUT = exitAnimationOptions;
+const EFFECTS = effectOptions;
+const CONFETTI = confettiEffectOptions;
+const CONFETTI_MODES = confettiModeOptions;
 const TTS_VOICES = [
   ...voiceOptions,
 ];
@@ -265,7 +230,7 @@ const ZONES = [
   {
     id:"image", side:"left", icon:Image, name:"รูปภาพ", posKey:"image",
     description:"รูปภาพ / GIF",
-    disp:(ls) => (ls.image||ls.alertImage) ? "มีรูป" : "ไม่มี",
+    disp:(ls) => ls.image ? "มีรูป" : "ไม่มี",
     fields:[
       { key:"image", label:"URL รูปภาพ", type:"image", placeholder:"https://..." },
     ],
@@ -273,29 +238,30 @@ const ZONES = [
   {
     id:"textStyle", side:"left", icon:Type, name:"ข้อความหลัก", posKey:"donorName",
     description:"สี, ขนาด, ฟอนต์",
-    disp:(ls) => `${readArr(ls.textSize,36)}px`,
+    disp:(ls) => `${readArr(ls.titleFontSize,36)}px`,
     fields:[
-      { key:"prefixText",     label:"ข้อความนำหน้า",  type:"text",   placeholder:"{{user}} " },
-      { key:"suffixText",     label:"ข้อความท้าย",     type:"text",   placeholder:"โดเนทมา" },
-      { key:"font",           label:"แบบอักษร",         type:"font",   options:thaiGoogleFonts },
-      { key:"fontWeight",     label:"น้ำหนักฟอนต์",    type:"select", options:fontWeights.map(w=>({id:w,name:w})) },
-      { key:"textSize",       label:"ขนาดตัวอักษร",    type:"slider", min:12, max:72, isArr:true },
-      { key:"textColor",      label:"สีข้อความหลัก",   type:"color" },
-      { key:"donorNameColor", label:"สีชื่อผู้บริจาค", type:"color" },
-      { key:"borderWidth",    label:"ขอบตัวอักษร",     type:"slider", min:0, max:10, step:0.5 },
-      { key:"borderColor",    label:"สีขอบตัวอักษร",   type:"color" },
+      { key:"titleText",     label:"ข้อความนำหน้า",  type:"text",   placeholder:"{{user}} " },
+      { key:"titleSuffixText",     label:"ข้อความท้าย",     type:"text",   placeholder:"โดเนทมา" },
+      { key:"titleFontFamily",           label:"แบบอักษร",         type:"font",   options:thaiGoogleFonts },
+      { key:"titleFontWeight",     label:"น้ำหนักฟอนต์",    type:"select", options:fontWeights.map(w=>({id:w,name:w})) },
+      { key:"titleFontSize",       label:"ขนาดตัวอักษร",    type:"slider", min:12, max:72, isArr:true },
+      { key:"titleMainColor",      label:"สีข้อความหลัก",   type:"color" },
+      { key:"titleUsernameColor", label:"สีชื่อผู้บริจาค", type:"color" },
+      { key:"titleStrokeWidth",    label:"ขอบตัวอักษร",     type:"slider", min:0, max:10, step:0.5 },
+      { key:"titleStrokeColor",    label:"สีขอบตัวอักษร",   type:"color" },
     ],
   },
   {
     id:"amount", side:"left", icon:Sparkles, name:"จำนวนเงิน", posKey:"amount",
     description:"สี + เอฟเฟกต์",
-    disp:(ls) => ls.amountColor||"#0EA5E9",
+    disp:(ls) => ls.titleAmountColor||"#0EA5E9",
     fields:[
-      { key:"amountText",   label:"รูปแบบจำนวนเงิน",  type:"text", placeholder:"{{amount}}฿" },
+      { key:"titleAmountText",   label:"รูปแบบจำนวนเงิน",  type:"text", placeholder:"{{amount}}฿" },
       { key:"amountSuffix", label:"ส่วนท้ายจำนวน",     type:"text", placeholder:"฿" },
-      { key:"amountColor",  label:"สีจำนวนเงิน",       type:"color" },
-      { key:"amountShine",  label:"เอฟเฟกต์ shine",    type:"boolean" },
-      { key:"effect",       label:"เอฟเฟกต์ข้อความ",  type:"select", options:EFFECTS },
+      { key:"titleAmountColor",  label:"สีจำนวนเงิน",       type:"color" },
+      { key:"titleAmountShine",  label:"เอฟเฟกต์ shine",    type:"boolean" },
+      { key:"titleAmountEffect", label:"รูปแบบเอฟเฟกต์ยอดเงิน", type:"select", options:amountEffectOptions },
+      { key:"titleTextEffect",       label:"เอฟเฟกต์ข้อความ",  type:"select", options:EFFECTS },
     ],
   },
   {
@@ -304,37 +270,37 @@ const ZONES = [
     disp:(ls) => { const t=ls.messageText||""; return t.length>12?t.slice(0,12)+"…":t||"—"; },
     fields:[
       { key:"messageText",        label:"ข้อความ",         type:"text",   placeholder:"ขอบคุณ..." },
-      { key:"messageFont",        label:"ฟอนต์ข้อความ",   type:"font",   options:thaiGoogleFonts },
+      { key:"messageFontFamily",        label:"ฟอนต์ข้อความ",   type:"font",   options:thaiGoogleFonts },
       { key:"messageFontWeight",  label:"น้ำหนักฟอนต์",   type:"select", options:fontWeights.map(w=>({id:w,name:w})) },
       { key:"messageFontSize",    label:"ขนาดข้อความ",    type:"slider", min:12, max:48, isArr:true },
       { key:"messageColor",       label:"สีข้อความ",       type:"color" },
-      { key:"messageBorderWidth", label:"ขอบข้อความ",     type:"slider", min:0, max:10, step:0.5 },
-      { key:"messageBorderColor", label:"สีขอบข้อความ",   type:"color" },
+      { key:"messageStrokeWidth", label:"ขอบข้อความ",     type:"slider", min:0, max:10, step:0.5 },
+      { key:"messageStrokeColor", label:"สีขอบข้อความ",   type:"color" },
     ],
   },
   {
     id:"animation", side:"right", icon:Zap, name:"อนิเมชัน", posKey:"image",
     description:"animation เข้า-ออก",
-    disp:(ls) => ls.inAnimation||"fadeInUp",
+    disp:(ls) => ls.animationEnterType||"fadeInUp",
     fields:[
-      { key:"inAnimation",     label:"animation เข้า",          type:"select", options:ANIM_IN },
-      { key:"inDuration",      label:"ระยะเวลาเข้า (วินาที)",   type:"slider", min:0.3, max:3,  step:0.1 },
-      { key:"displayDuration", label:"ระยะเวลาแสดง (วินาที)",  type:"slider", min:1,   max:10, step:0.5 },
-      { key:"outAnimation",    label:"animation ออก",           type:"select", options:ANIM_OUT },
-      { key:"outDuration",     label:"ระยะเวลาออก (วินาที)",    type:"slider", min:0.3, max:3,  step:0.1 },
+      { key:"animationEnterType",     label:"animation เข้า",          type:"select", options:ANIM_IN },
+      { key:"animationEnterDuration",      label:"ระยะเวลาเข้า (วินาที)",   type:"slider", min:0.3, max:3,  step:0.1 },
+      { key:"animationDisplayDuration", label:"ระยะเวลาแสดง (วินาที)",  type:"slider", min:1,   max:10, step:0.5 },
+      { key:"animationExitType",    label:"animation ออก",           type:"select", options:ANIM_OUT },
+      { key:"animationExitDuration",     label:"ระยะเวลาออก (วินาที)",    type:"slider", min:0.3, max:3,  step:0.1 },
     ],
   },
   {
     id:"sound", side:"right", icon:Volume2, name:"เสียง", posKey:"image",
     description:"เสียงแจ้งเตือน",
-    disp:(ls) => SOUNDS.find(s=>s.id===ls.alertSound)?.name||"BB Spirit",
+    disp:(ls) => SOUNDS.find(s=>s.id===ls.notificationSound)?.name||"BB Spirit",
     fields:[
-      { key:"alertSound",             label:"เสียงแจ้งเตือน",      type:"select",  options:SOUNDS },
-      { key:"useCustomSound",         label:"ใช้เสียงที่อัปโหลด", type:"boolean" },
-      { key:"volume",                 label:"ระดับเสียง",           type:"slider",  min:0, max:100, isArr:true },
+      { key:"notificationSound",             label:"เสียงแจ้งเตือน",      type:"select",  options:SOUNDS },
+      { key:"notificationUseCustom",         label:"ใช้เสียงที่อัปโหลด", type:"boolean" },
+      { key:"notificationVolume",                 label:"ระดับเสียง",           type:"slider",  min:0, max:100, isArr:true },
       { key:"ttsVoice",               label:"เสียง TTS",            type:"select",  options:TTS_VOICES },
       { key:"ttsTitleEnabled",        label:"อ่านชื่อและจำนวน",    type:"boolean" },
-      { key:"ttsMessageEnabledField", label:"อ่านข้อความ",          type:"boolean" },
+      { key:"ttsMessageEnabled", label:"อ่านข้อความ",          type:"boolean" },
       { key:"ttsVolume",              label:"ระดับเสียง TTS",      type:"slider",  min:0, max:100, isArr:true },
     ],
   },
@@ -347,8 +313,8 @@ const ZONES = [
       { key:"showConfetti",      label:"แสดง Confetti",       type:"boolean" },
       { key:"confettiMode",      label:"โหมด Confetti",       type:"select",  options:CONFETTI_MODES },
       { key:"confettiEffect",    label:"รูปแบบ Confetti",     type:"select",  options:CONFETTI },
-      { key:"useRanges",         label:"ใช้ระบบช่วงเงิน",    type:"boolean" },
-      { key:"minAmountForAlert", label:"จำนวนเงินขั้นต่ำ",   type:"slider",  min:1, max:1000, step:1 },
+      { key:"rangesUseRanges",         label:"ใช้ระบบช่วงเงิน",    type:"boolean" },
+      { key:"minimumDonation", label:"จำนวนเงินขั้นต่ำ",   type:"slider",  min:1, max:1000, step:1 },
     ],
   },
   {
@@ -356,15 +322,15 @@ const ZONES = [
     description:"แสด/ซ่อน",
     disp:(ls) => {
       const p=[];
-      if (ls.showName!==false)    p.push("ชื่อ");
-      if (ls.showAmount!==false)  p.push("เงิน");
-      if (ls.showMessage!==false) p.push("ข้อความ");
+      if (ls.titleShowName!==false)    p.push("ชื่อ");
+      if (ls.titleShowAmount!==false)  p.push("เงิน");
+      if (ls.messageShowMessage!==false) p.push("ข้อความ");
       return p.length ? p.join(", ") : "ปิดทั้งหมด";
     },
     fields:[
-      { key:"showName",        label:"แสดงชื่อผู้บริจาค", type:"boolean" },
-      { key:"showAmount",      label:"แสดงจำนวนเงิน",     type:"boolean" },
-      { key:"showMessage",     label:"แสดงข้อความ",       type:"boolean" },
+      { key:"titleShowName",        label:"แสดงชื่อผู้บริจาค", type:"boolean" },
+      { key:"titleShowAmount",      label:"แสดงจำนวนเงิน",     type:"boolean" },
+      { key:"messageShowMessage",     label:"แสดงข้อความ",       type:"boolean" },
       { key:"backgroundColor", label:"สีพื้นหลัง",        type:"color" },
     ],
   },
@@ -429,7 +395,7 @@ const FieldRenderer = memo(function FieldRenderer({ field, value, onUpdate }) {
 
     case "slider": {
       const num  = typeof value === "number" ? value : (field.min ?? 0);
-      const pct  = field.key === "volume" || field.key === "ttsVolume";
+      const pct  = field.key === "notificationVolume" || field.key === "ttsVolume";
       const step = field.step ?? 1;
       const dec  = step < 1 ? 1 : 0;
       return (
@@ -692,6 +658,8 @@ const AnnotationColumn = memo(function AnnotationColumn({
 export default function FullscreenVisualEditor({
   settings,           // ← parent ควรส่ง effectiveSettings มาแทน raw settings
   updateSetting,      // ← (key, value) update global หรือ range ขึ้นอยู่กับ context ใน parent
+  testDonationMessage = "",
+  onTestDonationMessageChange,
   onClose,
   onSave,
 }) {
@@ -728,8 +696,8 @@ export default function FullscreenVisualEditor({
   // ── lifecycle ──────────────────────────────────────────
   useEffect(() => {
     mountedRef.current = true;
-    injectFontFamily(settings.font);
-    injectFontFamily(settings.messageFont);
+    injectFontFamily(settings.titleFontFamily);
+    injectFontFamily(settings.messageFontFamily);
     return () => {
       mountedRef.current = false;
       cancelAnimationFrame(rafRef.current);
@@ -810,7 +778,7 @@ export default function FullscreenVisualEditor({
   // หลังจาก 80ms — ป้องกัน parent re-render ทุก keystroke
   const handleUpdate = useCallback((key, value) => {
     let final = value;
-    if (key === "font" || key === "messageFont") {
+    if (key === "titleFontFamily" || key === "messageFontFamily") {
       injectFontFamily(value);
     } else if (ARR_KEYS.has(key) && typeof value === "number") {
       final = [value];
@@ -842,13 +810,13 @@ export default function FullscreenVisualEditor({
   }, [onSave, onClose]);
 
   const handleTestSound = useCallback(() => {
-    const vol = readArr(ls.volume, 75);
-    playAlertSound(ls.alertSound || "chime", vol);
+    const vol = readArr(ls.notificationVolume, 75);
+    playAlertSound(ls.notificationSound || "chime", vol);
     setTestingSound(true);
     soundRef.current = setTimeout(() => {
       if (mountedRef.current) setTestingSound(false);
     }, 1100);
-  }, [ls.alertSound, ls.volume]);
+  }, [ls.notificationSound, ls.notificationVolume]);
 
   const handleToggle = useCallback((id) => {
     setSelectedId(prev => prev === id ? null : id);
@@ -945,7 +913,10 @@ export default function FullscreenVisualEditor({
                 className="relative z-10">
                 <AlertPreview
                   ref={previewRef}
-                  settings={ls}
+                  settings={{
+                    ...ls,
+                    messageText: testDonationMessage || ls.messageText,
+                  }}
                   isPlaying={isPlaying}
                   onPlayStateChange={setIsPlaying}
                   onAnimationStepChange={setAnimStep}
@@ -965,6 +936,18 @@ export default function FullscreenVisualEditor({
 
           {/* Right */}
           <div className="bg-slate-900/40 border-l border-slate-800/60 overflow-hidden">
+            <div className="px-4 pt-4 pb-3 border-b border-slate-800/60 space-y-2">
+              <div>
+                <h3 className="text-sm font-semibold text-white">Test Donation Message</h3>
+                <p className="text-[11px] text-slate-500">Preview only, not included in save</p>
+              </div>
+              <Input
+                value={testDonationMessage}
+                onChange={(e) => onTestDonationMessageChange?.(e.target.value)}
+                placeholder="ขอบคุณมาก ๆ สำหรับกำลังใจนะ {{user}}!"
+                className="bg-slate-800/80 border-slate-700 text-white placeholder:text-slate-500"
+              />
+            </div>
             <AnnotationColumn zoneList={RIGHT_ZONES} side="right"
               selectedId={selectedId} ls={ls}
               onToggle={handleToggle} onUpdate={handleUpdate}

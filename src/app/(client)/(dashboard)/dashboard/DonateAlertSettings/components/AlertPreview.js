@@ -1,5 +1,4 @@
 // ==================== AlertPreview.js ====================
-// แก้: ลบ if (settings.metadata) branch ออกทั้งหมด — flat only
 "use client";
 import React, {
   useState, useEffect, forwardRef, useImperativeHandle, useRef,
@@ -14,66 +13,9 @@ import {
   getAmountText,
   injectFontFamily,
 } from "./utils/fontUtils";
+import { buildAlertRenderSettings } from "./utils/settingsUtils";
 import { playAlertSound } from "../../../../../../utils/audioUtils";
 import { findMatchingTtsStyleId, synthesizeTtsAudio } from "../../../../../../utils/ttsService";
-
-function readNum(raw, fallback) {
-  if (Array.isArray(raw)) return raw[0] ?? fallback;
-  if (typeof raw === "number") return raw;
-  return fallback;
-}
-
-// ✅ flat structure เท่านั้น — ไม่มี if (settings.metadata) อีกต่อไป
-function buildSettings(settings) {
-  return {
-    prefixText:         settings.prefixText         ?? "{{user}} ",
-    amountText:         settings.amountText         ?? "{{amount}}฿",
-    textSize:           readNum(settings.textSize, 36),
-    font:               settings.font               ?? "IBM Plex Sans Thai",
-    fontWeight:         settings.fontWeight         ?? "700",
-    textColor:          settings.textColor          ?? "#FFFFFF",
-    donorNameColor:     settings.donorNameColor     ?? "#FF9500",
-    amountColor:        settings.amountColor        ?? "#0EA5E9",
-    borderWidth:        settings.borderWidth        ?? 2.5,
-    borderColor:        settings.borderColor        ?? "#000000",
-    amountShine:        settings.amountShine        ?? true,
-    suffixText:         settings.suffixText         ?? "โดเนทมา",
-    showName:           settings.showName           ?? true,
-    showAmount:         settings.showAmount         ?? true,
-    messageFont:        settings.messageFont        ?? "IBM Plex Sans Thai",
-    messageFontWeight:  settings.messageFontWeight  ?? "500",
-    messageFontSize:    readNum(settings.messageFontSize, 24),
-    messageColor:       settings.messageColor       ?? "#FFFFFF",
-    messageBorderWidth: settings.messageBorderWidth ?? 2.5,
-    messageBorderColor: settings.messageBorderColor ?? "#000000",
-    messageText:        settings.messageText        ?? "เล็กพาฟร้องไปไหน เพื่อนรอเล่นเกม",
-    showMessage:        settings.showMessage        ?? true,
-    inAnimation:        settings.inAnimation        ?? "fadeInUp",
-    inDuration:         settings.inDuration         ?? 1,
-    outAnimation:       settings.outAnimation       ?? "fadeOutUp",
-    outDuration:        settings.outDuration        ?? 1,
-    displayDuration:    settings.displayDuration    ?? 3,
-    alertSound:         settings.alertSound         ?? "bb_spirit",
-    volume:             readNum(settings.volume, 75),
-    useCustomSound:     settings.useCustomSound     ?? false,
-    ttsVoice:           settings.ttsVoice           ?? "female",
-    ttsStyleId:         settings.ttsStyleId         ?? null,
-    ttsRate:            settings.ttsRate            ?? 0.95,
-    ttsPitch:           settings.ttsPitch           ?? 1.05,
-    ttsTitleEnabled:    settings.ttsTitleEnabled    ?? true,
-    ttsMessageEnabled:  settings.ttsMessageEnabledField ?? false,
-    ttsVolume:          settings.ttsVolume          ?? 50,
-    // ✅ รองรับทั้ง alertImage และ image (flat ใช้ทั้งสองอย่าง)
-    image:              settings.alertImage ?? settings.image
-                        ?? "https://media.tenor.com/k_UsDt9xfWIAAAAM/i-will-eat-you-cat.gif",
-    effect:             settings.effect             ?? "realistic_look",
-    confettiEffect:     settings.confettiEffect     ?? "fountain",
-    confettiMode:       settings.confettiMode       ?? "classic",
-    imageGlow:          settings.imageGlow          ?? false,
-    showConfetti:       settings.showConfetti       ?? false,
-    minAmountForAlert:  settings.minAmountForAlert  ?? 10,
-  };
-}
 
 const AlertPreview = forwardRef(({
   settings,
@@ -83,28 +25,35 @@ const AlertPreview = forwardRef(({
   externalAnimationStep,
   externalIsVisible,
 }, ref) => {
-  const themeRef  = useRef(null);
+  const themeRef = useRef(null);
   const ttsAudioRef = useRef(null);
   const ttsRequestIdRef = useRef(0);
   const ttsPlaybackPromiseRef = useRef(null);
   const ttsPlaybackActiveRef = useRef(false);
   const [cycleKey, setCycleKey] = useState(0);
-  const [step,  setStep]   = useState("display");
+  const [step, setStep] = useState("display");
   const [visible, setVisible] = useState(true);
 
   const animStep = externalAnimationStep ?? step;
-  const isVis    = externalIsVisible     ?? visible;
-
-  const s = buildSettings(settings);
+  const isVis = externalIsVisible ?? visible;
+  const s = buildAlertRenderSettings(settings);
 
   useEffect(() => {
-    injectFontFamily(s.font);
-    injectFontFamily(s.messageFont);
-  }, [s.font, s.messageFont]);
+    injectFontFamily(s.titleFontFamily);
+    injectFontFamily(s.messageFontFamily);
+  }, [s.titleFontFamily, s.messageFontFamily]);
 
-  const displayName  = getDisplayName(s.prefixText);
-  const amountText   = getAmountText({ amountText: s.amountText, amountSuffix: settings.amountSuffix ?? "฿" });
-  const mainVariants = getMotionVariants(s.inAnimation, s.outAnimation, s.inDuration, s.outDuration);
+  const displayName = getDisplayName(s.titleText);
+  const amountText = getAmountText({
+    amountText: s.titleAmountText,
+    amountSuffix: settings.amountSuffix ?? "฿",
+  });
+  const mainVariants = getMotionVariants(
+    s.animationEnterType,
+    s.animationExitType,
+    s.animationEnterDuration,
+    s.animationExitDuration,
+  );
 
   const stopTtsAudio = () => {
     const activeAudio = ttsAudioRef.current;
@@ -149,7 +98,7 @@ const AlertPreview = forwardRef(({
 
   const triggerEnterAudio = async () => {
     try {
-      playAlertSound(s.alertSound, s.volume);
+      playAlertSound(s.notificationSound, s.notificationVolume);
     } catch {}
 
     const previewText = ttsText;
@@ -218,37 +167,38 @@ const AlertPreview = forwardRef(({
   };
 
   useImperativeHandle(ref, () => ({
-    handleStep: (step) => {
-      if (step === "in" || step === "display") {
+    handleStep: (nextStep) => {
+      if (nextStep === "in" || nextStep === "display") {
         setVisible(true);
-        setCycleKey(k => k + 1);
-        if (step === "in") {
+        setCycleKey((k) => k + 1);
+        if (nextStep === "in") {
           triggerEnterAudio();
         }
-        setStep(step);
-      } else if (step === "out") {
+        setStep(nextStep);
+      } else if (nextStep === "out") {
         stopTtsAudio();
         setVisible(true);
-        setCycleKey(k => k + 1);
+        setCycleKey((k) => k + 1);
         setTimeout(() => setVisible(false), 50);
-        setStep(step);
+        setStep(nextStep);
       }
     },
     getElementPositions: () => themeRef.current?.getElementPositions(),
   }));
 
-  // ── animation state machine ──────────────────────────────
   useEffect(() => {
-    if (!isPlaying) return;
+    if (!isPlaying) return undefined;
+
     let timer;
     let cancelled = false;
+
     if (animStep === "in") {
       ttsPlaybackPromiseRef.current = triggerEnterAudio();
       timer = setTimeout(() => {
         if (cancelled) return;
         setStep("display");
         onAnimationStepChange?.("display");
-      }, s.inDuration * 1000);
+      }, s.animationEnterDuration * 1000);
     } else if (animStep === "display") {
       const goToExit = () => {
         if (cancelled) return;
@@ -260,7 +210,7 @@ const AlertPreview = forwardRef(({
       if (shouldWaitForTts && ttsPlaybackActiveRef.current && ttsPlaybackPromiseRef.current) {
         ttsPlaybackPromiseRef.current.then(goToExit);
       } else {
-        timer = setTimeout(goToExit, s.displayDuration * 1000);
+        timer = setTimeout(goToExit, s.animationDisplayDuration * 1000);
       }
     } else if (animStep === "out") {
       timer = setTimeout(() => {
@@ -269,9 +219,10 @@ const AlertPreview = forwardRef(({
         setVisible(true);
         onAnimationStepChange?.("display");
         onPlayStateChange?.(false);
-        setCycleKey(k => k + 1);
-      }, s.outDuration * 1000);
+        setCycleKey((k) => k + 1);
+      }, s.animationExitDuration * 1000);
     }
+
     return () => {
       cancelled = true;
       clearTimeout(timer);
@@ -283,7 +234,7 @@ const AlertPreview = forwardRef(({
     if (isPlaying) {
       setStep("in");
       setVisible(true);
-      setCycleKey(k => k + 1);
+      setCycleKey((k) => k + 1);
     } else {
       stopTtsAudio();
       setStep("display");

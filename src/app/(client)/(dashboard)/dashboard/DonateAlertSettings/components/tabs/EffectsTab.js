@@ -7,16 +7,26 @@ import { Slider } from "@/components/ui/slider";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Zap, Sparkles, Layers, Image as ImageIcon, Droplet, Ghost, AlertCircle } from "lucide-react";
+import {
+  amountEffectOptions,
+  confettiEffectOptions,
+  confettiModeOptions,
+  effectOptions,
+} from "../utils/settingsUtils";
 
 export default function EffectsTab({ settings, updateSetting }) {
   // Safe value access with fallbacks
-  const effect = settings?.effect ?? "realistic_look";
+  const textEffect = settings?.titleTextEffect ?? settings?.effect ?? "realistic_look";
   const imageGlow = settings?.imageGlow ?? false;
-  const amountShine = settings?.amountShine ?? false;
+  const amountShine = settings?.titleAmountShine ?? false;
+  const amountEffect = settings?.titleAmountEffect ?? (amountShine ? "sweep" : "none");
   const showConfetti = settings?.showConfetti ?? false;
   const confettiEffect = settings?.confettiEffect ?? "fountain";
   const confettiMode = settings?.confettiMode ?? "classic";
-  const useRanges = settings?.useRanges ?? false;
+  const useRanges = settings?.rangesUseRanges ?? false;
+  const activeTextEffect =
+    effectOptions.find((option) => option.id === textEffect) ??
+    effectOptions.find((option) => option.id === "realistic_look");
 
   return (
     <motion.div
@@ -30,39 +40,26 @@ export default function EffectsTab({ settings, updateSetting }) {
 
       {/* --- Text / Amount Effect --- */}
       <div className="space-y-2">
-        <Label className="text-slate-300 text-base">Text/Amount Effect</Label>
+        <Label className="text-slate-300 text-base">Text Effect</Label>
         <Select
-          value={effect}
-          onValueChange={(v) => updateSetting("effect", v)}
+          value={textEffect}
+          onValueChange={(v) => {
+            updateSetting("titleTextEffect", v);
+            updateSetting("effect", v);
+          }}
         >
           <SelectTrigger className="bg-slate-800/80 border-slate-700 text-white h-12">
             <SelectValue placeholder="Select effect" />
           </SelectTrigger>
           <SelectContent className="bg-slate-800 border-slate-700">
-            <SelectItem value="realistic_look" className="text-white hover:bg-slate-700">
-              Realistic Look
-            </SelectItem>
-            <SelectItem value="glow" className="text-white hover:bg-slate-700">
-              Glow Effect
-            </SelectItem>
-            <SelectItem value="shadow" className="text-white hover:bg-slate-700">
-              Shadow Effect
-            </SelectItem>
-            <SelectItem value="neon" className="text-white hover:bg-slate-700">
-              Neon Effect
-            </SelectItem>
-            <SelectItem value="none" className="text-white hover:bg-slate-700">
-              No Effect
-            </SelectItem>
+            {effectOptions.map((effect) => (
+              <SelectItem key={effect.id} value={effect.id} className="text-white hover:bg-slate-700">
+                {effect.name}
+              </SelectItem>
+            ))}
           </SelectContent>
         </Select>
-        <p className="text-slate-500 text-xs mt-1">
-          {effect === "realistic_look" && "Natural look with subtle depth"}
-          {effect === "glow" && "Soft glow around text and amount"}
-          {effect === "shadow" && "Drop shadow for depth"}
-          {effect === "neon" && "Bright neon light effect"}
-          {effect === "none" && "No text effect applied"}
-        </p>
+        <p className="text-slate-500 text-xs mt-1">{activeTextEffect?.description}</p>
       </div>
 
       {/* --- Image Glow --- */}
@@ -84,24 +81,44 @@ export default function EffectsTab({ settings, updateSetting }) {
       </div>
 
       {/* --- Amount Shine (เฉพาะ Realistic Look) --- */}
-      {effect === "realistic_look" && (
-        <div className="space-y-3">
+      <div className="space-y-3">
         <div className="flex items-start sm:items-center justify-between gap-3 p-3 sm:p-4 rounded-xl bg-slate-800/50 border border-slate-700/50">
             <div className="flex items-start sm:items-center gap-3 min-w-0">
               <Sparkles className="w-5 h-5 text-yellow-400" />
               <div>
                 <Label className="text-slate-300 text-base">Amount Shine Effect</Label>
-                <p className="text-slate-500 text-sm mt-1">Adds a shine effect to the donation amount</p>
+                <p className="text-slate-500 text-sm mt-1">Adds an extra animated highlight to the donation amount</p>
               </div>
             </div>
             <Switch
               checked={amountShine}
-              onCheckedChange={(v) => updateSetting("amountShine", v)}
+              onCheckedChange={(v) => updateSetting("titleAmountShine", v)}
               className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-cyan-500 data-[state=checked]:to-blue-500"
             />
           </div>
-        </div>
-      )}
+
+          <div className="space-y-2">
+            <Label className="text-slate-300 text-base">Amount Effect Style</Label>
+            <Select
+              value={amountEffect}
+              onValueChange={(v) => updateSetting("titleAmountEffect", v)}
+            >
+              <SelectTrigger className="bg-slate-800/80 border-slate-700 text-white h-12">
+                <SelectValue placeholder="Select amount effect" />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-700">
+                {amountEffectOptions.map((effect) => (
+                  <SelectItem key={effect.id} value={effect.id} className="text-white hover:bg-slate-700">
+                    {effect.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <p className="text-slate-500 text-sm mt-1">
+              {amountEffectOptions.find((effect) => effect.id === amountEffect)?.description}
+            </p>
+          </div>
+      </div>
 
       {/* --- Confetti Section --- */}
       <div className="pt-6 border-t border-slate-700/50 space-y-4">
@@ -129,12 +146,11 @@ export default function EffectsTab({ settings, updateSetting }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-700">
-                  <SelectItem value="classic" className="text-white hover:bg-slate-700">
-                    Classic (Original animation)
-                  </SelectItem>
-                  <SelectItem value="physics" className="text-white hover:bg-slate-700">
-                    Physics (Bounce & collision)
-                  </SelectItem>
+                  {confettiModeOptions.map((mode) => (
+                    <SelectItem key={mode.id} value={mode.id} className="text-white hover:bg-slate-700">
+                      {mode.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -149,48 +165,11 @@ export default function EffectsTab({ settings, updateSetting }) {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className="bg-slate-800 border-slate-700">
-                  <SelectItem value="fountain" className="text-white hover:bg-slate-700">
-                    Fountain (Shooting upward)
-                  </SelectItem>
-                  <SelectItem value="rain" className="text-white hover:bg-slate-700">
-                    Rain (Falling from top)
-                  </SelectItem>
-                  <SelectItem value="spiral" className="text-white hover:bg-slate-700">
-                    Spiral (Spinning around)
-                  </SelectItem>
-                  <SelectItem value="blast" className="text-white hover:bg-slate-700">
-                    Blast (Explosive burst)
-                  </SelectItem>
-                  <SelectItem value="fireworks" className="text-white hover:bg-slate-700">
-                    Fireworks (Multi burst)
-                  </SelectItem>
-                  <SelectItem value="heart_burst" className="text-white hover:bg-slate-700">
-                    Heart Burst (Love explosion)
-                  </SelectItem>
-                  <SelectItem value="money_rain" className="text-white hover:bg-slate-700">
-                    Money Rain (Coins & cash)
-                  </SelectItem>
-                  <SelectItem value="starfall" className="text-white hover:bg-slate-700">
-                    Starfall (Twinkling shower)
-                  </SelectItem>
-                  <SelectItem value="portal" className="text-white hover:bg-slate-700">
-                    Portal (Magic vortex)
-                  </SelectItem>
-                  <SelectItem value="shockwave" className="text-white hover:bg-slate-700">
-                    Shockwave (Energy ring)
-                  </SelectItem>
-                  <SelectItem value="snow" className="text-white hover:bg-slate-700">
-                    Snow Drift (Soft falling)
-                  </SelectItem>
-                  <SelectItem value="bubbles" className="text-white hover:bg-slate-700">
-                    Bubbles (Floating upward)
-                  </SelectItem>
-                  <SelectItem value="meteors" className="text-white hover:bg-slate-700">
-                    Meteor Shower (Fast diagonal)
-                  </SelectItem>
-                  <SelectItem value="comet" className="text-white hover:bg-slate-700">
-                    Comet Trails (Arc streaks)
-                  </SelectItem>
+                  {confettiEffectOptions.map((effect) => (
+                    <SelectItem key={effect.id} value={effect.id} className="text-white hover:bg-slate-700">
+                      {effect.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -208,8 +187,10 @@ export default function EffectsTab({ settings, updateSetting }) {
 EffectsTab.propTypes = {
   settings: PropTypes.shape({
     effect: PropTypes.string,
+    titleTextEffect: PropTypes.string,
     imageGlow: PropTypes.bool,
-    amountShine: PropTypes.bool,
+    titleAmountShine: PropTypes.bool,
+    titleAmountEffect: PropTypes.string,
     showConfetti: PropTypes.bool,
     confettiEffect: PropTypes.string,
     confettiMode: PropTypes.string,

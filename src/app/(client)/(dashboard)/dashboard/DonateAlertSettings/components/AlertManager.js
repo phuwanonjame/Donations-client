@@ -4,18 +4,18 @@
 import React, { useState } from "react";
 import FullscreenVisualEditor from "./FullscreenVisualEditor";
 import AlertPreview from "./AlertPreview";
+import { normalizeFlatSettings } from "./utils/settingsUtils";
 
 export default function AlertManager() {
-  const [settings, setSettings] = useState({
-    donorNameColor: "#FF9500",
-    amountColor: "#0EA5E9",
-    suffixText: "โดเนทมา",
+  const [settings, setSettings] = useState(() => normalizeFlatSettings({
+    titleUsernameColor: "#FF9500",
+    titleAmountColor: "#0EA5E9",
+    titleSuffixText: "โดเนทมา",
     messageText: "เล็กพาฟร้องไปไหน เพื่อนรอเล่นเกม",
-    showName: true,
-    showAmount: true,
-    showMessage: true,
-    // ... settings อื่นๆ
-  });
+    titleShowName: true,
+    titleShowAmount: true,
+    messageShowMessage: true,
+  }));
   
   const [showVisualEditor, setShowVisualEditor] = useState(false);
   

@@ -31,10 +31,10 @@ export default function VisualEditorOverlay({ settings, updateSetting, isActive 
     {
       id: "donorName",
       name: "Donor Name",
-      flatPath: "donorNameColor",
+      flatPath: "titleUsernameColor",
       groupedPath: "title.usernameColor",
       type: "color",
-      getValue: () => settings.donorNameColor || "#FF9500",
+      getValue: () => settings.titleUsernameColor || "#FF9500",
       getPosition: () => ({ x: "35%", y: "28%" }),
       area: "text",
       icon: Type,
@@ -45,10 +45,10 @@ export default function VisualEditorOverlay({ settings, updateSetting, isActive 
     {
       id: "amount",
       name: "Amount Color",
-      flatPath: "amountColor",
+      flatPath: "titleAmountColor",
       groupedPath: "title.amountColor",
       type: "color",
-      getValue: () => settings.amountColor || "#0EA5E9",
+      getValue: () => settings.titleAmountColor || "#0EA5E9",
       getPosition: () => ({ x: "70%", y: "28%" }),
       area: "text",
       icon: Palette,
@@ -59,10 +59,10 @@ export default function VisualEditorOverlay({ settings, updateSetting, isActive 
     {
       id: "amountShine",
       name: "Amount Shine",
-      flatPath: "amountShine",
+      flatPath: "titleAmountShine",
       groupedPath: "title.amountShine",
       type: "boolean",
-      getValue: () => settings.amountShine ?? true,
+      getValue: () => settings.titleAmountShine ?? true,
       getPosition: () => ({ x: "70%", y: "35%" }),
       area: "text",
       icon: Sparkles,
@@ -73,10 +73,10 @@ export default function VisualEditorOverlay({ settings, updateSetting, isActive 
     {
       id: "suffixText",
       name: "Suffix Text",
-      flatPath: "suffixText",
+      flatPath: "titleSuffixText",
       groupedPath: "title.suffixText",
       type: "text",
-      getValue: () => settings.suffixText || "โดเนทมา",
+      getValue: () => settings.titleSuffixText || "โดเนทมา",
       getPosition: () => ({ x: "55%", y: "28%" }),
       area: "text",
       icon: Type,
@@ -115,10 +115,10 @@ export default function VisualEditorOverlay({ settings, updateSetting, isActive 
     {
       id: "image",
       name: "Alert Image",
-      flatPath: "alertImage",
+      flatPath: "image",
       groupedPath: "image",
       type: "image",
-      getValue: () => settings.alertImage || "",
+      getValue: () => settings.image || "",
       getPosition: () => ({ x: "50%", y: "15%" }),
       area: "image",
       icon: Image,
@@ -129,13 +129,13 @@ export default function VisualEditorOverlay({ settings, updateSetting, isActive 
     {
       id: "fontSize",
       name: "Font Size",
-      flatPath: "textSize",
+      flatPath: "titleFontSize",
       groupedPath: "title.fontSize",
       type: "slider",
       min: 12,
       max: 72,
       getValue: () => {
-        const val = settings.textSize;
+        const val = settings.titleFontSize;
         if (Array.isArray(val)) return val[0] || 36;
         return val || 36;
       },
@@ -149,11 +149,11 @@ export default function VisualEditorOverlay({ settings, updateSetting, isActive 
     {
       id: "font",
       name: "Font Family",
-      flatPath: "font",
+      flatPath: "titleFontFamily",
       groupedPath: "title.fontFamily",
       type: "select",
       options: thaiGoogleFonts,
-      getValue: () => settings.font || "ibmplex",
+      getValue: () => settings.titleFontFamily || "IBM Plex Sans Thai",
       getPosition: () => ({ x: "50%", y: "33%" }),
       area: "text",
       icon: Type,
@@ -165,11 +165,11 @@ export default function VisualEditorOverlay({ settings, updateSetting, isActive 
     {
       id: "fontWeight",
       name: "Font Weight",
-      flatPath: "fontWeight",
+      flatPath: "titleFontWeight",
       groupedPath: "title.fontWeight",
       type: "select",
       options: fontWeights.map(w => ({ id: w, name: w })),
-      getValue: () => settings.fontWeight || "700",
+      getValue: () => settings.titleFontWeight || "700",
       getPosition: () => ({ x: "50%", y: "43%" }),
       area: "text",
       icon: Type,
@@ -180,10 +180,10 @@ export default function VisualEditorOverlay({ settings, updateSetting, isActive 
     {
       id: "showName",
       name: "Show Donor Name",
-      flatPath: "showName",
+      flatPath: "titleShowName",
       groupedPath: "title.showName",
       type: "boolean",
-      getValue: () => settings.showName ?? true,
+      getValue: () => settings.titleShowName ?? true,
       getPosition: () => ({ x: "20%", y: "20%" }),
       area: "visibility",
       icon: Eye,
@@ -194,10 +194,10 @@ export default function VisualEditorOverlay({ settings, updateSetting, isActive 
     {
       id: "showAmount",
       name: "Show Amount",
-      flatPath: "showAmount",
+      flatPath: "titleShowAmount",
       groupedPath: "title.showAmount",
       type: "boolean",
-      getValue: () => settings.showAmount ?? true,
+      getValue: () => settings.titleShowAmount ?? true,
       getPosition: () => ({ x: "80%", y: "20%" }),
       area: "visibility",
       icon: Eye,
@@ -208,10 +208,10 @@ export default function VisualEditorOverlay({ settings, updateSetting, isActive 
     {
       id: "showMessage",
       name: "Show Message",
-      flatPath: "showMessage",
+      flatPath: "messageShowMessage",
       groupedPath: "message.showMessage",
       type: "boolean",
-      getValue: () => settings.showMessage ?? true,
+      getValue: () => settings.messageShowMessage ?? true,
       getPosition: () => ({ x: "50%", y: "85%" }),
       area: "visibility",
       icon: Eye,
@@ -226,7 +226,7 @@ export default function VisualEditorOverlay({ settings, updateSetting, isActive 
     let finalValue = value;
     
     // Handle special cases
-    if (element.type === "slider" && element.flatPath === "textSize") {
+    if (element.type === "slider" && element.flatPath === "titleFontSize") {
       finalValue = [value];
     } else if (element.type === "boolean") {
       finalValue = value;

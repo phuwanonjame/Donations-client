@@ -4,6 +4,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   Maximize2, Minimize2, RefreshCw, CheckCircle,
   Smartphone, Tablet, Monitor, Save, Settings2,
@@ -122,7 +123,9 @@ export default function PreviewPanel({
   settings,
   handleSave,
   isSaving = false,
-  hasChanges = false
+  hasChanges = false,
+  testDonationMessage = "",
+  onTestDonationMessageChange,
 }) {
   const alertPreviewRef = useRef();
   const [previewOptions, setPreviewOptions] = useState(loadPreviewOptions);
@@ -152,9 +155,9 @@ export default function PreviewPanel({
   const getDuration = (type, defaultValue) => {
     if (!settings) return defaultValue;
     switch (type) {
-      case "in":      return settings.inDuration      ?? defaultValue;
-      case "display": return settings.displayDuration ?? defaultValue;
-      case "out":     return settings.outDuration     ?? defaultValue;
+      case "in":      return settings.animationEnterDuration      ?? defaultValue;
+      case "display": return settings.animationDisplayDuration ?? defaultValue;
+      case "out":     return settings.animationExitDuration     ?? defaultValue;
       default:        return defaultValue;
     }
   };
@@ -165,7 +168,7 @@ export default function PreviewPanel({
   const totalDuration   = inDuration + displayDuration + outDuration;
   const activePhaseIndex = phaseControls.findIndex((item) => item.step === animationStep);
   const previewScaleLabel = `${Math.round(previewScale * 100)}%`;
-  const waitsForTts = Boolean(settings?.ttsTitleEnabled || settings?.ttsMessageEnabledField);
+  const waitsForTts = Boolean(settings?.ttsTitleEnabled || settings?.ttsMessageEnabled);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -342,6 +345,24 @@ export default function PreviewPanel({
             </motion.div>
           )}
         </AnimatePresence>
+
+        <div className="border-b border-white/10 bg-slate-950/40 px-4 py-3">
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <label className="text-sm font-medium text-slate-200">Test Donation Message</label>
+              <span className="text-[11px] text-slate-500">Preview only, not included in save</span>
+            </div>
+            <Input
+              value={testDonationMessage}
+              onChange={(event) => onTestDonationMessageChange?.(event.target.value)}
+              placeholder="พิมพ์ข้อความโดเนทสำหรับทดสอบ preview"
+              className="bg-slate-900/80 border-slate-700 text-white placeholder:text-slate-500"
+            />
+            <p className="text-[11px] text-slate-500">
+              ตอนนี้ใช้ค่า default ในหน้า preview ไว้ก่อน และเตรียมช่องนี้รอข้อมูลจาก master API ในรอบถัดไป
+            </p>
+          </div>
+        </div>
 
         {/* Preview Content */}
         <div className={`relative min-h-[320px] sm:min-h-[360px] overflow-auto p-3 sm:p-6 transition-colors duration-300 ${previewBackgrounds[backgroundMode]}`}>

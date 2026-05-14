@@ -10,11 +10,10 @@ export default function MediaTab({ settings, updateSetting }) {
   const fileInputRef = useRef(null);
 
   // ✅ flat structure เท่านั้น
-  const currentImageUrl = settings?.alertImage || settings?.image || "";
+  const currentImageUrl = settings?.image || "";
 
   const updateImageUrl = (url) => {
     updateSetting("image", url);
-    updateSetting("alertImage", url);
   };
 
   const handleFileUpload = (e) => {
