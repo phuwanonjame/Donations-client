@@ -1,4 +1,5 @@
-import React, { useCallback } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -11,21 +12,77 @@ import StringDropdownSelect from './StringDropdownSelect';
 import TemplateVariablesHint from './TemplateVariablesHint';
 import SectionWrapper from './SectionWrapper';
 import ThaiDateTimeInput from './ThaiDateTimeInput';
-import { widgetTypes, fontFamilies, fontWeights, fontSizes, strokeWidths, templateVariables, progressBarSkins } from '../constants/donate-goal';
+import { widgetTypes, fontFamilies, fontWeights, fontSizes, strokeWidths, templateVariables, progressBarSkins, progressShineEffects } from '../constants/donate-goal';
 import { getResetDates } from '../utils/donate-goal';
+import { useDonateGoalSettings } from './context/DonateGoalSettingsProvider';
 
-export default function GoalSettingsForm({ settings, update }) {
+const GOAL_TABS = [
+  { id: 'settings', label: 'Settings', icon: Target, color: 'from-emerald-500 to-teal-500' },
+  { id: 'progress', label: 'Progress', icon: Sparkles, color: 'from-cyan-500 to-blue-500' },
+  { id: 'description', label: 'Description', icon: Type, color: 'from-violet-500 to-purple-500' },
+  { id: 'typography', label: 'Typography', icon: Palette, color: 'from-amber-500 to-orange-500' },
+];
+
+function GoalTabNav({ activeTab, onSelect }) {
+  return (
+    <div className="relative">
+      <div className="absolute inset-0 bg-gradient-to-r from-slate-800/50 to-slate-900/50 rounded-xl blur" />
+      <div className="relative bg-slate-800/40 backdrop-blur-sm rounded-xl p-1 border border-slate-700/50 overflow-x-auto">
+        <div className="grid min-w-max grid-flow-col auto-cols-[86px] sm:auto-cols-[104px] lg:grid-flow-row lg:grid-cols-4 lg:min-w-0 gap-1">
+          {GOAL_TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <motion.button
+                key={tab.id}
+                type="button"
+                onClick={() => onSelect(tab.id)}
+                className={`relative px-2 sm:px-3 py-2.5 sm:py-3 rounded-lg transition-all duration-300 group ${
+                  isActive ? 'text-white' : 'text-slate-400 hover:text-slate-200 hover:bg-slate-700/50'
+                }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                {isActive && (
+                  <motion.div
+                    className={`absolute inset-0 rounded-lg bg-gradient-to-r ${tab.color}`}
+                    layoutId="goalActiveTab"
+                    transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+                <div className="relative z-10 flex flex-col items-center gap-1">
+                  <Icon className={`w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-105'}`} />
+                  <span className="text-[10px] sm:text-xs font-medium">{tab.label}</span>
+                </div>
+              </motion.button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function GoalSettingsForm({ settings: settingsProp, update: updateProp }) {
+  const [activeTab, setActiveTab] = useState('settings');
+  const {
+    settings: contextSettings,
+    update: contextUpdate,
+    updateSettings,
+  } = useDonateGoalSettings();
+  const settings = settingsProp ?? contextSettings;
+  const update = updateProp ?? contextUpdate;
   const textInputClassName = 'bg-slate-800/80 border-slate-700 text-white';
   const templateInputClassName = `${textInputClassName} font-mono`;
 
-  const progressSkinPresets = {
+  const progressSkinPresets = useMemo(() => ({
     custom: null,
     aurora: { from: '#22D3EE', via: '#8B5CF6', to: '#EC4899' },
     sunset: { from: '#FB7185', via: '#FB923C', to: '#FACC15' },
     ocean: { from: '#0EA5E9', via: '#14B8A6', to: '#67E8F9' },
     berry: { from: '#A855F7', via: '#EC4899', to: '#F43F5E' },
     mono: { from: '#94A3B8', via: '#E2E8F0', to: '#CBD5E1' },
-  };
+  }), []);
 
   const isSolidProgressSkin = settings.progressSkin === 'solid';
   const isCustomProgressSkin = settings.progressSkin === 'custom';
@@ -33,11 +90,13 @@ export default function GoalSettingsForm({ settings, update }) {
 
   const handleResetDates = useCallback(() => {
     const { startAt, endAt } = getResetDates();
-    update('startAt', startAt);
-    update('endAt', endAt);
-    update('isUseStartAt', true);
-    update('isUseEndAt', true);
-  }, [update]);
+    updateSettings({
+      startAt,
+      endAt,
+      isUseStartAt: true,
+      isUseEndAt: true,
+    });
+  }, [updateSettings]);
 
   const getFontSizeIndex = (value) => {
     const index = fontSizes.indexOf(value);
@@ -50,16 +109,40 @@ export default function GoalSettingsForm({ settings, update }) {
   }, [update]);
 
   const handleProgressSkinChange = useCallback((value) => {
-    update('progressSkin', value);
     const preset = progressSkinPresets[value];
-    if (!preset) return;
-    update('progressGradientFrom', preset.from);
-    update('progressGradientVia', preset.via);
-    update('progressGradientTo', preset.to);
-  }, [update]);
+    updateSettings({
+      progressSkin: value,
+      ...(preset
+        ? {
+            progressGradientFrom: preset.from,
+            progressGradientVia: preset.via,
+            progressGradientTo: preset.to,
+          }
+        : {}),
+    });
+  }, [progressSkinPresets, updateSettings]);
+
+  const tabContentVariants = {
+    hidden: { opacity: 0, x: -16 },
+    visible: { opacity: 1, x: 0, transition: { duration: 0.22 } },
+    exit: { opacity: 0, x: 16, transition: { duration: 0.18 } },
+  };
 
   return (
     <div className="space-y-5 sm:space-y-6 px-4 sm:px-0">
+      <GoalTabNav activeTab={activeTab} onSelect={setActiveTab} />
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          variants={tabContentVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          className="space-y-5 sm:space-y-6 min-w-0"
+        >
+      {activeTab === 'settings' && (
+        <>
       {/* Widget Type */}
       <SectionWrapper delay={0.05}>
         <h3 className="text-base sm:text-lg font-semibold text-white mb-4 flex items-center gap-2">
@@ -198,7 +281,11 @@ export default function GoalSettingsForm({ settings, update }) {
           </Button>
         </div>
       </SectionWrapper>
+        </>
+      )}
 
+      {activeTab === 'progress' && (
+        <>
       {/* Progress Bar Section */}
       <SectionWrapper delay={0.15}>
         <h3 className="text-base sm:text-lg font-semibold text-white mb-4 flex items-center gap-2">
@@ -397,7 +484,7 @@ export default function GoalSettingsForm({ settings, update }) {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between p-3 rounded-xl bg-slate-800/50 border border-slate-700/50 gap-3">
             <div>
               <p className="text-white font-medium text-sm sm:text-base">เปิด Shine Effect</p>
-              <p className="text-xs text-slate-400">แสงที่วิ่งไปเรื่อย ๆ บริเวณหลอดเป้าหมาย</p>
+              <p className="text-xs text-slate-400">เลือกเอฟเฟกต์แสงให้เหมาะกับหลอดเป้าหมาย</p>
             </div>
 
             <Switch
@@ -406,9 +493,22 @@ export default function GoalSettingsForm({ settings, update }) {
               className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-emerald-500 data-[state=checked]:to-teal-500"
             />
           </div>
+
+          {settings.progressShine && (
+            <DropdownSelect
+              label="รูปแบบ Shine"
+              value={settings.progressShineEffect ?? 'sweep'}
+              options={progressShineEffects}
+              onChange={v => update('progressShineEffect', v)}
+            />
+          )}
         </div>
       </SectionWrapper>
+        </>
+      )}
 
+      {activeTab === 'description' && (
+        <>
       {/* Description Section */}
       <SectionWrapper delay={0.2}>
         <h3 className="text-base sm:text-lg font-semibold text-white mb-4 flex items-center gap-2">
@@ -506,7 +606,11 @@ export default function GoalSettingsForm({ settings, update }) {
           </div>
         </div>
       </SectionWrapper>
+        </>
+      )}
 
+      {activeTab === 'typography' && (
+        <>
       {/* Goal Text Appearance */}
       <SectionWrapper delay={0.25}>
         <h3 className="text-base sm:text-lg font-semibold text-white mb-4 flex items-center gap-2">
@@ -572,6 +676,10 @@ export default function GoalSettingsForm({ settings, update }) {
           </div>
         </div>
       </SectionWrapper>
+        </>
+      )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

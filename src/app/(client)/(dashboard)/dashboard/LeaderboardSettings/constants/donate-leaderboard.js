@@ -6,6 +6,24 @@ export const layoutStyles = [
   { id: 'podium', name: 'Podium Style' },
 ];
 
+export const podiumLayoutStyles = [
+  { id: 'classic', name: 'Classic Stage' },
+  { id: 'spotlight', name: 'Spotlight Hero' },
+  { id: 'neon_steps', name: 'Neon Steps' },
+  { id: 'compact_badges', name: 'Compact Badges' },
+  { id: 'cards', name: 'Rank Cards' },
+  { id: 'floating', name: 'Floating Bars' },
+];
+
+export const podiumBadgeShapes = [
+  { id: 'pentagon', name: 'Pentagon Gem' },
+  { id: 'circle', name: 'Circle Coin' },
+  { id: 'diamond', name: 'Diamond' },
+  { id: 'star', name: 'Star' },
+  { id: 'hexagon', name: 'Hexagon' },
+  { id: 'shield', name: 'Shield' },
+];
+
 export const timeRanges = [
   { id: 'today', name: 'Today' },
   { id: 'week', name: 'This Week' },
@@ -31,6 +49,7 @@ export const textAlignments = [
 export const defaultSettings = {
   enabled: true,
   layoutStyle: 'podium',
+  podiumLayoutVariant: 'classic',
   timeRange: 'month',
   maxEntries: 5,
   showRank: true,
@@ -39,7 +58,7 @@ export const defaultSettings = {
   animateEntries: true,
 
   titleText: 'Top Supporters',
-  titleFontFamily: 'ibm-plex-sans-thai',
+  titleFontFamily: 'ibmplex',
   titleFontWeight: 'bold',
   titleFontSize: '36px',
   titleColor: '#f59e0b',
@@ -47,7 +66,7 @@ export const defaultSettings = {
   titleStrokeColor: '#000000',
   titleAlignment: 'center',
 
-  listFontFamily: 'ibm-plex-sans-thai',
+  listFontFamily: 'ibmplex',
   listFontWeight: 'medium',
   listFontSize: '18px',
   listColor: '#ffffff',
@@ -62,7 +81,7 @@ export const defaultSettings = {
   podiumFirstUsernameColor: '#ffffff',
   podiumFirstAmountFontSize: '28px',
   podiumFirstAmountColor: '#f59e0b',
-  podiumFirstFontFamily: 'ibm-plex-sans-thai',
+  podiumFirstFontFamily: 'ibmplex',
   podiumFirstFontWeight: 'bold',
   podiumFirstStrokeWidth: '0px',
   podiumFirstStrokeColor: '#000000',
@@ -70,32 +89,38 @@ export const defaultSettings = {
   podiumFirstBackgroundColor: '',
   podiumFirstPedestalColor: '#D3D1C7',
   podiumFirstImage: '',
+  podiumFirstBadgeType: 'pentagon',
 
   podiumSecondUsernameFontSize: '20px',
   podiumSecondUsernameColor: '#ffffff',
   podiumSecondAmountFontSize: '22px',
   podiumSecondAmountColor: '#f59e0b',
-  podiumSecondFontFamily: 'ibm-plex-sans-thai',
+  podiumSecondFontFamily: 'ibmplex',
   podiumSecondFontWeight: 'bold',
   podiumSecondStrokeWidth: '0px',
   podiumSecondStrokeColor: '#000000',
+  podiumSecondShine: false,
   podiumSecondBackgroundColor: '',
   podiumSecondPedestalColor: '#B4B2A9',
   podiumSecondImage: '',
+  podiumSecondBadgeType: 'diamond',
 
   podiumThirdUsernameFontSize: '18px',
   podiumThirdUsernameColor: '#ffffff',
   podiumThirdAmountFontSize: '20px',
   podiumThirdAmountColor: '#f59e0b',
-  podiumThirdFontFamily: 'ibm-plex-sans-thai',
+  podiumThirdFontFamily: 'ibmplex',
   podiumThirdFontWeight: 'bold',
   podiumThirdStrokeWidth: '0px',
   podiumThirdStrokeColor: '#000000',
+  podiumThirdShine: false,
   podiumThirdBackgroundColor: '',
   podiumThirdPedestalColor: '#B4B2A9',
   podiumThirdImage: '',
+  podiumThirdBadgeType: 'shield',
 
   backgroundColor: '#1e293b',
+  showBackground: true,
   accentColor: '#f59e0b',
 
   isUseStartAt: false,
@@ -108,6 +133,15 @@ export const defaultSettings = {
 const getFontFamilyName = (id) => {
   const found = fontFamilies.find(f => f.id === id);
   return found ? found.name : id;
+};
+
+const getFontFamilyId = (fontValue, fallback = 'ibmplex') => {
+  if (!fontValue) return fallback;
+  const normalized = String(fontValue).trim().toLowerCase();
+  const found = fontFamilies.find(f =>
+    f.id.toLowerCase() === normalized || f.name.toLowerCase() === normalized
+  );
+  return found ? found.id : fallback;
 };
 
 const normalizeMetadataFontWeight = (weight) => {
@@ -128,6 +162,28 @@ const normalizeMetadataFontWeight = (weight) => {
     black: '900',
   };
   return weightMap[normalized] || weight || '400';
+};
+
+const normalizeSettingsFontWeight = (weight, fallback = 'medium') => {
+  const normalized = String(weight || '').trim().toLowerCase();
+  const weightMap = {
+    '100': 'thin',
+    '200': 'extralight',
+    '300': 'light',
+    '400': 'normal',
+    '500': 'medium',
+    '600': 'semibold',
+    '700': 'bold',
+    '800': 'extrabold',
+    '900': 'black',
+  };
+  return weightMap[normalized] || normalized || fallback;
+};
+
+const toPxString = (value, fallback = '0px') => {
+  if (value === undefined || value === null || value === '') return fallback;
+  const parsed = parseFloat(value);
+  return Number.isFinite(parsed) ? `${parsed}px` : fallback;
 };
 
 export const toThaiDate = (dateString) => {
@@ -183,6 +239,7 @@ export const toMetadata = (settings) => {
 
       // ── Colors ────────────────────────────────────────────────
       backgroundColor: settings.backgroundColor,
+      showBackground: settings.showBackground,
       accentColor: settings.accentColor,
 
       // ── Title ────────────────────────────────────────────────
@@ -283,6 +340,7 @@ export const toMetadata = (settings) => {
         secondAmountColor: settings.podiumSecondAmountColor,
         secondStrokeWidth: parseFloat(settings.podiumSecondStrokeWidth),
         secondStrokeColor: settings.podiumSecondStrokeColor,
+        secondShine: settings.podiumSecondShine,
         secondBackgroundColor: settings.podiumSecondBackgroundColor,
         secondPedestalColor: settings.podiumSecondPedestalColor,
         secondImage: settings.podiumSecondImage,
@@ -336,6 +394,7 @@ export const toMetadata = (settings) => {
         thirdAmountColor: settings.podiumThirdAmountColor,
         thirdStrokeWidth: parseFloat(settings.podiumThirdStrokeWidth),
         thirdStrokeColor: settings.podiumThirdStrokeColor,
+        thirdShine: settings.podiumThirdShine,
         thirdBackgroundColor: settings.podiumThirdBackgroundColor,
         thirdPedestalColor: settings.podiumThirdPedestalColor,
         thirdImage: settings.podiumThirdImage,
@@ -382,4 +441,147 @@ export const toMetadata = (settings) => {
       },
     },
   };
+};
+
+const pickFields = (source, keys) => keys.reduce((picked, key) => {
+  if (source[key] !== undefined) picked[key] = source[key];
+  return picked;
+}, {});
+
+const API_SAFE_PODIUM_FIELDS = [
+  'firstImage',
+  'firstShine',
+  'thirdImage',
+  'secondImage',
+  'firstFontFamily',
+  'firstFontWeight',
+  'thirdFontFamily',
+  'thirdFontWeight',
+  'firstAmountColor',
+  'firstStrokeColor',
+  'firstStrokeWidth',
+  'secondFontFamily',
+  'secondFontWeight',
+  'thirdAmountColor',
+  'thirdStrokeColor',
+  'thirdStrokeWidth',
+  'secondAmountColor',
+  'secondStrokeColor',
+  'secondStrokeWidth',
+  'firstPedestalColor',
+  'firstUsernameColor',
+  'thirdPedestalColor',
+  'thirdUsernameColor',
+  'firstAmountFontSize',
+  'secondPedestalColor',
+  'secondUsernameColor',
+  'thirdAmountFontSize',
+  'firstBackgroundColor',
+  'secondAmountFontSize',
+  'thirdBackgroundColor',
+  'firstUsernameFontSize',
+  'secondBackgroundColor',
+  'thirdUsernameFontSize',
+  'secondUsernameFontSize',
+];
+
+export const toApiMetadata = (settings) => {
+  const fullMetadata = toMetadata(settings).metadata;
+
+  return {
+    type: 'LEADERBOARD',
+    metadata: {
+      list: fullMetadata.list,
+      type: fullMetadata.type,
+      endAt: fullMetadata.endAt,
+      title: fullMetadata.title,
+      podium: pickFields(fullMetadata.podium, API_SAFE_PODIUM_FIELDS),
+      enabled: fullMetadata.enabled,
+      startAt: fullMetadata.startAt,
+      showRank: fullMetadata.showRank,
+      timeRange: fullMetadata.timeRange,
+      isUseEndAt: fullMetadata.isUseEndAt,
+      maxEntries: fullMetadata.maxEntries,
+      showAmount: fullMetadata.showAmount,
+      showAvatar: fullMetadata.showAvatar,
+      accentColor: fullMetadata.accentColor,
+      isUseStartAt: fullMetadata.isUseStartAt,
+      animateEntries: fullMetadata.animateEntries,
+      backgroundColor: fullMetadata.backgroundColor,
+      podiumLayoutVariant: fullMetadata.podiumLayoutVariant,
+    },
+  };
+};
+
+export const fromMetadata = (metadata = {}, fallbackSettings = defaultSettings) => {
+  const title = metadata.title || {};
+  const list = metadata.list || {};
+  const podium = metadata.podium || {};
+
+  const settings = {
+    ...fallbackSettings,
+    enabled: metadata.enabled ?? fallbackSettings.enabled,
+    layoutStyle: metadata.type ?? fallbackSettings.layoutStyle,
+    timeRange: metadata.timeRange ?? fallbackSettings.timeRange,
+    podiumLayoutVariant: metadata.podiumLayoutVariant ?? fallbackSettings.podiumLayoutVariant,
+    maxEntries: metadata.maxEntries ?? list.count ?? fallbackSettings.maxEntries,
+    showRank: metadata.showRank ?? fallbackSettings.showRank,
+    showAmount: metadata.showAmount ?? fallbackSettings.showAmount,
+    showAvatar: metadata.showAvatar ?? fallbackSettings.showAvatar,
+    animateEntries: metadata.animateEntries ?? fallbackSettings.animateEntries,
+    backgroundColor: metadata.backgroundColor ?? fallbackSettings.backgroundColor,
+    showBackground: metadata.showBackground ?? fallbackSettings.showBackground,
+    accentColor: metadata.accentColor ?? fallbackSettings.accentColor,
+
+    titleText: title.text ?? fallbackSettings.titleText,
+    titleFontFamily: getFontFamilyId(title.fontFamily, fallbackSettings.titleFontFamily),
+    titleFontWeight: normalizeSettingsFontWeight(title.fontWeight, fallbackSettings.titleFontWeight),
+    titleFontSize: toPxString(title.fontSize, fallbackSettings.titleFontSize),
+    titleColor: title.color ?? fallbackSettings.titleColor,
+    titleStrokeWidth: toPxString(title.strokeWidth, fallbackSettings.titleStrokeWidth),
+    titleStrokeColor: title.strokeColor ?? fallbackSettings.titleStrokeColor,
+    titleAlignment: title.alignment ?? fallbackSettings.titleAlignment,
+
+    listFontFamily: getFontFamilyId(list.fontFamily, fallbackSettings.listFontFamily),
+    listFontWeight: normalizeSettingsFontWeight(list.fontWeight, fallbackSettings.listFontWeight),
+    listFontSize: toPxString(list.fontSize, fallbackSettings.listFontSize),
+    listColor: list.color ?? fallbackSettings.listColor,
+    listAmountColor: list.amountColor ?? fallbackSettings.listAmountColor,
+    listStrokeWidth: toPxString(list.strokeWidth, fallbackSettings.listStrokeWidth),
+    listStrokeColor: list.strokeColor ?? fallbackSettings.listStrokeColor,
+    listShowBackground: list.showBackground ?? fallbackSettings.listShowBackground,
+    listBackgroundColor: list.backgroundColor ?? fallbackSettings.listBackgroundColor,
+    listBorderColor: list.borderColor ?? fallbackSettings.listBorderColor,
+
+    isUseStartAt: metadata.isUseStartAt ?? fallbackSettings.isUseStartAt,
+    startAt: metadata.startAt ? new Date(metadata.startAt).toISOString().slice(0, 16) : fallbackSettings.startAt,
+    isUseEndAt: metadata.isUseEndAt ?? fallbackSettings.isUseEndAt,
+    endAt: metadata.endAt ? new Date(metadata.endAt).toISOString().slice(0, 16) : fallbackSettings.endAt,
+  };
+
+  ['first', 'second', 'third'].forEach((rank) => {
+    const prefix = `podium${rank.charAt(0).toUpperCase()}${rank.slice(1)}`;
+    Object.entries(podium).forEach(([key, value]) => {
+      if (!key.startsWith(rank) || value === undefined) return;
+      const suffix = key.slice(rank.length);
+      const settingKey = `${prefix}${suffix}`;
+
+      if (settingKey.endsWith('FontFamily')) {
+        settings[settingKey] = getFontFamilyId(value, fallbackSettings[settingKey]);
+      } else if (settingKey.endsWith('FontWeight')) {
+        settings[settingKey] = normalizeSettingsFontWeight(value, fallbackSettings[settingKey]);
+      } else if (
+        settingKey.endsWith('UsernameFontSize') ||
+        settingKey.endsWith('AmountFontSize') ||
+        settingKey.endsWith('StrokeWidth') ||
+        settingKey.endsWith('ExtraLabelFontSize')
+      ) {
+        settings[settingKey] = toPxString(value, fallbackSettings[settingKey]);
+      } else {
+        settings[settingKey] = value;
+      }
+    });
+  });
+
+  return settings;
 };

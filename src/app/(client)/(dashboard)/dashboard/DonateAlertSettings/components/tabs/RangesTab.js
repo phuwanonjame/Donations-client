@@ -396,6 +396,7 @@ export default function RangesTab({ onEditRange }) {
       )}
 
       <RangeConfigModal
+        key={isModalOpen ? editingRange?.id ?? "new-range" : "closed"}
         range={editingRange}
         defaultSettings={normalizedSettings}
         onSave={handleSaveRangeMetadata}

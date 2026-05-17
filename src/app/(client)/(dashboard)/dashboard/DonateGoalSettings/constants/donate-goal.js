@@ -44,6 +44,15 @@ export const progressBarSkins = [
   { id: 'mono', name: 'Monochrome Ice' },
 ];
 
+export const progressShineEffects = [
+  { id: 'sweep', name: 'Clean Sweep' },
+  { id: 'soft_gloss', name: 'Soft Gloss' },
+  { id: 'pulse_glow', name: 'Pulse Glow' },
+  { id: 'energy_wave', name: 'Energy Wave' },
+  { id: 'sparkle', name: 'Sparkle Trail' },
+  { id: 'scanline', name: 'Scanline' },
+];
+
 export const defaultSettings = {
   type: 'main',
   goalName: 'ค่าอาหารหมา',
@@ -59,6 +68,7 @@ export const defaultSettings = {
   progressColor: '#0EA5E9',
   progressFontFamily: 'kanit',
   progressShine: true,
+  progressShineEffect: 'sweep',
   progressSkin: 'custom',
   progressGradientFrom: '#38BDF8',
   progressGradientVia: '#818CF8',

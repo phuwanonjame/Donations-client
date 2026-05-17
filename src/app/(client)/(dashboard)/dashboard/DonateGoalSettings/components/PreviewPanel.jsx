@@ -10,8 +10,17 @@ import { Switch } from '@/components/ui/switch';
 import GoalPreview from './GoalPreview';
 import SectionWrapper from './SectionWrapper';
 import { toMetadata } from '../utils/donate-goal';
+import { useDonateGoalSettings } from './context/DonateGoalSettingsProvider';
 
-const PreviewPanel = React.memo(({ settings, update, onSave }) => {
+const PreviewPanel = React.memo(({ settings: settingsProp, update: updateProp, onSave }) => {
+  const {
+    settings: contextSettings,
+    update: contextUpdate,
+    saveSettings,
+    saving,
+  } = useDonateGoalSettings();
+  const settings = settingsProp ?? contextSettings;
+  const update = updateProp ?? contextUpdate;
   const [showBackground, setShowBackground] = useState(true);
 
   useEffect(() => {
@@ -27,13 +36,35 @@ const PreviewPanel = React.memo(({ settings, update, onSave }) => {
   }, [update]);
 
   const handleSave = useCallback(() => {
-    if (!onSave) return;
-    onSave(toMetadata(settings));
-  }, [onSave, settings]);
+    const metadataPayload = toMetadata(settings);
+    if (onSave) {
+      onSave(metadataPayload);
+      return;
+    }
+    saveSettings(metadataPayload);
+  }, [onSave, saveSettings, settings]);
 
   const previewKey = useMemo(() => {
-    return `${settings.type}-${settings.goalAmount}-${settings.currentAmount}-${settings.progressColor}-${settings.goalColor}`;
-  }, [settings.type, settings.goalAmount, settings.currentAmount, settings.progressColor, settings.goalColor]);
+    return [
+      settings.type,
+      settings.goalAmount,
+      settings.currentAmount,
+      settings.progressColor,
+      settings.goalColor,
+      settings.progressShine,
+      settings.progressShineEffect,
+      settings.progressSkin,
+    ].join('-');
+  }, [
+    settings.type,
+    settings.goalAmount,
+    settings.currentAmount,
+    settings.progressColor,
+    settings.goalColor,
+    settings.progressShine,
+    settings.progressShineEffect,
+    settings.progressSkin,
+  ]);
 
   return (
     <SectionWrapper delay={0.3}>
@@ -99,8 +130,9 @@ const PreviewPanel = React.memo(({ settings, update, onSave }) => {
         <Button
           className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400"
           onClick={handleSave}
+          disabled={saving}
         >
-          บันทึก
+          {saving ? 'Saving...' : 'บันทึก'}
         </Button>
       </div>
     </SectionWrapper>

@@ -68,6 +68,34 @@ function rgba(hex, alpha) {
   return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
 }
 
+function getRuntimePerformanceProfile() {
+  if (typeof window === "undefined") {
+    return {
+      isWindows: false,
+      reduceMotion: false,
+      dpr: 1,
+      physicsCount: 64,
+      classicCount: 56,
+      shadowBlurMax: 12,
+      obstacleSampleRate: 3,
+    };
+  }
+
+  const isWindows = /Windows/i.test(window.navigator?.userAgent || "");
+  const reduceMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches ?? false;
+  const dprLimit = reduceMotion ? 1 : isWindows ? 1.25 : 1.75;
+
+  return {
+    isWindows,
+    reduceMotion,
+    dpr: Math.min(window.devicePixelRatio || 1, dprLimit),
+    physicsCount: reduceMotion ? 0 : isWindows ? 36 : 64,
+    classicCount: reduceMotion ? 0 : isWindows ? 30 : 56,
+    shadowBlurMax: isWindows ? 6 : 12,
+    obstacleSampleRate: isWindows ? 6 : 3,
+  };
+}
+
 // ── ConfettiLayer ────────────────────────────────────────
 const PhysicsConfettiLayer = ({ settings, collisionRefs = [] }) => {
   const canvasRef = useRef(null);
@@ -76,6 +104,9 @@ const PhysicsConfettiLayer = ({ settings, collisionRefs = [] }) => {
   const color      = settings.amountColor || "#FF6B00";
 
   useEffect(() => {
+    const perf = getRuntimePerformanceProfile();
+    if (perf.reduceMotion) return undefined;
+
     const canvas = canvasRef.current;
     const ctx = canvas?.getContext("2d");
     if (!canvas || !ctx) return undefined;
@@ -84,7 +115,9 @@ const PhysicsConfettiLayer = ({ settings, collisionRefs = [] }) => {
     let height = 0;
     let rafId = 0;
     let lastTime = performance.now();
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let frameCount = 0;
+    let cachedObstacle = null;
+    const dpr = perf.dpr;
 
     const resize = () => {
       const rect = canvas.getBoundingClientRect();
@@ -93,9 +126,10 @@ const PhysicsConfettiLayer = ({ settings, collisionRefs = [] }) => {
       canvas.width = Math.floor(width * dpr);
       canvas.height = Math.floor(height * dpr);
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      cachedObstacle = null;
     };
 
-    const getObstacle = () => {
+    const readObstacle = () => {
       const canvasRect = canvas.getBoundingClientRect();
       const rects = collisionRefs
         .map((ref) => ref.current?.getBoundingClientRect())
@@ -256,12 +290,17 @@ const PhysicsConfettiLayer = ({ settings, collisionRefs = [] }) => {
     };
 
     resize();
-    const particles = Array.from({ length: preset.count }, (_, i) => makeParticle(i));
+    const particleCount = Math.min(preset.count, perf.physicsCount);
+    const particles = Array.from({ length: particleCount }, (_, i) => makeParticle(i));
 
     const tick = (time) => {
       const dt = clamp((time - lastTime) / 1000, 0.001, 0.033);
       lastTime = time;
-      const obstacle = getObstacle();
+      frameCount += 1;
+      if (!cachedObstacle || frameCount % perf.obstacleSampleRate === 1) {
+        cachedObstacle = readObstacle();
+      }
+      const obstacle = cachedObstacle;
 
       ctx.clearRect(0, 0, width, height);
       ctx.textAlign = "center";
@@ -314,7 +353,7 @@ const PhysicsConfettiLayer = ({ settings, collisionRefs = [] }) => {
         ctx.rotate(particle.angle);
         ctx.font = `${particle.size}px "Apple Color Emoji", "Segoe UI Emoji", sans-serif`;
         ctx.shadowColor = `${color}99`;
-        ctx.shadowBlur = seededRange(i, 49, 3, 12);
+        ctx.shadowBlur = Math.min(seededRange(i, 49, 3, 12), perf.shadowBlurMax);
         ctx.fillText(particle.emoji, 0, 0);
         ctx.restore();
       });
@@ -356,6 +395,8 @@ const ClassicConfettiLayer = ({ settings }) => {
   const effectType = settings.confettiEffect || settings.effect || "fountain";
   const preset     = confettiPresets[effectType] || confettiPresets.fountain;
   const color      = settings.amountColor || "#FF6B00";
+  const perf = useMemo(() => getRuntimePerformanceProfile(), []);
+  const particleCount = Math.min(preset.count, perf.classicCount);
 
   const variants = (i) => {
     const angle = seededRange(i, 1, 0, Math.PI * 2);
@@ -503,10 +544,11 @@ const ClassicConfettiLayer = ({ settings }) => {
   };
 
   const pos = getClassicOrigin(preset.origin);
+  if (!particleCount) return null;
 
   return (
     <motion.div className="absolute inset-0 z-10 overflow-hidden pointer-events-none">
-      {[...Array(preset.count)].map((_, i) => (
+      {[...Array(particleCount)].map((_, i) => (
         <motion.div
           key={i}
           className="absolute will-change-transform"
@@ -517,7 +559,7 @@ const ClassicConfettiLayer = ({ settings }) => {
             ...pos,
             color,
             fontSize: `${seededRange(i, 45, preset.size[0], preset.size[1])}px`,
-            filter: `drop-shadow(0 0 ${seededRange(i, 46, 4, 14)}px ${color}80)`,
+            filter: `drop-shadow(0 0 ${Math.min(seededRange(i, 46, 4, 14), perf.shadowBlurMax)}px ${color}80)`,
           }}
         >
           {preset.emojis[i % preset.emojis.length]}
@@ -857,8 +899,8 @@ const EasyDonateTheme = forwardRef(({
           src={alertImage}
           alt="alert"
           style={{ filter:"drop-shadow(0 4px 6px rgba(0,0,0,0.6))", boxShadow: imgShadow }}
-          animate={{ scale:[1,1.05,1] }}
-          transition={{ duration:2, repeat:Infinity }}
+          animate={isPlaying ? { scale:[1,1.05,1] } : { scale:1 }}
+          transition={isPlaying ? { duration:2, repeat:Infinity } : { duration:0.2 }}
         />
 
         <div className="flex flex-col items-center">
@@ -946,9 +988,6 @@ const EasyDonateTheme = forwardRef(({
           )}
         </defs>
       </svg>
-
-      <canvas id="preview-confetti-canvas"
-        className="pointer-events-none absolute inset-0 z-10 h-full w-full" />
     </motion.div>
   );
 });

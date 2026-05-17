@@ -16,9 +16,10 @@ import SectionWrapper from './SectionWrapper';
 import ThaiDateTimeInput from './ThaiDateTimeInput';
 import {
   layoutStyles, timeRanges, fontFamilies, fontWeights, fontSizes,
-  strokeWidths, textAlignments,
+  podiumBadgeShapes, podiumLayoutStyles, strokeWidths, textAlignments,
 } from '../constants/donate-leaderboard';
 import { getResetDates } from '../utils/donate-leaderboard';
+import { useOptionalLeaderboardSettings } from './context/LeaderboardSettingsProvider';
 
 // Helper to safely get font size index
 const getFontSizeIndex = (value, sizes = fontSizes) => {
@@ -63,14 +64,30 @@ const FontSizeSlider = ({ label, value, onChange }) => {
   );
 };
 
-export default function LeaderboardSettingsForm({ settings, update }) {
+export default function LeaderboardSettingsForm({ settings: settingsProp, update: updateProp }) {
+  const leaderboardContext = useOptionalLeaderboardSettings();
+  const contextSettings = leaderboardContext?.settings;
+  const contextUpdate = leaderboardContext?.update;
+  const updateSettings = leaderboardContext?.updateSettings;
+  const settings = settingsProp ?? contextSettings;
+  const update = updateProp ?? contextUpdate;
+
   const handleResetDates = useCallback(() => {
     const { startAt, endAt } = getResetDates();
+    if (updateSettings) {
+      updateSettings({
+        startAt,
+        endAt,
+        isUseStartAt: true,
+        isUseEndAt: true,
+      });
+      return;
+    }
     update('startAt', startAt);
     update('endAt', endAt);
     update('isUseStartAt', true);
     update('isUseEndAt', true);
-  }, [update]);
+  }, [update, updateSettings]);
 
   const isPodium = settings?.layoutStyle === 'podium';
 
@@ -114,6 +131,17 @@ export default function LeaderboardSettingsForm({ settings, update }) {
                 onChange={v => update('layoutStyle', v)}
               />
             </div>
+            {isPodium && (
+              <div className="space-y-2">
+                <Label className="text-slate-300">Podium Style</Label>
+                <DropdownSelect
+                  label=""
+                  value={settings?.podiumLayoutVariant || 'classic'}
+                  options={podiumLayoutStyles}
+                  onChange={v => update('podiumLayoutVariant', v)}
+                />
+              </div>
+            )}
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <Label className="text-slate-300">Max Entries</Label>
@@ -164,6 +192,14 @@ export default function LeaderboardSettingsForm({ settings, update }) {
               label="List Border Color"
               value={settings?.listBorderColor || 'rgba(0,0,0,0.12)'}
               onChange={v => update('listBorderColor', v)}
+            />
+          </div>
+          <div className="mb-3">
+            <SwitchRow
+              label="Show Widget Background"
+              sublabel="เปิด/ปิดพื้นหลังหลักของวิดเจ็ต"
+              checked={settings?.showBackground !== false}
+              onCheckedChange={v => update('showBackground', v)}
             />
           </div>
           <div className="mb-6">
@@ -399,6 +435,12 @@ export default function LeaderboardSettingsForm({ settings, update }) {
                   value={settings?.podiumFirstPedestalColor || '#D3D1C7'}
                   onChange={v => update('podiumFirstPedestalColor', v)}
                 />
+                <DropdownSelect
+                  label="Badge Shape"
+                  value={settings?.podiumFirstBadgeType || 'pentagon'}
+                  options={podiumBadgeShapes}
+                  onChange={v => update('podiumFirstBadgeType', v)}
+                />
                 <div className="space-y-2">
                   <Label className="text-slate-300 flex items-center gap-2">
                     <ImageIcon className="w-4 h-4" /> Badge Image URL
@@ -481,6 +523,12 @@ export default function LeaderboardSettingsForm({ settings, update }) {
                   value={settings?.podiumSecondPedestalColor || '#B4B2A9'}
                   onChange={v => update('podiumSecondPedestalColor', v)}
                 />
+                <DropdownSelect
+                  label="Badge Shape"
+                  value={settings?.podiumSecondBadgeType || 'diamond'}
+                  options={podiumBadgeShapes}
+                  onChange={v => update('podiumSecondBadgeType', v)}
+                />
                 <div className="space-y-2">
                   <Label className="text-slate-300 flex items-center gap-2">
                     <ImageIcon className="w-4 h-4" /> Badge Image URL
@@ -554,6 +602,12 @@ export default function LeaderboardSettingsForm({ settings, update }) {
                   label="Pedestal Base Color"
                   value={settings?.podiumThirdPedestalColor || '#B4B2A9'}
                   onChange={v => update('podiumThirdPedestalColor', v)}
+                />
+                <DropdownSelect
+                  label="Badge Shape"
+                  value={settings?.podiumThirdBadgeType || 'shield'}
+                  options={podiumBadgeShapes}
+                  onChange={v => update('podiumThirdBadgeType', v)}
                 />
                 <div className="space-y-2">
                   <Label className="text-slate-300 flex items-center gap-2">

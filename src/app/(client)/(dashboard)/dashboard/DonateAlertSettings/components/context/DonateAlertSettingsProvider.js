@@ -1,18 +1,90 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import {
   createRangeSettingsFromMaster,
+  defaultSettings,
   normalizeFlatSettings,
+  transformToFlatStructure,
+  transformToGroupedStructure,
 } from "../utils/settingsUtils";
+import {
+  fetchDonateSettings,
+  saveDonateSettings,
+} from "@/actions/DonateAlertapi/donateSettingsApi";
+import { createWidgetSettingsNotifier } from "@/lib/notifications/widget-settings-toast";
 
 const DonateAlertSettingsContext = createContext(null);
+const FIXED_USER_ID = "244bad71-4990-4a79-9a19-9ff983a55442";
+const FIXED_WIDGET_ID = "676669ee-9634-44cd-bd08-6aa40afe32a9";
+const DEFAULT_TEST_DONATION_MESSAGE = "ขอบคุณมาก ๆ สำหรับกำลังใจนะ {{user}}!";
+const alertNotifier = createWidgetSettingsNotifier("Alert settings");
+
+function buildSavePayload(flatSettings) {
+  const grouped = transformToGroupedStructure(flatSettings);
+  return {
+    ...grouped,
+    updatedAt: new Date().toISOString(),
+  };
+}
+
+function buildWidgetPatchRequest(userId, flatSettings) {
+  const grouped = buildSavePayload(flatSettings);
+  return {
+    userId,
+    metadata: grouped.metadata,
+  };
+}
 
 export function DonateAlertSettingsProvider({
-  settings,
-  updateSetting,
   onEffectiveSettingsChange,
   children,
 }) {
+  const [settings, setSettings] = useState(() => transformToFlatStructure(defaultSettings));
   const [activeRangeId, setActiveRangeId] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+  const [showSaveNotification, setShowSaveNotification] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [testDonationMessage, setTestDonationMessage] = useState(DEFAULT_TEST_DONATION_MESSAGE);
+  const [showFullscreenEditor, setShowFullscreenEditor] = useState(false);
+  const [fullscreenEditorContext, setFullscreenEditorContext] = useState({
+    effectiveSettings: null,
+    updateFn: null,
+  });
+
+  useEffect(() => {
+    const loadSettings = async () => {
+      setLoading(true);
+      try {
+        const response = await fetchDonateSettings(FIXED_USER_ID);
+
+        if (!response?.metadata) {
+          setSettings(transformToFlatStructure(defaultSettings));
+          alertNotifier.defaultLoaded();
+        } else {
+          setSettings(transformToFlatStructure(response));
+          alertNotifier.loadSuccess();
+        }
+
+        setHasChanges(false);
+      } catch (error) {
+        console.error(error);
+        alertNotifier.loadError(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadSettings();
+  }, []);
+
+  useEffect(() => {
+    if (!showSaveNotification) return undefined;
+
+    const timeoutId = setTimeout(() => setShowSaveNotification(false), 3000);
+    return () => clearTimeout(timeoutId);
+  }, [showSaveNotification]);
 
   const normalizedSettings = useMemo(
     () => normalizeFlatSettings(settings),
@@ -42,12 +114,29 @@ export function DonateAlertSettingsProvider({
     onEffectiveSettingsChange?.(effectiveSettings);
   }, [effectiveSettings, onEffectiveSettingsChange]);
 
-  const updateGlobalSetting = useCallback(
-    (key, value) => {
-      updateSetting(key, value);
-    },
-    [updateSetting]
-  );
+  const updateSettings = useCallback((patchOrUpdater) => {
+    setSettings((previous) => {
+      const patch = typeof patchOrUpdater === "function"
+        ? patchOrUpdater(previous)
+        : patchOrUpdater;
+
+      if (!patch || typeof patch !== "object") return previous;
+      return normalizeFlatSettings({ ...previous, ...patch });
+    });
+    setHasChanges(true);
+  }, []);
+
+  const updateSetting = useCallback((key, valueOrUpdater) => {
+    updateSettings((previous) => ({
+      [key]: typeof valueOrUpdater === "function"
+        ? valueOrUpdater(previous[key], previous)
+        : valueOrUpdater,
+    }));
+  }, [updateSettings]);
+
+  const updateGlobalSetting = useCallback((key, value) => {
+    updateSetting(key, value);
+  }, [updateSetting]);
 
   const updateContextSetting = useCallback(
     (key, value) => {
@@ -72,6 +161,48 @@ export function DonateAlertSettingsProvider({
       updateSetting("rangesItems", updatedRanges);
     },
     [updateSetting]
+  );
+
+  const addRange = useCallback(
+    (overrides = {}) => {
+      const newRange = createRangeSettingsFromMaster(normalizedSettings, overrides);
+      updateSetting("rangesItems", [...ranges, newRange]);
+      return newRange;
+    },
+    [normalizedSettings, ranges, updateSetting]
+  );
+
+  const upsertRange = useCallback(
+    (rangeConfig) => {
+      const nextRange = normalizeFlatSettings(rangeConfig);
+      const exists = ranges.some((range) => range.id === nextRange.id);
+      const updatedRanges = exists
+        ? ranges.map((range) => (range.id === nextRange.id ? { ...range, ...nextRange } : range))
+        : [...ranges, createRangeSettingsFromMaster(normalizedSettings, nextRange)];
+
+      updateSetting("rangesItems", updatedRanges);
+    },
+    [normalizedSettings, ranges, updateSetting]
+  );
+
+  const deleteRange = useCallback(
+    (rangeId) => {
+      updateSetting("rangesItems", ranges.filter((range) => range.id !== rangeId));
+      if (activeRangeId === rangeId) setActiveRangeId(null);
+    },
+    [activeRangeId, ranges, updateSetting]
+  );
+
+  const duplicateRange = useCallback(
+    (range, overrides = {}) => {
+      const duplicated = {
+        ...range,
+        ...overrides,
+      };
+      updateSetting("rangesItems", [...ranges, duplicated]);
+      return duplicated;
+    },
+    [ranges, updateSetting]
   );
 
   const resetActiveRangeToDefault = useCallback(() => {
@@ -100,34 +231,132 @@ export function DonateAlertSettingsProvider({
     [normalizedSettings]
   );
 
+  const resetSettings = useCallback(() => {
+    if (!window.confirm("Reset all settings to default?")) return;
+    setSettings(transformToFlatStructure(defaultSettings));
+    setActiveRangeId(null);
+    setHasChanges(true);
+    alertNotifier.resetSuccess();
+  }, []);
+
+  const copySettingsJSON = useCallback(async () => {
+    try {
+      const grouped = buildSavePayload(settings);
+      await navigator.clipboard.writeText(JSON.stringify(grouped, null, 2));
+      setCopied(true);
+      alertNotifier.copySuccess();
+      setTimeout(() => setCopied(false), 2000);
+    } catch (error) {
+      alertNotifier.copyError(error);
+    }
+  }, [settings]);
+
+  const saveSettings = useCallback(async () => {
+    setSaving(true);
+    try {
+      const widgetId = settings.id || FIXED_WIDGET_ID;
+      const requestPayload = buildWidgetPatchRequest(FIXED_USER_ID, settings);
+      const response = await saveDonateSettings(widgetId, requestPayload);
+
+      if (!response) throw new Error("Save failed");
+
+      setSaveSuccess(true);
+      setHasChanges(false);
+      setShowSaveNotification(true);
+      alertNotifier.saveSuccess();
+      setTimeout(() => setSaveSuccess(false), 2000);
+    } catch (error) {
+      console.error(error);
+      alertNotifier.saveError(error);
+    } finally {
+      setSaving(false);
+    }
+  }, [settings]);
+
+  const openFullscreenEditor = useCallback((editorSettings, updateFn) => {
+    setFullscreenEditorContext({
+      effectiveSettings: editorSettings,
+      updateFn,
+    });
+    setShowFullscreenEditor(true);
+  }, []);
+
+  const closeFullscreenEditor = useCallback(() => {
+    setShowFullscreenEditor(false);
+  }, []);
+
   const value = useMemo(
     () => ({
       settings,
       normalizedSettings,
       effectiveSettings,
+      loading,
+      saving,
+      saveSuccess,
+      hasChanges,
+      showSaveNotification,
+      setShowSaveNotification,
+      copied,
+      testDonationMessage,
+      setTestDonationMessage,
+      showFullscreenEditor,
+      fullscreenEditorContext,
       ranges,
       activeRange,
       activeRangeId: resolvedActiveRangeId,
       setActiveRangeId,
       clearActiveRange: () => setActiveRangeId(null),
+      setSettings,
+      updateSetting,
+      updateSettings,
+      addSettingsData: updateSettings,
       updateGlobalSetting,
       updateContextSetting,
       replaceRanges,
+      addRange,
+      upsertRange,
+      deleteRange,
+      duplicateRange,
       resetActiveRangeToDefault,
       buildRangeSettings,
+      resetSettings,
+      copySettingsJSON,
+      saveSettings,
+      openFullscreenEditor,
+      closeFullscreenEditor,
     }),
     [
       settings,
       normalizedSettings,
       effectiveSettings,
+      loading,
+      saving,
+      saveSuccess,
+      hasChanges,
+      showSaveNotification,
+      copied,
+      testDonationMessage,
+      showFullscreenEditor,
+      fullscreenEditorContext,
       ranges,
       activeRange,
       resolvedActiveRangeId,
+      updateSetting,
+      updateSettings,
       updateGlobalSetting,
       updateContextSetting,
       replaceRanges,
+      addRange,
+      upsertRange,
+      deleteRange,
+      duplicateRange,
       resetActiveRangeToDefault,
       buildRangeSettings,
+      resetSettings,
+      copySettingsJSON,
+      saveSettings,
+      openFullscreenEditor,
+      closeFullscreenEditor,
     ]
   );
 

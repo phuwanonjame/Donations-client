@@ -2,8 +2,11 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Bell, Check } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { useDonateAlertSettings } from "./context/DonateAlertSettingsProvider";
 
-export default function SettingsHeader({ settings, updateSetting, hasChanges, saveSuccess }) {
+export default function SettingsHeader() {
+  const { settings, updateSetting, hasChanges, saveSuccess } = useDonateAlertSettings();
+
   // Helper function to get enabled status (support both flat and grouped)
   const getEnabledStatus = () => {
     if (!settings) return true;

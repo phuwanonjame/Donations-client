@@ -242,7 +242,7 @@ function TabNav({ tabs, activeTab, onSelect }) {
   );
 }
 
-export default function SettingsTabs({ handleReset, handleCopyJSON, onOpenVisualEditor }) {
+export default function SettingsTabs() {
   const [activeTab, setActiveTab] = useState("template");
   const [isHoveringVisual, setIsHoveringVisual] = useState(false);
   const {
@@ -257,6 +257,9 @@ export default function SettingsTabs({ handleReset, handleCopyJSON, onOpenVisual
     updateGlobalSetting,
     updateContextSetting,
     resetActiveRangeToDefault,
+    resetSettings,
+    copySettingsJSON,
+    openFullscreenEditor,
   } = useDonateAlertSettings();
 
   const handleTabSelect = (tabId) => {
@@ -268,8 +271,8 @@ export default function SettingsTabs({ handleReset, handleCopyJSON, onOpenVisual
   const safeActiveTab = visibleTabs.find((tab) => tab.id === activeTab) ? activeTab : "media";
 
   const handleOpenVisualEditor = useCallback(() => {
-    onOpenVisualEditor(effectiveSettings, updateContextSetting);
-  }, [effectiveSettings, onOpenVisualEditor, updateContextSetting]);
+    openFullscreenEditor(effectiveSettings, updateContextSetting);
+  }, [effectiveSettings, openFullscreenEditor, updateContextSetting]);
 
   const handleResetCurrentRange = useCallback(() => {
     if (!activeRange) return;
@@ -399,8 +402,8 @@ export default function SettingsTabs({ handleReset, handleCopyJSON, onOpenVisual
             {safeActiveTab === "template" && (
               <TemplateTab
                 currentTemplate={settings.templateId || "basic"}
-                handleReset={handleReset}
-                handleCopyJSON={handleCopyJSON}
+                handleReset={resetSettings}
+                handleCopyJSON={copySettingsJSON}
                 onTemplateSelect={(newTemplateSettings) => {
                   Object.entries(newTemplateSettings).forEach(([key, value]) => updateGlobalSetting(key, value));
                 }}
