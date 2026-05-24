@@ -1,22 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { toThaiDate, fromThaiDate } from '../utils/donate-leaderboard';
+import { toThaiDate, fromThaiDate } from '../utils/top-donate';
 
 export default function ThaiDateTimeInput({ label, value, onChange }) {
-  const [thaiValue, setThaiValue] = useState('');
-
-  useEffect(() => {
-    if (value) {
-      setThaiValue(toThaiDate(value));
-    } else {
-      setThaiValue('');
-    }
-  }, [value]);
+  const thaiValue = value ? toThaiDate(value) : '';
 
   const handleChange = (e) => {
     const newThaiValue = e.target.value;
-    setThaiValue(newThaiValue);
     const converted = fromThaiDate(newThaiValue);
     if (converted) onChange(converted);
   };

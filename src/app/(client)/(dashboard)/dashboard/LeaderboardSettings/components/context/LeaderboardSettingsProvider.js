@@ -16,7 +16,6 @@ import { fromMetadata, toApiMetadata, toMetadata } from '../../utils/donate-lead
 const LeaderboardSettingsContext = createContext(null);
 
 const FIXED_USER_ID = '244bad71-4990-4a79-9a19-9ff983a55442';
-const FIXED_WIDGET_ID = 'e445cefd-dfc8-458d-b9c7-d69ed51cc497';
 const leaderboardNotifier = createWidgetSettingsNotifier('Leaderboard settings');
 
 const logLeaderboardProvider = (label, payload) => {
@@ -25,7 +24,7 @@ const logLeaderboardProvider = (label, payload) => {
 
 export function LeaderboardSettingsProvider({ children }) {
   const [settings, setSettings] = useState(defaultSettings);
-  const [widgetId, setWidgetId] = useState(FIXED_WIDGET_ID);
+  const [widgetId, setWidgetId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
@@ -44,10 +43,15 @@ export function LeaderboardSettingsProvider({ children }) {
       setLoading(true);
 
       try {
-        const widget = await fetchLeaderboardSettings(FIXED_USER_ID, FIXED_WIDGET_ID);
+        const widget = await fetchLeaderboardSettings(FIXED_USER_ID);
         logLeaderboardProvider('loaded widget from api', widget);
 
-        if (widget?.id) setWidgetId(widget.id);
+        if (!widget?.id) {
+          leaderboardNotifier.error('Leaderboard widget not found for this user');
+          return;
+        }
+
+        setWidgetId(widget.id);
 
         if (!widget?.metadata) {
           setSettings(defaultSettings);

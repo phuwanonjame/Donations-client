@@ -7,11 +7,80 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { generateWidgetUrl } from '../constants/recentDonateOptions';
 
+const getNumberValue = (value, fallback = 0) => {
+  const raw = Array.isArray(value) ? value[0] : value;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const getTextStrokeStyle = (width, color) => {
+  const strokeWidth = getNumberValue(width, 0);
+  if (strokeWidth <= 0 || !color) return {};
+  return {
+    WebkitTextStroke: `${strokeWidth}px ${color}`,
+    textStroke: `${strokeWidth}px ${color}`,
+  };
+};
+
+const getLayoutStyles = (layoutStyle) => {
+  const map = {
+    list: {
+      item: 'flex items-start gap-3 p-2 rounded-lg',
+      avatar: 'w-8 h-8',
+      content: 'flex-1 min-w-0',
+      row: 'flex items-center justify-between gap-3',
+      showAvatar: true,
+      titleClassName: 'text-center font-bold mb-3',
+    },
+    compact: {
+      item: 'flex items-center gap-2 px-2 py-1.5 rounded-lg',
+      avatar: 'w-6 h-6',
+      content: 'flex-1 min-w-0',
+      row: 'flex items-center justify-between gap-2',
+      showAvatar: true,
+      titleClassName: 'text-left text-sm font-bold mb-2',
+    },
+    spotlight: {
+      item: 'flex flex-col items-center gap-3 p-5 rounded-lg text-center',
+      avatar: 'w-14 h-14',
+      content: 'w-full min-w-0',
+      row: 'flex flex-col items-center justify-center gap-2',
+      showAvatar: true,
+      titleClassName: 'text-center font-bold mb-4',
+    },
+    split: {
+      item: 'grid grid-cols-[1fr_auto] items-center gap-4 p-3 rounded-lg',
+      avatar: 'hidden',
+      content: 'min-w-0 contents',
+      row: 'contents',
+      showAvatar: false,
+      titleClassName: 'text-left font-bold mb-3',
+    },
+  };
+  return map[layoutStyle] || map.list;
+};
+
 export default function RecentDonatePreview({ settings, donations, onReset }) {
   const widgetUrl = generateWidgetUrl();
   const fontSize = Array.isArray(settings.fontSize) ? settings.fontSize[0] : settings.fontSize;
   const maxEntries = Array.isArray(settings.maxEntries) ? settings.maxEntries[0] : settings.maxEntries;
   const visibleDonations = donations.slice(0, maxEntries);
+  const layout = getLayoutStyles(settings.layoutStyle);
+
+  const nameStyle = {
+    color: settings.lastDonatorColor ?? settings.textColor,
+    fontSize: `${getNumberValue(settings.lastDonatorFontSize, fontSize)}px`,
+    fontFamily: settings.lastDonatorFontFamily,
+    fontWeight: settings.lastDonatorFontWeight,
+    ...getTextStrokeStyle(settings.lastDonatorStrokeWidth, settings.lastDonatorStrokeColor),
+  };
+  const amountStyle = {
+    color: settings.amountColor ?? settings.accentColor,
+    fontSize: `${getNumberValue(settings.amountFontSize, fontSize)}px`,
+    fontFamily: settings.amountFontFamily,
+    fontWeight: settings.amountFontWeight,
+    ...getTextStrokeStyle(settings.amountStrokeWidth, settings.amountStrokeColor),
+  };
 
   return (
     <div className="space-y-4">
@@ -24,7 +93,7 @@ export default function RecentDonatePreview({ settings, donations, onReset }) {
       </div>
 
       <div className="rounded-xl p-4 mb-4" style={{ backgroundColor: settings.backgroundColor }}>
-        <h4 className="text-center font-bold mb-3" style={{ color: settings.accentColor }}>
+        <h4 className={layout.titleClassName} style={{ color: settings.accentColor }}>
           {settings.title}
         </h4>
 
@@ -35,24 +104,28 @@ export default function RecentDonatePreview({ settings, donations, onReset }) {
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: index * 0.1 }}
-              className="flex items-start gap-3 p-2 rounded-lg"
+              className={layout.item}
               style={{ backgroundColor: `${settings.accentColor}15` }}
             >
-              <div
-                className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0"
-                style={{ backgroundColor: settings.accentColor, color: '#ffffff' }}
-              >
-                {donation.name?.[0] ?? '?'}
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-3">
+              {layout.showAvatar && (
+                <div
+                  className={`${layout.avatar} rounded-full flex items-center justify-center text-sm font-bold flex-shrink-0`}
+                  style={{ backgroundColor: settings.accentColor, color: '#ffffff' }}
+                >
+                  {donation.name?.[0] ?? '?'}
+                </div>
+              )}
+              <div className={layout.content}>
+                <div
+                  className={layout.row}
+                >
                   {settings.showName && (
-                    <span className="font-medium truncate" style={{ color: settings.textColor, fontSize: `${fontSize}px` }}>
+                    <span className="font-medium truncate" style={nameStyle}>
                       {donation.name}
                     </span>
                   )}
                   {settings.showAmount && (
-                    <span className="shrink-0 font-semibold" style={{ color: settings.accentColor }}>
+                    <span className="shrink-0 font-semibold" style={amountStyle}>
                       {donation.amount}
                     </span>
                   )}

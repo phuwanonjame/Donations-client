@@ -1,9 +1,8 @@
 // TopDonatePreview.tsx
 "use client";
 import React from 'react';
-import { motion } from 'framer-motion';
 import {
-  Copy, Eye, RotateCcw,
+  Copy,
   Sparkles, Crown, Star, Heart, Zap, Trophy, Flame, Diamond,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -26,6 +25,76 @@ const ANIMATE_CLASS = {
   pulse:  'animate-pulse',
   bounce: 'animate-bounce',
   spin:   'animate-spin',
+};
+
+const getNumberValue = (value, fallback = 0) => {
+  const raw = Array.isArray(value) ? value[0] : value;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
+
+const getTextStrokeStyle = (width, color) => {
+  const strokeWidth = getNumberValue(width, 0);
+  if (strokeWidth <= 0 || !color) return {};
+  return {
+    WebkitTextStroke: `${strokeWidth}px ${color}`,
+    textStroke: `${strokeWidth}px ${color}`,
+  };
+};
+
+const getTextStyle = (settings, prefix, fallbackColor) => ({
+  color: settings[`${prefix}Color`] ?? fallbackColor,
+  fontSize: `${getNumberValue(settings[`${prefix}FontSize`], 18)}px`,
+  textAlign: settings[`${prefix}Alignment`] ?? 'center',
+  fontFamily: settings[`${prefix}FontFamily`] ?? 'inherit',
+  fontWeight: settings[`${prefix}FontWeight`] ?? '700',
+  lineHeight: 1.15,
+  margin: 0,
+  width: '100%',
+  ...getTextStrokeStyle(settings[`${prefix}StrokeWidth`], settings[`${prefix}StrokeColor`]),
+});
+
+const getLayoutStyle = (alignment) => {
+  const normalizedMap = {
+    'flex-col': 'stack-center',
+    'flex-row': 'row-center',
+    'flex-col-reverse': 'stack-reverse-center',
+    'flex-row-reverse': 'row-reverse-center',
+  };
+  const normalized = normalizedMap[alignment] || alignment || 'stack-center';
+  const isRow = normalized.startsWith('row-');
+  const isReverse = normalized.includes('reverse');
+  const isLeft = normalized.endsWith('left');
+  const isRight = normalized.endsWith('right');
+  const isStack = normalized.startsWith('stack-');
+  const justifyContent = isLeft ? 'flex-start' : isRight ? 'flex-end' : 'center';
+  const alignItems = isStack
+    ? isLeft ? 'flex-start' : isRight ? 'flex-end' : 'center'
+    : 'center';
+  const textAlign = isLeft ? 'left' : isRight ? 'right' : 'center';
+
+  return {
+    container: {
+      display: 'flex',
+      flexDirection: isRow
+        ? isReverse ? 'row-reverse' : 'row'
+        : isReverse ? 'column-reverse' : 'column',
+      alignItems,
+      justifyContent,
+      gap: 16,
+      width: '100%',
+    },
+    textGroup: {
+      minWidth: 0,
+      width: isStack ? 'fit-content' : 'auto',
+      maxWidth: '100%',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'stretch',
+      gap: 10,
+      textAlign,
+    },
+  };
 };
 
 // resolve placeholders ใน title โดยใช้ donorData
@@ -54,9 +123,15 @@ export default function TopDonatePreview({ settings, donorData }) {
   const resolvedTitle = resolveTitle(settings.title ?? '', donorData);
 
   const containerPx = Array.isArray(settings.iconSize)        ? settings.iconSize[0]        : (settings.iconSize        ?? 80);
+  const iconImageRatio = getNumberValue(settings.iconImageSize, 70) / 100;
+  const legacyFontPx = getNumberValue(settings.fontSize, 18);
+  const titleFontPx = getNumberValue(settings.titleFontSize, Math.max(12, Math.round(legacyFontPx * 0.8)));
+  const messageFontPx = getNumberValue(settings.messageFontSize, legacyFontPx);
   const radiusPx    = Array.isArray(settings.iconRadius)      ? settings.iconRadius[0]      : (settings.iconRadius      ?? 16);
   const borderW     = Array.isArray(settings.iconBorderWidth) ? settings.iconBorderWidth[0] : (settings.iconBorderWidth ?? 0);
-  const fontPx      = Array.isArray(settings.fontSize)        ? settings.fontSize[0]        : settings.fontSize;
+  const topDonatorStyle = getTextStyle(settings, 'topDonator', settings.textColor ?? '#ffffff');
+  const amountStyle = getTextStyle(settings, 'amount', settings.accentColor ?? '#a855f7');
+  const layoutStyle = getLayoutStyle(settings.alignment);
 
   const isCustom  = settings.iconType === 'custom' && settings.iconCustomUrl;
   const IconComp  = ICON_MAP[settings.iconType] ?? Sparkles;
@@ -104,6 +179,8 @@ export default function TopDonatePreview({ settings, donorData }) {
   const totalBorder = borderW * 2;
   const effectivePx = containerPx - totalBorder;
   const innerIconPx = isDiamond ? Math.round(effectivePx * 0.60) : effectivePx;
+  const iconContentPx = Math.max(8, Math.round(effectivePx * iconImageRatio));
+  const diamondIconContentPx = Math.max(8, Math.round(innerIconPx * iconImageRatio));
 
   const diamondWrapStyle = isDiamond ? {
     width: `${containerPx}px`, height: `${containerPx}px`,
@@ -135,65 +212,89 @@ export default function TopDonatePreview({ settings, donorData }) {
   } : null;
 
   const innerStyle = !isDiamond
-    ? { width: '100%', height: '100%', objectFit: 'cover', display: 'block' }
-    : { width: `${innerIconPx}px`, height: `${innerIconPx}px`, objectFit: 'cover', display: 'block' };
+    ? { width: `${iconContentPx}px`, height: `${iconContentPx}px`, objectFit: 'contain', display: 'block' }
+    : { width: `${diamondIconContentPx}px`, height: `${diamondIconContentPx}px`, objectFit: 'contain', display: 'block' };
 
   const lucideStyle = !isDiamond
-    ? { width: `${Math.round(effectivePx * 0.58)}px`, height: `${Math.round(effectivePx * 0.58)}px`, color: getIconColor() }
-    : { width: `${Math.round(innerIconPx * 0.65)}px`, height: `${Math.round(innerIconPx * 0.65)}px`, color: getIconColor() };
+    ? { width: `${iconContentPx}px`, height: `${iconContentPx}px`, color: getIconColor() }
+    : { width: `${diamondIconContentPx}px`, height: `${diamondIconContentPx}px`, color: getIconColor() };
 
   return (
     <div className="space-y-4">
       {/* Widget preview */}
       <div
-        className="rounded-xl p-6 text-center transition-colors duration-200"
+        className="rounded-xl p-6 transition-colors duration-200"
         style={{ backgroundColor: settings.backgroundColor }}
       >
-        <p className="text-sm mb-3" style={{ color: settings.accentColor }}>
+        <p
+          className="mb-3"
+          style={{
+            color: settings.accentColor,
+            fontSize: `${titleFontPx}px`,
+            lineHeight: 1.2,
+            margin: '0 0 12px',
+          }}
+        >
           {resolvedTitle}
         </p>
 
-        {settings.showIcon && (
-          <div className="flex justify-center mb-4">
-            {isDiamond ? (
-              <div style={diamondWrapStyle} className={animClass}>
-                <div style={diamondBoxStyle}>
-                  <div style={diamondInnerStyle}>
-                    {isCustom
-                      ? <img src={settings.iconCustomUrl} alt="icon" style={innerStyle} />
-                      : <IconComp style={lucideStyle} />
-                    }
+        <div style={layoutStyle.container}>
+          {settings.showIcon && (
+            <div className="flex justify-center">
+              {isDiamond ? (
+                <div style={diamondWrapStyle} className={animClass}>
+                  <div style={diamondBoxStyle}>
+                    <div style={diamondInnerStyle}>
+                      {isCustom
+                        ? <img src={settings.iconCustomUrl} alt="icon" style={innerStyle} />
+                        : <IconComp style={lucideStyle} />
+                      }
+                    </div>
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div style={normalContainerStyle} className={animClass}>
-                {isCustom
-                  ? <img src={settings.iconCustomUrl} alt="icon" style={innerStyle} />
-                  : <IconComp style={lucideStyle} />
-                }
-              </div>
+              ) : (
+                <div style={normalContainerStyle} className={animClass}>
+                  {isCustom
+                    ? <img src={settings.iconCustomUrl} alt="icon" style={innerStyle} />
+                    : <IconComp style={lucideStyle} />
+                  }
+                </div>
+              )}
+            </div>
+          )}
+
+          <div
+            style={layoutStyle.textGroup}
+          >
+            {settings.showName && (
+              <p style={topDonatorStyle}>
+                {donorName}
+              </p>
+            )}
+
+            {settings.showAmount && (
+              <p style={amountStyle}>
+                {donorAmount}
+              </p>
+            )}
+
+            {settings.showMessage && (
+              <p
+                className="opacity-80"
+                style={{
+                  color: settings.textColor,
+                  fontSize: `${messageFontPx}px`,
+                  lineHeight: 1.35,
+                  margin: 0,
+                  textAlign: 'center',
+                  width: '100%',
+                }}
+              >
+                <span>&quot;{donorMessage}&quot;</span>
+              </p>
             )}
           </div>
-        )}
-
-        {settings.showName && (
-          <p className="font-bold" style={{ color: settings.textColor, fontSize: `${fontPx}px` }}>
-            {donorName}
-          </p>
-        )}
-
-        {settings.showAmount && (
-          <p className="font-bold text-2xl mt-1" style={{ color: settings.accentColor }}>
-            {donorAmount}
-          </p>
-        )}
-
-        {settings.showMessage && (
-          <p className="text-sm mt-2 opacity-80" style={{ color: settings.textColor }}>
-            "{donorMessage}"
-          </p>
-        )}
+        </div>
       </div>
 
       {/* Widget URL */}

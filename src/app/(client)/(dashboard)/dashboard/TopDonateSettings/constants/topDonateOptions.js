@@ -12,6 +12,47 @@ export const animationStyles = [
   { id: 'bounce', name: 'Bounce' },
 ];
 
+export const layoutAlignments = [
+  { id: 'stack-center', name: 'Stack Center' },
+  { id: 'stack-left', name: 'Stack Left' },
+  { id: 'stack-right', name: 'Stack Right' },
+  { id: 'row-center', name: 'Row Center' },
+  { id: 'row-left', name: 'Row Left' },
+  { id: 'row-right', name: 'Row Right' },
+  { id: 'row-reverse-center', name: 'Row Reverse Center' },
+  { id: 'row-reverse-left', name: 'Row Reverse Left' },
+  { id: 'row-reverse-right', name: 'Row Reverse Right' },
+  { id: 'stack-reverse-center', name: 'Stack Reverse Center' },
+  { id: 'stack-reverse-left', name: 'Stack Reverse Left' },
+  { id: 'stack-reverse-right', name: 'Stack Reverse Right' },
+];
+
+export const textAlignments = [
+  { id: 'left', name: 'Left' },
+  { id: 'center', name: 'Center' },
+  { id: 'right', name: 'Right' },
+];
+
+export const fontFamilies = [
+  { id: 'IBM Plex Sans Thai', name: 'IBM Plex Sans Thai' },
+  { id: 'Kanit', name: 'Kanit' },
+  { id: 'Prompt', name: 'Prompt' },
+  { id: 'Sarabun', name: 'Sarabun' },
+  { id: 'Noto Sans Thai', name: 'Noto Sans Thai' },
+  { id: 'Inter', name: 'Inter' },
+  { id: 'Poppins', name: 'Poppins' },
+  { id: 'Montserrat', name: 'Montserrat' },
+];
+
+export const fontWeights = [
+  { id: '400', name: '400' },
+  { id: '500', name: '500' },
+  { id: '600', name: '600' },
+  { id: '700', name: '700' },
+  { id: '800', name: '800' },
+  { id: '900', name: '900' },
+];
+
 export function generateWidgetUrl(widgetId = 'abc123') {
   return `https://easydonate.app/w/top/${widgetId}`;
 }
@@ -61,6 +102,29 @@ export function getDefaultSettings() {
     backgroundColor:  '#1e293b',
     textColor:        '#ffffff',
     fontSize:         [18],           // px (12–32)
+    titleFontSize:    [14],
+    messageFontSize:  [18],
+    alignment:        'stack-center',
+    isUseStartAt:     false,
+    startAt:          new Date(Date.now()).toISOString().slice(0, 16),
+    isUseEndAt:       false,
+    endAt:            new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
+
+    amountColor: '#FFFFFF',
+    amountFontSize: [36],
+    amountAlignment: 'center',
+    amountFontFamily: 'IBM Plex Sans Thai',
+    amountFontWeight: '700',
+    amountStrokeColor: '#000000',
+    amountStrokeWidth: [2.5],
+
+    topDonatorColor: '#FFFFFF',
+    topDonatorFontSize: [36],
+    topDonatorAlignment: 'center',
+    topDonatorFontFamily: 'IBM Plex Sans Thai',
+    topDonatorFontWeight: '700',
+    topDonatorStrokeColor: '#000000',
+    topDonatorStrokeWidth: [2.5],
 
     // ── (legacy) ──
     animationStyle:   'glow',

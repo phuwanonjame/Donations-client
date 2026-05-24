@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useCallback } from 'react';
+import React, { useCallback, useState } from 'react';
+import { AnimatePresence, motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -64,7 +65,54 @@ const FontSizeSlider = ({ label, value, onChange }) => {
   );
 };
 
+const LEADERBOARD_TABS = [
+  { id: 'setup', label: 'Setup', icon: Trophy, color: 'from-amber-500 to-orange-500' },
+  { id: 'typography', label: 'Typography', icon: Type, color: 'from-sky-500 to-cyan-500' },
+  { id: 'podium', label: 'Podium', icon: Crown, color: 'from-yellow-500 to-amber-500' },
+];
+
+function LeaderboardTabNav({ activeTab, onSelect }) {
+  return (
+    <div className="relative">
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-slate-800/50 to-slate-900/50 blur" />
+      <div className="relative overflow-x-auto rounded-xl border border-slate-700/50 bg-slate-800/40 p-1 backdrop-blur-sm">
+        <div className="grid min-w-max grid-flow-col auto-cols-[96px] gap-1 sm:auto-cols-[118px] lg:min-w-0 lg:grid-cols-3">
+          {LEADERBOARD_TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <motion.button
+                key={tab.id}
+                type="button"
+                onClick={() => onSelect(tab.id)}
+                className={`relative rounded-lg px-2 py-2.5 transition-all duration-300 sm:px-3 sm:py-3 ${
+                  isActive ? 'text-white' : 'text-slate-400 hover:bg-slate-700/50 hover:text-slate-200'
+                }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                {isActive && (
+                  <motion.div
+                    className={`absolute inset-0 rounded-lg bg-gradient-to-r ${tab.color}`}
+                    layoutId="leaderboardActiveTab"
+                    transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+                <div className="relative z-10 flex flex-col items-center gap-1">
+                  <Icon className={`h-4 w-4 transition-all duration-300 sm:h-5 sm:w-5 ${isActive ? 'scale-110' : ''}`} />
+                  <span className="text-[10px] font-medium sm:text-xs">{tab.label}</span>
+                </div>
+              </motion.button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function LeaderboardSettingsForm({ settings: settingsProp, update: updateProp }) {
+  const [activeTab, setActiveTab] = useState('setup');
   const leaderboardContext = useOptionalLeaderboardSettings();
   const contextSettings = leaderboardContext?.settings;
   const contextUpdate = leaderboardContext?.update;
@@ -93,9 +141,27 @@ export default function LeaderboardSettingsForm({ settings: settingsProp, update
 
   const defaultFontFamily = fontFamilies?.[0]?.id || 'ibm-plex-sans-thai';
   const defaultFontWeight = fontWeights?.[0]?.id || 'medium';
+  const tabContentVariants = {
+    hidden: { opacity: 0, x: -16 },
+    visible: { opacity: 1, x: 0, transition: { duration: 0.22 } },
+    exit: { opacity: 0, x: 16, transition: { duration: 0.18 } },
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6 px-4 sm:px-0">
+      <LeaderboardTabNav activeTab={activeTab} onSelect={setActiveTab} />
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          variants={tabContentVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          className="space-y-5 sm:space-y-6 min-w-0"
+        >
+      {activeTab === 'setup' && (
+        <>
 
       {/* Configuration */}
       <SectionWrapper delay={0.1}>
@@ -273,6 +339,11 @@ export default function LeaderboardSettingsForm({ settings: settingsProp, update
           </Button>
         </div>
       </SectionWrapper>
+        </>
+      )}
+
+      {activeTab === 'typography' && (
+        <>
 
       {/* Title Typography */}
       <SectionWrapper delay={0.3}>
@@ -372,9 +443,11 @@ export default function LeaderboardSettingsForm({ settings: settingsProp, update
           </div>
         </div>
       </SectionWrapper>
+        </>
+      )}
 
       {/* Podium Settings with Image URL */}
-      {isPodium && (
+      {activeTab === 'podium' && isPodium && (
         <>
           <SectionWrapper delay={0.4}>
             <div className="rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl p-4 sm:p-6">
@@ -625,6 +698,8 @@ export default function LeaderboardSettingsForm({ settings: settingsProp, update
           </SectionWrapper>
         </>
       )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }

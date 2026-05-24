@@ -1,11 +1,11 @@
 // TopDonateSettingsForm.tsx
 "use client";
 import React, { useRef, useState } from 'react';
-import { motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'framer-motion';
 import {
   Settings, Palette, Sparkles,
   Crown, Star, Heart, Zap, Trophy, Flame, Diamond,
-  Upload, X, Link, ImageIcon, User,
+  Upload, X, Link, ImageIcon,
 } from 'lucide-react';
 import { Input }    from '@/components/ui/input';
 import { Label }    from '@/components/ui/label';
@@ -13,11 +13,15 @@ import { Slider }   from '@/components/ui/slider';
 import { Switch }   from '@/components/ui/switch';
 import { Button }   from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import DropdownSelect from './DropdownSelect';
+import ThaiDateTimeInput from './ThaiDateTimeInput';
 import {
-  Select, SelectContent, SelectItem,
-  SelectTrigger, SelectValue,
-} from "@/components/ui/select";
-import { timeRanges } from '../constants/topDonateOptions';
+  fontFamilies,
+  fontWeights,
+  layoutAlignments,
+  textAlignments,
+} from '../constants/topDonateOptions';
+import { useTopDonateSettings } from './context/TopDonateSettingsProvider';
 
 export const ICON_OPTIONS = [
   { id: 'sparkles', label: 'Sparkles', icon: Sparkles },
@@ -71,8 +75,65 @@ const PLACEHOLDERS = [
   { tag: '{{ข้อความ}}',    desc: 'ข้อความ' },
 ];
 
-export default function TopDonateSettingsForm({ settings, updateSetting, donorData, updateDonor }) {
+const TOP_DONATE_TABS = [
+  { id: 'settings', label: 'Settings', icon: Settings, color: 'from-purple-500 to-pink-500' },
+  { id: 'icon', label: 'Icon', icon: Sparkles, color: 'from-fuchsia-500 to-violet-500' },
+  { id: 'appearance', label: 'Appearance', icon: Palette, color: 'from-cyan-500 to-blue-500' },
+];
+
+function TopDonateTabNav({ activeTab, onSelect }) {
+  return (
+    <div className="relative">
+      <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-slate-800/50 to-slate-900/50 blur" />
+      <div className="relative overflow-x-auto rounded-xl border border-slate-700/50 bg-slate-800/40 p-1 backdrop-blur-sm">
+        <div className="grid min-w-max grid-flow-col auto-cols-[96px] gap-1 sm:auto-cols-[118px] lg:min-w-0 lg:grid-cols-3">
+          {TOP_DONATE_TABS.map((tab) => {
+            const Icon = tab.icon;
+            const isActive = activeTab === tab.id;
+            return (
+              <motion.button
+                key={tab.id}
+                type="button"
+                onClick={() => onSelect(tab.id)}
+                className={`relative rounded-lg px-2 py-2.5 transition-all duration-300 sm:px-3 sm:py-3 ${
+                  isActive ? 'text-white' : 'text-slate-400 hover:bg-slate-700/50 hover:text-slate-200'
+                }`}
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                {isActive && (
+                  <motion.div
+                    className={`absolute inset-0 rounded-lg bg-gradient-to-r ${tab.color}`}
+                    layoutId="topDonateActiveTab"
+                    transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+                <div className="relative z-10 flex flex-col items-center gap-1">
+                  <Icon className={`h-4 w-4 transition-all duration-300 sm:h-5 sm:w-5 ${isActive ? 'scale-110' : ''}`} />
+                  <span className="text-[10px] font-medium sm:text-xs">{tab.label}</span>
+                </div>
+              </motion.button>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function TopDonateSettingsForm({
+  settings: settingsProp,
+  updateSetting: updateSettingProp,
+  donorData: donorDataProp,
+  updateDonor: updateDonorProp,
+} = {}) {
+  const topDonateContext = useTopDonateSettings();
+  const settings = settingsProp ?? topDonateContext.settings;
+  const updateSetting = updateSettingProp ?? topDonateContext.updateSetting;
+  const donorData = donorDataProp ?? topDonateContext.donorData;
+  const updateDonor = updateDonorProp ?? topDonateContext.updateDonor;
   const fileInputRef = useRef(null);
+  const [activeTab, setActiveTab] = useState('settings');
   const [uploadTab, setUploadTab] = useState('file');
   const [urlInput,  setUrlInput]  = useState('');
   const [urlError,  setUrlError]  = useState('');
@@ -133,11 +194,28 @@ export default function TopDonateSettingsForm({ settings, updateSetting, donorDa
 
   const radiusPx = Array.isArray(settings.iconRadius) ? settings.iconRadius[0] : settings.iconRadius;
   const showRadiusSlider = ['rounded', 'squircle', 'square'].includes(settings.iconShape);
+  const tabContentVariants = {
+    hidden: { opacity: 0, x: -16 },
+    visible: { opacity: 1, x: 0, transition: { duration: 0.22 } },
+    exit: { opacity: 0, x: 16, transition: { duration: 0.18 } },
+  };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 px-4 sm:space-y-6 sm:px-0">
+      <TopDonateTabNav activeTab={activeTab} onSelect={setActiveTab} />
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          variants={tabContentVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
+          className="min-w-0 space-y-5 sm:space-y-6"
+        >
 
       {/* ── Configuration ── */}
+      {activeTab === 'settings' && (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -149,7 +227,7 @@ export default function TopDonateSettingsForm({ settings, updateSetting, donorDa
           Configuration
         </h3>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4">
           {/* Title + placeholder buttons */}
           <div className="space-y-2">
             <Label className="text-slate-300">Title</Label>
@@ -176,19 +254,6 @@ export default function TopDonateSettingsForm({ settings, updateSetting, donorDa
             <p className="text-[10px] text-slate-500">คลิก tag เพื่อแทรกลงใน title</p>
           </div>
 
-          <div className="space-y-2">
-            <Label className="text-slate-300">Time Range</Label>
-            <Select value={settings.timeRange} onValueChange={(v) => updateSetting('timeRange', v)}>
-              <SelectTrigger className="bg-slate-800/80 border-slate-700 text-white">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-700">
-                {timeRanges.map(r => (
-                  <SelectItem key={r.id} value={r.id} className="text-white hover:bg-slate-700">{r.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
         </div>
 
         {/* Donor data inputs */}
@@ -241,8 +306,10 @@ export default function TopDonateSettingsForm({ settings, updateSetting, donorDa
           ))}
         </div>
       </motion.div>
+      )}
 
       {/* ── Icon ── */}
+      {activeTab === 'icon' && (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -468,8 +535,10 @@ export default function TopDonateSettingsForm({ settings, updateSetting, donorDa
 
         </div>
       </motion.div>
+      )}
 
       {/* ── Appearance ── */}
+      {activeTab === 'appearance' && (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -485,13 +554,101 @@ export default function TopDonateSettingsForm({ settings, updateSetting, donorDa
           <ColorInput label="Background"   value={settings.backgroundColor} onChange={(v) => updateSetting('backgroundColor', v)} />
           <ColorInput label="Text Color"   value={settings.textColor}       onChange={(v) => updateSetting('textColor', v)} />
         </div>
-        <SliderControl label="Font Size" value={settings.fontSize} onChange={(v) => updateSetting('fontSize', v)} min={12} max={32} step={1} unit="px" />
-      </motion.div>
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <SliderControl
+            label="Title Font Size"
+            value={settings.titleFontSize}
+            onChange={(v) => updateSetting('titleFontSize', v)}
+            min={10}
+            max={48}
+            step={1}
+            unit="px"
+          />
+          <SliderControl
+            label="Message Font Size"
+            value={settings.messageFontSize}
+            onChange={(v) => updateSetting('messageFontSize', v)}
+            min={10}
+            max={48}
+            step={1}
+            unit="px"
+          />
+        </div>
 
+        <div className="mt-6 border-t border-slate-700/60 pt-5 space-y-5">
+          <DropdownSelect
+            label="Widget Alignment"
+            value={settings.alignment}
+            options={layoutAlignments}
+            onChange={(v) => updateSetting('alignment', v)}
+          />
+
+          <div className="grid grid-cols-1 gap-4">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-700/50 bg-slate-800/50 p-3">
+                <div>
+                  <p className="text-sm font-medium text-white">Use Start Date</p>
+                  <p className="text-xs text-slate-400">Send startAt from selected date when enabled</p>
+                </div>
+                <Switch
+                  checked={settings.isUseStartAt}
+                  onCheckedChange={(v) => updateSetting('isUseStartAt', v)}
+                  className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-purple-500 data-[state=checked]:to-pink-500"
+                />
+              </div>
+              {settings.isUseStartAt && (
+                <ThaiDateTimeInput
+                  label="Start Date"
+                  value={settings.startAt}
+                  onChange={(v) => updateSetting('startAt', v)}
+                />
+              )}
+            </div>
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-700/50 bg-slate-800/50 p-3">
+                <div>
+                  <p className="text-sm font-medium text-white">Use End Date</p>
+                  <p className="text-xs text-slate-400">Send endAt from selected date when enabled</p>
+                </div>
+                <Switch
+                  checked={settings.isUseEndAt}
+                  onCheckedChange={(v) => updateSetting('isUseEndAt', v)}
+                  className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-purple-500 data-[state=checked]:to-pink-500"
+                />
+              </div>
+              {settings.isUseEndAt && (
+                <ThaiDateTimeInput
+                  label="End Date"
+                  value={settings.endAt}
+                  onChange={(v) => updateSetting('endAt', v)}
+                />
+              )}
+            </div>
+          </div>
+        </div>
+
+        <TextStyleControls
+          title="Top Donator Text"
+          prefix="topDonator"
+          settings={settings}
+          updateSetting={updateSetting}
+        />
+
+        <TextStyleControls
+          title="Amount Text"
+          prefix="amount"
+          settings={settings}
+          updateSetting={updateSetting}
+        />
+      </motion.div>
+      )}
+
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 }
-
 function ColorInput({ label, value, onChange }) {
   return (
     <div className="space-y-2">
@@ -499,6 +656,66 @@ function ColorInput({ label, value, onChange }) {
       <div className="flex gap-2">
         <Input type="color" value={value} onChange={(e) => onChange(e.target.value)} className="w-12 h-10 p-1 bg-slate-800/80 border-slate-700" />
         <Input value={value} onChange={(e) => onChange(e.target.value)} className="flex-1 bg-slate-800/80 border-slate-700 text-white font-mono" />
+      </div>
+    </div>
+  );
+}
+
+function TextStyleControls({ title, prefix, settings, updateSetting }) {
+  const key = (suffix) => `${prefix}${suffix}`;
+
+  return (
+    <div className="mt-6 border-t border-slate-700/60 pt-5">
+      <h4 className="mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-slate-400">{title}</h4>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+        <ColorInput
+          label="Color"
+          value={settings[key('Color')]}
+          onChange={(v) => updateSetting(key('Color'), v)}
+        />
+        <DropdownSelect
+          label="Alignment"
+          value={settings[key('Alignment')]}
+          options={textAlignments}
+          onChange={(v) => updateSetting(key('Alignment'), v)}
+        />
+        <DropdownSelect
+          label="Font Family"
+          value={settings[key('FontFamily')]}
+          options={fontFamilies}
+          onChange={(v) => updateSetting(key('FontFamily'), v)}
+        />
+        <DropdownSelect
+          label="Font Weight"
+          value={settings[key('FontWeight')]}
+          options={fontWeights}
+          onChange={(v) => updateSetting(key('FontWeight'), v)}
+        />
+        <SliderControl
+          label="Font Size"
+          value={settings[key('FontSize')]}
+          onChange={(v) => updateSetting(key('FontSize'), v)}
+          min={12}
+          max={96}
+          step={1}
+          unit="px"
+        />
+        <SliderControl
+          label="Stroke Width"
+          value={settings[key('StrokeWidth')]}
+          onChange={(v) => updateSetting(key('StrokeWidth'), v)}
+          min={0}
+          max={8}
+          step={0.5}
+          unit="px"
+        />
+        <div className="md:col-span-2">
+          <ColorInput
+            label="Stroke Color"
+            value={settings[key('StrokeColor')]}
+            onChange={(v) => updateSetting(key('StrokeColor'), v)}
+          />
+        </div>
       </div>
     </div>
   );
