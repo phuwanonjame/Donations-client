@@ -1,18 +1,30 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowRight,
   Check,
   Crown,
+  Gem,
+  Minus,
+  Plus,
   Rocket,
   ShieldCheck,
   Sparkles,
   Star,
   Zap,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
+import { fetchPlans, purchasePlan } from '@/actions/Plansapi/plansApi';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
 
 const billingOptions = [
   { id: 'monthly', label: '1 เดือน', suffix: '/เดือน' },
@@ -20,8 +32,9 @@ const billingOptions = [
   { id: 'yearly', label: '1 ปี', suffix: '/ปี' },
 ];
 
-const plans = [
+const fallbackPlans = [
   {
+    code: 'free',
     name: 'Basic',
     icon: Zap,
     caption: 'เหมาะสำหรับผู้เริ่มต้นที่อยากลองเปิดรับโดเนท',
@@ -41,6 +54,7 @@ const plans = [
     ],
   },
   {
+    code: 'lite',
     name: 'Lite',
     icon: Sparkles,
     caption: 'ชุดประหยัดที่พร้อมใช้งานสำหรับครีเอเตอร์รายวัน',
@@ -59,6 +73,7 @@ const plans = [
     ],
   },
   {
+    code: 'pro',
     name: 'Pro',
     icon: Crown,
     caption: 'สำหรับคนที่อยากทำแบรนด์และปรับแต่งประสบการณ์ให้ลึกขึ้น',
@@ -77,6 +92,7 @@ const plans = [
     ],
   },
   {
+    code: 'ultra',
     name: 'Ultra',
     icon: Rocket,
     caption: 'ปลดล็อกทุกอย่างสำหรับผู้ที่ต้องการความยืดหยุ่นเต็มรูปแบบ',
@@ -96,6 +112,44 @@ const plans = [
     ],
   },
 ];
+
+const planPresentation = {
+  free: {
+    icon: Zap,
+    name: 'Basic',
+    caption: 'เหมาะสำหรับผู้เริ่มต้นที่อยากลองเปิดรับโดเนท',
+    cta: 'แพลนปัจจุบัน',
+    current: true,
+    accent: 'from-slate-500 to-slate-300',
+    border: 'border-white/10',
+    glow: 'bg-white/10',
+  },
+  lite: {
+    icon: Sparkles,
+    caption: 'ชุดประหยัดที่พร้อมใช้งานสำหรับครีเอเตอร์รายวัน',
+    cta: 'อัปเกรดเป็น Lite',
+    accent: 'from-cyan-400 to-teal-300',
+    border: 'border-cyan-400/20',
+    glow: 'bg-cyan-400/15',
+  },
+  pro: {
+    icon: Crown,
+    caption: 'สำหรับคนที่อยากทำแบรนด์และปรับแต่งประสบการณ์ให้ลึกขึ้น',
+    cta: 'อัปเกรดเป็น Pro',
+    accent: 'from-sky-400 to-cyan-300',
+    border: 'border-sky-400/30',
+    glow: 'bg-sky-400/15',
+  },
+  ultra: {
+    icon: Rocket,
+    caption: 'ปลดล็อกทุกอย่างสำหรับผู้ที่ต้องการความยืดหยุ่นเต็มรูปแบบ',
+    cta: 'อัปเกรดเป็น Ultra',
+    accent: 'from-cyan-300 via-sky-300 to-teal-200',
+    border: 'border-cyan-300/40',
+    glow: 'bg-cyan-300/20',
+    featured: true,
+  },
+};
 
 const faqs = [
   {
@@ -118,12 +172,232 @@ const trustItems = [
   'พร้อมขยายตามการเติบโตของช่อง',
 ];
 
+const PURCHASE_USER_ID = '244bad71-4990-4a79-9a19-9ff983a55442';
+const PURCHASE_PROVIDER = 'PROMPTPAY';
+const PAYMENT_BASE_URL = process.env.NEXT_PUBLIC_PAYMENT_BASE_URL || 'http://localhost:3002/';
+
 function formatPrice(value) {
-  return value.toLocaleString('th-TH');
+  return Number(value || 0).toLocaleString('th-TH', {
+    minimumFractionDigits: Number(value || 0) % 1 === 0 ? 0 : 1,
+    maximumFractionDigits: 1,
+  });
+}
+
+function getPlanPrice(plan, months) {
+  if (!plan) {
+    return 0;
+  }
+
+  if (months === 1) {
+    return plan.price.monthly;
+  }
+
+  if (months === 3) {
+    return plan.price.quarterly;
+  }
+
+  if (months === 12) {
+    return plan.price.yearly;
+  }
+
+  return plan.price.monthly * months;
+}
+
+function getBaseMonthlyTotal(plan, months) {
+  if (!plan) {
+    return 0;
+  }
+
+  return plan.price.monthly * months;
+}
+
+function getDiscountAmount(plan, months) {
+  if (!plan || ![3, 12].includes(months)) {
+    return 0;
+  }
+
+  const baseTotal = getBaseMonthlyTotal(plan, months);
+  const discountedTotal = getPlanPrice(plan, months);
+
+  return Math.max(baseTotal - discountedTotal, 0);
+}
+
+function getDurationLabel(months) {
+  if (months === 12) {
+    return '1 ปี';
+  }
+
+  return `${months} เดือน`;
+}
+
+function getPurchaseOrderNumber(response) {
+  return (
+    response?.orderNumber ||
+    response?.data?.orderNumber ||
+    response?.po ||
+    response?.data?.po ||
+    response?.purchaseOrderNo ||
+    response?.data?.purchaseOrderNo ||
+    response?.purchaseOrderNumber ||
+    response?.data?.purchaseOrderNumber ||
+    null
+  );
+}
+
+function buildPaymentRedirectUrl(po) {
+  const normalizedBase = PAYMENT_BASE_URL.endsWith('/')
+    ? PAYMENT_BASE_URL
+    : `${PAYMENT_BASE_URL}/`;
+
+  return `${normalizedBase}${po}`;
+}
+
+function normalizePlan(apiPlan) {
+  const meta = planPresentation[apiPlan?.code] || {};
+  const monthlyPrice = Number(apiPlan?.pricing?.monthlyPrice || 0);
+  const priceOptions = Array.isArray(apiPlan?.priceOptions) ? apiPlan.priceOptions : [];
+  const quarterlyOption = priceOptions.find((option) => Number(option?.durationMonths) === 3);
+  const yearlyOption = priceOptions.find((option) => Number(option?.durationMonths) === 12);
+
+  return {
+    id: apiPlan?.id,
+    code: apiPlan?.code,
+    name: meta.name || apiPlan?.name || 'Plan',
+    icon: meta.icon || Star,
+    caption: meta.caption || apiPlan?.description || '',
+    description: apiPlan?.description || '',
+    price: {
+      monthly: Number(priceOptions.find((option) => Number(option?.durationMonths) === 1)?.finalAmount ?? monthlyPrice),
+      quarterly: Number(quarterlyOption?.finalAmount ?? monthlyPrice * 3),
+      yearly: Number(yearlyOption?.finalAmount ?? monthlyPrice * 12),
+    },
+    cta: meta.cta || `อัปเกรดเป็น ${apiPlan?.name || 'Plan'}`,
+    current: Boolean(meta.current),
+    accent: meta.accent || 'from-cyan-400 to-teal-300',
+    border: meta.border || 'border-cyan-400/20',
+    glow: meta.glow || 'bg-cyan-400/15',
+    summary: apiPlan?.monthlyDonationLimit
+      ? `โดเนทขึ้นจอ ${apiPlan.monthlyDonationLimit} ครั้ง/เดือน`
+      : 'รายละเอียดใช้งานตามแพลน',
+    featured: Boolean(apiPlan?.isFeatured || meta.featured),
+    features: Array.isArray(apiPlan?.features) ? apiPlan.features : [],
+    priceOptions,
+    monthlyPrice,
+  };
 }
 
 export default function PlansPage() {
   const [billing, setBilling] = useState('monthly');
+  const [plans, setPlans] = useState([]);
+  const [selectedPlan, setSelectedPlan] = useState(null);
+  const [selectedMonths, setSelectedMonths] = useState(1);
+  const [isLoadingPlans, setIsLoadingPlans] = useState(true);
+  const [plansError, setPlansError] = useState('');
+  const [isPurchasing, setIsPurchasing] = useState(false);
+  const [purchaseResult, setPurchaseResult] = useState(null);
+  const totalPrice = getPlanPrice(selectedPlan, selectedMonths);
+  const baseMonthlyTotal = getBaseMonthlyTotal(selectedPlan, selectedMonths);
+  const discountAmount = getDiscountAmount(selectedPlan, selectedMonths);
+  const hasDiscount = discountAmount > 0;
+
+  const selectedSuffix =
+    billingOptions.find((option) => option.id === billing)?.suffix ?? '/เดือน';
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadPlans() {
+      setIsLoadingPlans(true);
+      setPlansError('');
+
+      const apiPlans = await fetchPlans();
+
+      if (!active) {
+        return;
+      }
+
+      if (!apiPlans.length) {
+        setPlansError('ไม่สามารถโหลดข้อมูลแพลนล่าสุดได้ กำลังใช้ข้อมูลสำรองชั่วคราว');
+        setPlans(fallbackPlans);
+        setIsLoadingPlans(false);
+        return;
+      }
+
+      const normalizedPlans = apiPlans
+        .filter((plan) => Number(plan?.isActive) === 1 || plan?.isActive === true)
+        .sort((a, b) => Number(a?.sortOrder || 0) - Number(b?.sortOrder || 0))
+        .map(normalizePlan);
+
+      setPlans(normalizedPlans.length ? normalizedPlans : fallbackPlans);
+      setIsLoadingPlans(false);
+    }
+
+    loadPlans();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  function handleUpgradeClick(plan) {
+    if (plan.current) {
+      return;
+    }
+
+    if (billing === 'quarterly') {
+      setSelectedMonths(3);
+    } else if (billing === 'yearly') {
+      setSelectedMonths(12);
+    } else {
+      setSelectedMonths(1);
+    }
+
+    setPurchaseResult(null);
+    setSelectedPlan(plan);
+  }
+
+  function changeBilling(step) {
+    const nextMonths = selectedMonths + step;
+
+    if (nextMonths < 1) {
+      return;
+    }
+
+    setSelectedMonths(nextMonths);
+  }
+
+  async function handlePurchasePlan() {
+    if (!selectedPlan?.id || isPurchasing) {
+      return;
+    }
+
+    try {
+      setIsPurchasing(true);
+      setPurchaseResult(null);
+
+      const response = await purchasePlan({
+        userId: PURCHASE_USER_ID,
+        planId: selectedPlan.id,
+        durationMonths: selectedMonths,
+        provider: PURCHASE_PROVIDER,
+      });
+      const po = getPurchaseOrderNumber(response);
+
+      setPurchaseResult(response);
+      if (!po) {
+        toast.error('สร้างรายการสำเร็จ แต่ไม่พบเลข PO สำหรับ redirect');
+        return;
+      }
+
+      toast.success('สร้างรายการอัปเกรดสำเร็จ กำลังไปหน้าชำระเงิน...');
+      window.location.href = buildPaymentRedirectUrl(po);
+    } catch (error) {
+      const message = error?.message || 'ไม่สามารถสร้างรายการอัปเกรดได้';
+      toast.error(message);
+    } finally {
+      setIsPurchasing(false);
+    }
+  }
 
   return (
     <div className="relative overflow-hidden bg-[#0A1628] text-white">
@@ -193,10 +467,21 @@ export default function PlansPage() {
         </motion.div>
 
         <div className="grid gap-6 xl:grid-cols-4">
+          {isLoadingPlans && (
+            <div className="xl:col-span-4 rounded-[2rem] border border-white/10 bg-white/5 p-5 text-sm text-slate-300 backdrop-blur-xl">
+              กำลังโหลดแพลนล่าสุด...
+            </div>
+          )}
+
+          {!isLoadingPlans && plansError && (
+            <div className="xl:col-span-4 rounded-[2rem] border border-amber-300/20 bg-amber-400/10 p-5 text-sm text-amber-100 backdrop-blur-xl">
+              {plansError}
+            </div>
+          )}
+
           {plans.map((plan, index) => {
             const Icon = plan.icon;
             const price = plan.price[billing];
-            const suffix = billingOptions.find((option) => option.id === billing)?.suffix ?? '/เดือน';
 
             return (
               <motion.article
@@ -224,7 +509,7 @@ export default function PlansPage() {
                   <div className="mb-6">
                     <h2 className="text-2xl font-semibold tracking-tight">{plan.name}</h2>
                     <p className="mt-2 text-sm leading-6 text-cyan-100/80">{plan.caption}</p>
-                    <p className="mt-3 text-sm leading-6 text-slate-400">{plan.description}</p>
+
                   </div>
 
                   <div className="mb-6 rounded-2xl border border-white/10 bg-slate-950/40 p-4">
@@ -234,12 +519,13 @@ export default function PlansPage() {
                       <span className="text-4xl font-bold tracking-tight">
                         {formatPrice(price)}
                       </span>
-                      <span className="pb-1 text-sm text-slate-400">{suffix}</span>
+                      <span className="pb-1 text-sm text-slate-400">{selectedSuffix}</span>
                     </div>
-                    <p className="mt-3 text-sm text-slate-300">{plan.summary}</p>
                   </div>
 
                   <Button
+                    type="button"
+                    onClick={() => handleUpgradeClick(plan)}
                     className={`mb-6 h-12 w-full rounded-full text-sm font-semibold transition-all ${
                       plan.featured
                         ? 'bg-gradient-to-r from-cyan-400 via-sky-300 to-teal-200 text-[#0A1628] shadow-lg shadow-cyan-500/20 hover:brightness-110'
@@ -282,59 +568,165 @@ export default function PlansPage() {
           })}
         </div>
 
-        <div className="mt-16 grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="rounded-[2rem] border border-white/10 bg-white/5 p-8 backdrop-blur-xl"
-          >
-            <p className="text-sm uppercase tracking-[0.24em] text-cyan-300/80">Why This Page</p>
-            <h3 className="mt-3 text-3xl font-bold tracking-tight">หน้าราคาแบบใหม่ที่อ่านง่ายและเทียบได้เร็ว</h3>
-            <p className="mt-4 max-w-2xl text-base leading-8 text-slate-300">
-              เราจัดลำดับข้อมูลใหม่ให้เห็นความต่างของแต่ละแพลนชัดตั้งแต่ราคา ความจุ และขอบเขตการปรับแต่ง
-              เพื่อช่วยลดภาระการตัดสินใจ โดยยังรักษาความรู้สึก modern creator tool ของโปรเจกต์นี้ไว้ครบ
-            </p>
-
-            <div className="mt-6 flex flex-wrap gap-3">
-              {trustItems.map((item) => (
-                <div
-                  key={item}
-                  className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-sm text-cyan-100"
-                >
-                  {item}
-                </div>
-              ))}
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="rounded-[2rem] border border-white/10 bg-slate-950/50 p-8 backdrop-blur-xl"
-          >
-            <div className="mb-6 flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-400 to-teal-300 text-[#0A1628]">
-                <Star className="h-5 w-5" />
-              </div>
-              <div>
-                <h3 className="text-2xl font-semibold">คำถามที่พบบ่อย</h3>
-                <p className="text-sm text-slate-400">สรุปสั้น ๆ ก่อนตัดสินใจอัปเกรด</p>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              {faqs.map((faq) => (
-                <div key={faq.title} className="rounded-2xl border border-white/10 bg-white/5 p-4">
-                  <p className="font-medium text-white">{faq.title}</p>
-                  <p className="mt-2 text-sm leading-6 text-slate-400">{faq.detail}</p>
-                </div>
-              ))}
-            </div>
-          </motion.div>
-        </div>
+        
       </section>
+
+      <Dialog open={Boolean(selectedPlan)} onOpenChange={(open) => !open && setSelectedPlan(null)}>
+        <DialogContent
+          className="overflow-hidden border-white/10 bg-[#081221] p-0 text-white shadow-2xl shadow-cyan-950/40 sm:max-w-2xl [&>[data-slot=dialog-close]]:z-30 [&>[data-slot=dialog-close]]:top-5 [&>[data-slot=dialog-close]]:right-5 [&>[data-slot=dialog-close]]:rounded-full [&>[data-slot=dialog-close]]:border [&>[data-slot=dialog-close]]:border-white/15 [&>[data-slot=dialog-close]]:bg-white/5 [&>[data-slot=dialog-close]]:p-2 [&>[data-slot=dialog-close]]:text-white/80 [&>[data-slot=dialog-close]]:ring-0 [&>[data-slot=dialog-close]]:hover:bg-white/10 [&>[data-slot=dialog-close]]:hover:text-white"
+        >
+          <div className="relative">
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage:
+                  'linear-gradient(rgba(0, 102, 255, 0.4) 0%, rgba(0, 102, 255, 0) 50%, rgba(0, 102, 255, 0) 100%), linear-gradient(rgba(255, 255, 255, 0.07) 1px, transparent 1px), linear-gradient(90deg, rgba(255, 255, 255, 0.07) 1px, transparent 1px)',
+                backgroundSize: 'cover, 40px 40px, 40px 40px',
+                backgroundPosition: 'center center, center center, center center',
+                maskImage: 'linear-gradient(rgb(0, 0, 0), rgba(0, 0, 0, 0) 50%)',
+              }}
+            />
+            <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-cyan-300/20 via-sky-400/10 to-transparent blur-3xl" />
+
+            <div className="relative z-10 p-6 sm:p-8">
+              <DialogHeader className="space-y-3 text-left">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-cyan-300 via-sky-300 to-teal-200 text-[#0A1628] shadow-lg shadow-cyan-500/20">
+                  <Gem className="h-6 w-6" />
+                </div>
+                <DialogTitle className="text-2xl font-semibold tracking-tight sm:text-3xl">
+                  เลือกรอบบิลสำหรับ {selectedPlan?.name}
+                </DialogTitle>
+                <DialogDescription className="max-w-xl text-sm leading-7 text-slate-300 sm:text-base">
+                  เลือกแพ็กเกจที่เหมาะกับจังหวะการเติบโตของช่องคุณได้เลย โดยราคาและสิทธิ์ใช้งานของแพลนนี้จะอ้างอิงตามรอบบิลที่เลือก
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="mt-8 flex flex-col gap-4 rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
+                <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => changeBilling(-1)}
+                      disabled={selectedMonths <= 1}
+                      className="flex aspect-square h-[25px] items-center justify-center rounded-full border border-white/20 transition duration-300 hover:scale-95 hover:bg-white/10 disabled:opacity-60"
+                    >
+                      <Minus className="h-4 w-4" />
+                    </button>
+
+                    <p className="text-xl font-semibold text-white">
+                      {getDurationLabel(selectedMonths)}
+                    </p>
+
+                    <button
+                      type="button"
+                      onClick={() => changeBilling(1)}
+                      className="flex aspect-square h-[25px] items-center justify-center rounded-full border border-white/20 transition duration-300 hover:scale-95 hover:bg-white/10 disabled:opacity-60"
+                    >
+                      <Plus className="h-4 w-4" />
+                    </button>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    {billingOptions.map((option) => {
+                      const optionMonths =
+                        option.id === 'monthly' ? 1 : option.id === 'quarterly' ? 3 : 12;
+                      const active = selectedMonths === optionMonths;
+
+                      return (
+                        <button
+                          key={`pill-${option.id}`}
+                          type="button"
+                          onClick={() => setSelectedMonths(optionMonths)}
+                          disabled={active}
+                          className={`rounded-full px-3 py-0.5 transition duration-300 ${
+                            active
+                              ? 'bg-white font-medium text-black'
+                              : 'border border-white/20 text-white hover:bg-white/10'
+                          }`}
+                        >
+                          {option.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
+                <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                  <div>
+                    <p className="text-sm uppercase tracking-[0.2em] text-cyan-200/80">สรุปรายการ</p>
+                    <h4 className="mt-2 text-2xl font-semibold text-white">
+                      {selectedPlan?.name} Plan
+                    </h4>
+                    <p className="mt-2 text-sm leading-6 text-slate-300">
+                      {selectedPlan?.summary} และฟีเจอร์ตามแพลนที่เลือก
+                    </p>
+                  </div>
+
+                  <div className="text-left sm:text-right">
+                    <p className="text-sm text-slate-400">ชำระครั้งนี้</p>
+                    {hasDiscount && (
+                      <p className="mt-2 text-base font-medium text-red-300 line-through decoration-red-400/90 decoration-2">
+                        ฿{formatPrice(baseMonthlyTotal)}
+                      </p>
+                    )}
+                    <p className="mt-2 text-3xl font-bold tracking-tight text-white">
+                      ฿{formatPrice(totalPrice)}
+                    </p>
+                    <p className="mt-1 text-sm text-slate-400">{getDurationLabel(selectedMonths)}</p>
+                  </div>
+                </div>
+
+                {hasDiscount && (
+                  <div className="mt-5 flex flex-col gap-2 rounded-2xl border border-emerald-300/20 bg-emerald-400/10 p-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="text-sm font-semibold text-emerald-200">
+                        ประหยัดทันที ฿{formatPrice(discountAmount)}
+                      </p>
+                      <p className="text-sm text-emerald-100/80">
+                        จากราคาปกติ ฿{formatPrice(baseMonthlyTotal)}
+                      </p>
+                    </div>
+                    <div className="rounded-full border border-emerald-200/25 bg-white/10 px-3 py-1 text-sm font-medium text-emerald-100">
+                      ส่วนลดแพ็กเกจ {getDurationLabel(selectedMonths)}
+                    </div>
+                  </div>
+                )}
+
+                {purchaseResult && (
+                  <div className="mt-5 rounded-2xl border border-cyan-300/20 bg-cyan-400/10 p-4 text-sm text-cyan-50">
+                    <p className="font-semibold text-cyan-100">สร้างรายการสำเร็จ</p>
+                    <p className="mt-1 break-all text-cyan-100/80">
+                      {purchaseResult?.message || purchaseResult?.data?.message || 'ส่งคำสั่งซื้อเรียบร้อยแล้ว'}
+                    </p>
+                  </div>
+                )}
+
+                <div className="mt-6 flex flex-col gap-3 sm:flex-row">
+                  <Button
+                    type="button"
+                    onClick={() => setSelectedPlan(null)}
+                    disabled={isPurchasing}
+                    className="h-12 flex-1 rounded-full border border-white/15 bg-white/5 text-white hover:bg-white/10"
+                  >
+                    ย้อนกลับ
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handlePurchasePlan}
+                    disabled={isPurchasing}
+                    className="h-12 flex-1 rounded-full bg-gradient-to-r from-cyan-400 via-sky-300 to-teal-200 text-[#0A1628] shadow-lg shadow-cyan-500/20 hover:brightness-110"
+                  >
+                    {isPurchasing ? 'กำลังสร้างรายการ...' : 'ดำเนินการอัปเกรด'}
+                    {!isPurchasing && <ArrowRight className="h-4 w-4" />}
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
