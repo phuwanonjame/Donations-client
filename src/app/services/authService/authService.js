@@ -1,6 +1,6 @@
 // src/app/services/authService/authService.js
 
-const API_URL = "http://localhost:4000/api/auth"; // backend ของคุณ
+const API_URL = process.env.NEXT_PUBLIC_AUTH_API_URL || "http://localhost:5000/api/auth"; // backend ของคุณ
 
 // ============================
 // LOGIN
@@ -148,3 +148,5 @@ export const getCurrentUser = async () => {
   
   return res.json(); 
 };
+
+export const getSocialAuthUrl = (provider) => `${API_URL}/${provider}`;

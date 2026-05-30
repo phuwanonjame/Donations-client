@@ -3,9 +3,10 @@ import { motion } from "framer-motion";
 import { Bell, Check } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { useDonateAlertSettings } from "./context/DonateAlertSettingsProvider";
+import WidgetUrlHeaderField from "../../components/WidgetUrlHeaderField";
 
 export default function SettingsHeader() {
-  const { settings, updateSetting, hasChanges, saveSuccess } = useDonateAlertSettings();
+  const { settings, updateSetting, hasChanges, saveSuccess, widgetId } = useDonateAlertSettings();
 
   // Helper function to get enabled status (support both flat and grouped)
   const getEnabledStatus = () => {
@@ -95,6 +96,8 @@ export default function SettingsHeader() {
           </div>
         </div>
       </div>
+
+      <WidgetUrlHeaderField type="alert" widgetId={widgetId} accentClass="text-cyan-300" />
     </motion.div>
   );
 }

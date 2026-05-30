@@ -1,36 +1,60 @@
 "use client";
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Clock, Copy, Eye } from 'lucide-react';
+import { ArrowLeft, Clock, Eye } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 
 import RecentDonatePreview from './components/RecentDonatePreview';
 import RecentDonateSettingsForm from './components/RecentDonateSettingsForm';
+import WidgetUrlHeaderField from '../components/WidgetUrlHeaderField';
 import {
   RecentDonateSettingsProvider,
   useRecentDonateSettings,
 } from './components/context/RecentDonateSettingsProvider';
-import { generateWidgetUrl } from './constants/recentDonateOptions';
 import { toMetadata } from './utils/recent-donate';
 
-function RecentDonateHeader() {
+const TEST_DONATIONS = [
+  { name: 'NeonFan', amount: '฿120', time: 'just now', message: 'Amazing stream!' },
+  { name: 'LuckyViewer', amount: '฿250', time: 'just now', message: 'Keep going!' },
+  { name: 'PixelHero', amount: '฿75', time: 'just now', message: 'Love this overlay' },
+  { name: 'MoonSupport', amount: '฿500', time: 'just now', message: 'Big support!' },
+];
+
+function RecentDonateHeader({ onTestDonation }) {
   const {
     settings,
     updateSetting,
     saveSettings,
     saving,
     showHeader,
+    widgetId,
   } = useRecentDonateSettings();
-  const widgetUrl = generateWidgetUrl();
 
   const handleSave = () => saveSettings(toMetadata(settings));
 
   return (
-    <div className={`overflow-hidden transition-all duration-300 ease-out ${showHeader ? 'max-h-[999px] opacity-100' : 'max-h-0 opacity-0'}`}>
+    <div className={`space-y-3 overflow-hidden transition-all duration-300 ease-out ${showHeader ? 'max-h-[999px] opacity-100' : 'max-h-0 opacity-0'}`}>
+      <div className="flex flex-col gap-3 rounded-2xl border border-slate-800 bg-slate-950/70 p-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <Button size="icon" variant="outline" className="h-9 w-9 border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800">
+            <ArrowLeft className="h-4 w-4" />
+          </Button>
+          <div>
+            <div className="text-sm font-semibold text-white">Widget Editor</div>
+            <div className="text-xs text-slate-500">/ Recent Donations</div>
+          </div>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" className="border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800" onClick={onTestDonation}>
+            Test Donation
+          </Button>
+          <Button className="bg-violet-600 hover:bg-violet-500" onClick={handleSave} disabled={saving}>
+            {saving ? 'Saving...' : 'Save Changes'}
+          </Button>
+        </div>
+      </div>
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -58,27 +82,10 @@ function RecentDonateHeader() {
           </div>
         </div>
 
+        <WidgetUrlHeaderField type="recent" widgetId={widgetId} accentClass="text-blue-400" />
+
         <div className="mt-4 border-t border-white/10 pt-4">
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="space-y-1 min-w-0">
-              <Label className="text-slate-400 text-xs uppercase tracking-[0.2em]">Widget URL</Label>
-              <div className="flex flex-col gap-2 sm:flex-row">
-                <Input
-                  value={widgetUrl}
-                  readOnly
-                  className="flex-1 bg-transparent border border-white/10 text-blue-400 font-mono text-xs sm:text-sm focus:border-blue-400"
-                />
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="border-white/10 hover:border-blue-400 hover:bg-slate-800"
-                  onClick={() => navigator.clipboard?.writeText(widgetUrl)}
-                >
-                  <Copy className="w-4 h-4" />
-                </Button>
-              </div>
-            </div>
-            <div className="flex flex-wrap items-center gap-2 justify-start lg:justify-end">
+          <div className="flex flex-wrap items-center gap-2 justify-start lg:justify-end">
               <Button
                 className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-400 hover:to-indigo-400 text-sm sm:text-base py-3 px-4 shadow-lg"
                 onClick={handleSave}
@@ -89,7 +96,6 @@ function RecentDonateHeader() {
               <Button variant="outline" className="border border-white/10 text-slate-300 hover:bg-slate-800 py-3 px-4">
                 <Eye className="w-4 h-4" />
               </Button>
-            </div>
           </div>
         </div>
       </motion.div>
@@ -106,10 +112,27 @@ function RecentDonateContent() {
     updateSetting,
     updateDonation,
   } = useRecentDonateSettings();
+  const [previewDonations, setPreviewDonations] = useState(donations);
+
+  React.useEffect(() => {
+    setPreviewDonations(donations);
+  }, [donations]);
+
+  const handleTestDonation = () => {
+    setPreviewDonations((current) => {
+      const nextDonation = TEST_DONATIONS[Math.floor(Math.random() * TEST_DONATIONS.length)];
+      const stampedDonation = {
+        ...nextDonation,
+        id: `${Date.now()}-${Math.random().toString(16).slice(2)}`,
+      };
+      return [stampedDonation, ...current].slice(0, 10);
+    });
+  };
 
   return (
-    <div className="space-y-6 sm:space-y-8 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
-      <RecentDonateHeader />
+    <div className="min-h-screen bg-[#070b16] px-4 py-4 text-slate-100 sm:px-6 lg:px-8">
+      <div className="space-y-6 sm:space-y-8">
+      <RecentDonateHeader onTestDonation={handleTestDonation} />
 
       {loading && (
         <div className="rounded-xl border border-slate-700/50 bg-slate-900/70 px-4 py-3 text-sm text-slate-300">
@@ -117,8 +140,8 @@ function RecentDonateContent() {
         </div>
       )}
 
-      <div className="flex flex-col md:flex-row gap-6">
-        <div className="flex-[2] min-w-0">
+      <div className="grid gap-6 xl:grid-cols-[1.15fr_1fr]">
+        <div className="min-w-0">
           <div className="md:sticky md:top-6 md:self-start">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
@@ -129,7 +152,7 @@ function RecentDonateContent() {
               <div className="h-full">
                 <RecentDonatePreview
                   settings={settings}
-                  donations={donations}
+                  donations={previewDonations}
                   onReset={resetSettings}
                 />
               </div>
@@ -137,7 +160,7 @@ function RecentDonateContent() {
           </div>
         </div>
 
-        <div className="flex-[1] min-w-0 md:max-w-xl">
+        <div className="min-w-0">
           <RecentDonateSettingsForm
             settings={settings}
             updateSetting={updateSetting}
@@ -145,6 +168,7 @@ function RecentDonateContent() {
             updateDonation={updateDonation}
           />
         </div>
+      </div>
       </div>
     </div>
   );

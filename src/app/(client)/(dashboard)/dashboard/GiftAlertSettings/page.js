@@ -1,13 +1,14 @@
 "use client";
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Gift, Palette, Volume2, Settings, Copy, Eye, RotateCcw, Sparkles, Lock } from 'lucide-react';
+import { Gift, Palette, Volume2, Settings, Eye, RotateCcw, Sparkles, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import WidgetUrlHeaderField from '../components/WidgetUrlHeaderField';
 import {
   Select,
   SelectContent,
@@ -82,6 +83,7 @@ export default function GiftAlertSettings() {
             </span>
           </div>
         </div>
+        <WidgetUrlHeaderField type="gift" widgetId="gift-widget" accentClass="text-rose-300" />
       </motion.div>
 
       {/* Pro Upgrade Banner */}
@@ -315,20 +317,6 @@ export default function GiftAlertSettings() {
                   </p>
                 )}
               </motion.div>
-            </div>
-
-            <div className="space-y-2">
-              <Label className="text-slate-400 text-sm">Widget URL</Label>
-              <div className="flex gap-2">
-                <Input
-                  value="https://easydonate.app/w/gift/abc123"
-                  readOnly
-                  className="bg-slate-800/80 border-slate-700 text-rose-400 font-mono text-sm"
-                />
-                <Button size="icon" variant="outline" className="border-slate-700 hover:bg-slate-800">
-                  <Copy className="w-4 h-4" />
-                </Button>
-              </div>
             </div>
 
             <div className="flex gap-2 mt-4">

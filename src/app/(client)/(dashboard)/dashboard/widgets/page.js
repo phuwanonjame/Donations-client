@@ -91,8 +91,11 @@ export default function Widgets() {
     setWidgetStates(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
+  const outlineButtonClass =
+    "border-slate-700/80 bg-slate-900/70 text-slate-200 shadow-none hover:border-cyan-400/40 hover:bg-cyan-500/10 hover:text-cyan-100";
+
   return (
-    <div className="space-y-8">
+    <div className="w-full space-y-8">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -164,7 +167,7 @@ export default function Widgets() {
                   <Link href={createPageUrl(widget.settingsPage)} className="flex-1">
                     <Button
                       variant="outline"
-                      className="w-full border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
+                      className={`w-full ${outlineButtonClass}`}
                     >
                       <Settings className="w-4 h-4 mr-2" />
                       Settings
@@ -174,7 +177,7 @@ export default function Widgets() {
                 {widget.hasSettings && !widget.settingsPage && (
                   <Button
                     variant="outline"
-                    className="flex-1 border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
+                    className={`flex-1 ${outlineButtonClass}`}
                   >
                     <Settings className="w-4 h-4 mr-2" />
                     Settings
@@ -183,7 +186,7 @@ export default function Widgets() {
                 <Button
                   variant="outline"
                   size="icon"
-                  className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
+                  className={outlineButtonClass}
                 >
                   <ExternalLink className="w-4 h-4" />
                 </Button>

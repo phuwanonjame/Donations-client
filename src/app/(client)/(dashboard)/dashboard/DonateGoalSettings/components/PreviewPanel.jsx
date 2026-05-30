@@ -1,8 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { Copy } from 'lucide-react';
-
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
@@ -26,10 +23,6 @@ const PreviewPanel = React.memo(({ settings: settingsProp, update: updateProp, o
   useEffect(() => {
     console.log('PreviewPanel received new settings:', settings);
   }, [settings]);
-
-  const handleCopyUrl = useCallback(() => {
-    navigator.clipboard?.writeText('https://easydonate.app/w/goal/abc123');
-  }, []);
 
   const handleSliderChange = useCallback(([value]) => {
     update('currentAmount', value);
@@ -103,27 +96,6 @@ const PreviewPanel = React.memo(({ settings: settingsProp, update: updateProp, o
           max={settings.goalAmount}
           step={1}
         />
-      </div>
-
-      <div className="space-y-2">
-        <Label className="text-sm text-slate-400">Widget URL</Label>
-        <div className="flex gap-2">
-          <Input
-            type="url"
-            value="https://easydonate.app/w/goal/abc123"
-            readOnly
-            inputMode="url"
-            className="bg-slate-800/80 font-mono text-sm text-emerald-400 border-slate-700"
-          />
-          <Button
-            size="icon"
-            variant="outline"
-            className="border-slate-700 hover:bg-slate-800"
-            onClick={handleCopyUrl}
-          >
-            <Copy className="h-4 w-4" />
-          </Button>
-        </div>
       </div>
 
       <div className="mt-4 flex gap-2">

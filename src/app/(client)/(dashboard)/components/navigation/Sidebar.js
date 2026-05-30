@@ -13,7 +13,7 @@ import {
   Code, 
   CreditCard,
   ChevronRight,
-  Sparkles,
+  Zap,
   Package,
   Bell,
   Grid3X3,
@@ -73,12 +73,15 @@ export default function Sidebar({ currentPage, isOpen, onClose }) {
       >
         <div className="p-6 border-b border-slate-800/50">
          <Link href={createPageUrl('Dashboard')} className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-cyan-500/25">
-              <Sparkles className="w-6 h-6 text-white" />
+            <div className="relative group">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 group-hover:shadow-cyan-500/50 transition-shadow">
+                <Zap className="w-5 h-5 text-white" />
+              </div>
+              <div className="absolute -inset-1 bg-gradient-to-br from-cyan-400 to-cyan-600 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity" />
             </div>
             <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-                StreamHub
+              <h1 className="text-xl font-bold text-white tracking-tight">
+                Stream<span className="text-cyan-400">Flow</span>
               </h1>
               <p className="text-slate-500 text-xs">Creator Platform</p>
             </div>
@@ -125,12 +128,15 @@ export default function Sidebar({ currentPage, isOpen, onClose }) {
       >
         <div className="p-6 border-b border-slate-800/50">
           <Link href={createPageUrl('Dashboard')} className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 via-blue-500 to-purple-600 flex items-center justify-center shadow-lg shadow-cyan-500/25">
-              <Sparkles className="w-6 h-6 text-white" />
+            <div className="relative group">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 group-hover:shadow-cyan-500/50 transition-shadow">
+                <Zap className="w-5 h-5 text-white" />
+              </div>
+              <div className="absolute -inset-1 bg-gradient-to-br from-cyan-400 to-cyan-600 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity" />
             </div>
             <div>
-              <h1 className="text-xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
-                StreamHub
+              <h1 className="text-xl font-bold text-white tracking-tight">
+                Stream<span className="text-cyan-400">Flow</span>
               </h1>
               <p className="text-slate-500 text-xs">Creator Platform</p>
             </div>

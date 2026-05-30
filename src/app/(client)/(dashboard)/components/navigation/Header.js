@@ -1,8 +1,8 @@
 "use client";
-import React from 'react';
-import { motion } from 'framer-motion';
-import { Menu, Bell, Search, User, LogOut } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+
+import React, { useEffect } from "react";
+import { Bell, LogOut, Menu, Search } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,39 +10,46 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useAuth } from '@/contexts/AuthContext'; // 🌟 Import useAuth
-import { useRouter } from 'next/navigation'; // สำหรับ App Router (ถ้าใช้ Pages Router ให้ใช้ 'next/router')
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 
-// Helper function to delete the 'token' cookie
 const deleteTokenCookie = () => {
-    document.cookie = 'token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;';
+  document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
 };
 
+const getDisplayName = (user) =>
+  user?.username ||
+  user?.name ||
+  user?.displayName ||
+  user?.email?.split("@")[0] ||
+  "Creator";
+
+const getInitials = (name) =>
+  name
+    .split(/\s+/)
+    .filter(Boolean)
+    .map((part) => part[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase() || "SF";
+
 export default function Header({ onMenuClick, title }) {
-  const { user, isLoading, refetchUser } = useAuth(); // 🌟 ดึงค่าจาก Context
+  const { user, isLoading, refetchUser } = useAuth();
   const router = useRouter();
 
-  // ---------------------------------
-  // 🔥 HANDLE LOGOUT
-  // ---------------------------------
+  useEffect(() => {
+    if (!isLoading && !user) {
+      router.replace("/login");
+    }
+  }, [isLoading, router, user]);
+
   const handleLogout = () => {
-    deleteTokenCookie(); // ลบคุกกี้ Token
-    
-    // Clear user state and trigger re-fetch in AuthContext (optional but good practice)
-    // โดยปกติการลบคุกกี้แล้วเรียก refetchUser จะทำให้ AuthContext ตั้งค่า user เป็น null
-    // เนื่องจาก API /me จะตอบกลับด้วย 401
-    refetchUser(); 
-    
-    // Redirect to login page
-    router.push('/login'); 
+    deleteTokenCookie();
+    refetchUser?.();
+    router.push("/login");
   };
 
-  // กำหนดชื่อผู้ใช้และสถานะ
-  const userName = user?.name || "Guest";
-  const userPlan = "Free Plan"; // สมมติว่า Plan มาจาก Context ใน user object (user?.plan)
-
   if (isLoading) {
-    // 💡 แสดง Loading State ขณะที่กำลังตรวจสอบ Auth
     return (
       <header className="sticky top-0 z-30 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
         <div className="flex items-center justify-between px-4 lg:px-8 py-4">
@@ -50,6 +57,7 @@ export default function Header({ onMenuClick, title }) {
             <Button
               variant="ghost"
               size="icon"
+              onClick={onMenuClick}
               className="lg:hidden text-slate-400 hover:text-white hover:bg-slate-800"
             >
               <Menu className="w-6 h-6" />
@@ -65,6 +73,14 @@ export default function Header({ onMenuClick, title }) {
     );
   }
 
+  if (!user) {
+    return null;
+  }
+
+  const userName = getDisplayName(user);
+  const userInitials = getInitials(userName);
+  const userPlan = user?.plan?.name || user?.planName || "Free Plan";
+
   return (
     <header className="sticky top-0 z-30 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
       <div className="flex items-center justify-between px-4 lg:px-8 py-4">
@@ -77,25 +93,25 @@ export default function Header({ onMenuClick, title }) {
           >
             <Menu className="w-6 h-6" />
           </Button>
-          
+
           <div>
             <h1 className="text-xl font-bold text-white">{title}</h1>
-            <p className="text-slate-500 text-sm hidden sm:block">Welcome back, {userName}!</p> {/* 🌟 แสดงชื่อจริง */}
+            <p className="text-slate-500 text-sm hidden sm:block">
+              Welcome back, {userName}!
+            </p>
           </div>
         </div>
 
         <div className="flex items-center gap-3">
-          {/* Search */}
           <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800/50 border border-slate-700/50">
             <Search className="w-4 h-4 text-slate-500" />
-            <input 
-              type="text" 
-              placeholder="Search..." 
+            <input
+              type="text"
+              placeholder="Search..."
               className="bg-transparent border-none outline-none text-sm text-white placeholder:text-slate-500 w-40"
             />
           </div>
 
-          {/* Notifications */}
           <Button
             variant="ghost"
             size="icon"
@@ -105,7 +121,6 @@ export default function Header({ onMenuClick, title }) {
             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-cyan-400 rounded-full" />
           </Button>
 
-          {/* Profile Dropdown */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -113,11 +128,11 @@ export default function Header({ onMenuClick, title }) {
                 className="flex items-center gap-3 px-3 py-2 hover:bg-slate-800 rounded-xl"
               >
                 <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-cyan-400 to-purple-500 flex items-center justify-center">
-                  <User className="w-5 h-5 text-white" />
+                  <span className="text-xs font-bold text-white">{userInitials}</span>
                 </div>
                 <div className="hidden sm:block text-left">
-                  <p className="text-sm font-medium text-white">{userName}</p> {/* 🌟 แสดงชื่อจริง */}
-                  <p className="text-xs text-slate-500">{userPlan}</p> {/* 🌟 แสดง Plan จริง */}
+                  <p className="text-sm font-medium text-white">{userName}</p>
+                  <p className="text-xs text-slate-500">{userPlan}</p>
                 </div>
               </Button>
             </DropdownMenuTrigger>
@@ -129,12 +144,12 @@ export default function Header({ onMenuClick, title }) {
                 Subscription
               </DropdownMenuItem>
               <DropdownMenuSeparator className="bg-slate-700" />
-              <DropdownMenuItem 
-                onClick={handleLogout} // 🌟 เรียกใช้ฟังก์ชัน Logout
+              <DropdownMenuItem
+                onClick={handleLogout}
                 className="hover:bg-slate-700 cursor-pointer text-red-400 flex items-center gap-2"
               >
                 <LogOut className="w-4 h-4" />
-                Logout 
+                Logout
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

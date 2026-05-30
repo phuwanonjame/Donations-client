@@ -4,6 +4,7 @@ import {
   fetchLeaderboardSettings,
   saveLeaderboardSettings,
 } from '@/actions/Leaderboardapi/leaderboardSettingsApi';
+import { useAuth } from '@/contexts/AuthContext';
 import { createWidgetSettingsNotifier } from '@/lib/notifications/widget-settings-toast';
 
 import {
@@ -15,7 +16,6 @@ import { fromMetadata, toApiMetadata, toMetadata } from '../../utils/donate-lead
 
 const LeaderboardSettingsContext = createContext(null);
 
-const FIXED_USER_ID = '244bad71-4990-4a79-9a19-9ff983a55442';
 const leaderboardNotifier = createWidgetSettingsNotifier('Leaderboard settings');
 
 const logLeaderboardProvider = (label, payload) => {
@@ -23,6 +23,8 @@ const logLeaderboardProvider = (label, payload) => {
 };
 
 export function LeaderboardSettingsProvider({ children }) {
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const userId = user?.id;
   const [settings, setSettings] = useState(defaultSettings);
   const [widgetId, setWidgetId] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -40,10 +42,18 @@ export function LeaderboardSettingsProvider({ children }) {
 
   useEffect(() => {
     const loadSettings = async () => {
+      if (isAuthLoading) return;
+
+      if (!userId) {
+        setWidgetId(null);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
 
       try {
-        const widget = await fetchLeaderboardSettings(FIXED_USER_ID);
+        const widget = await fetchLeaderboardSettings(userId);
         logLeaderboardProvider('loaded widget from api', widget);
 
         if (!widget?.id) {
@@ -75,7 +85,7 @@ export function LeaderboardSettingsProvider({ children }) {
     };
 
     loadSettings();
-  }, []);
+  }, [isAuthLoading, userId]);
 
   const updateSettings = useCallback((patchOrUpdater) => {
     setSettings((previous) => {
@@ -107,7 +117,7 @@ export function LeaderboardSettingsProvider({ children }) {
   }, []);
 
   const saveSettings = useCallback(async (metadataPayload) => {
-    if (!widgetId) {
+    if (!userId || !widgetId) {
       leaderboardNotifier.error('Cannot save because the Leaderboard widget does not exist yet');
       return;
     }
@@ -115,7 +125,7 @@ export function LeaderboardSettingsProvider({ children }) {
     const loadingToastId = leaderboardNotifier.saveLoading();
     const resolvedMetadataPayload = metadataPayload ?? toApiMetadata(settings);
     const payload = {
-      userId: FIXED_USER_ID,
+      userId,
       metadata: resolvedMetadataPayload?.metadata ?? {},
     };
 
@@ -143,7 +153,7 @@ export function LeaderboardSettingsProvider({ children }) {
     } finally {
       setSaving(false);
     }
-  }, [settings, widgetId]);
+  }, [settings, userId, widgetId]);
 
   const metadata = useMemo(() => toMetadata(settings), [settings]);
 

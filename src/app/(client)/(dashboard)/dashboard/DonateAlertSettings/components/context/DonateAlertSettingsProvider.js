@@ -10,11 +10,10 @@ import {
   fetchDonateSettings,
   saveDonateSettings,
 } from "@/actions/DonateAlertapi/donateSettingsApi";
+import { useAuth } from "@/contexts/AuthContext";
 import { createWidgetSettingsNotifier } from "@/lib/notifications/widget-settings-toast";
 
 const DonateAlertSettingsContext = createContext(null);
-const FIXED_USER_ID = "244bad71-4990-4a79-9a19-9ff983a55442";
-const FIXED_WIDGET_ID = "676669ee-9634-44cd-bd08-6aa40afe32a9";
 const DEFAULT_TEST_DONATION_MESSAGE = "ขอบคุณมาก ๆ สำหรับกำลังใจนะ {{user}}!";
 const alertNotifier = createWidgetSettingsNotifier("Alert settings");
 
@@ -38,7 +37,10 @@ export function DonateAlertSettingsProvider({
   onEffectiveSettingsChange,
   children,
 }) {
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const userId = user?.id;
   const [settings, setSettings] = useState(() => transformToFlatStructure(defaultSettings));
+  const [widgetId, setWidgetId] = useState(null);
   const [activeRangeId, setActiveRangeId] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -55,9 +57,19 @@ export function DonateAlertSettingsProvider({
 
   useEffect(() => {
     const loadSettings = async () => {
+      if (isAuthLoading) return;
+
+      if (!userId) {
+        setSettings(transformToFlatStructure(defaultSettings));
+        setWidgetId(null);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       try {
-        const response = await fetchDonateSettings(FIXED_USER_ID);
+        const response = await fetchDonateSettings(userId);
+        setWidgetId(response?.id || null);
 
         if (!response?.metadata) {
           setSettings(transformToFlatStructure(defaultSettings));
@@ -77,7 +89,7 @@ export function DonateAlertSettingsProvider({
     };
 
     loadSettings();
-  }, []);
+  }, [isAuthLoading, userId]);
 
   useEffect(() => {
     if (!showSaveNotification) return undefined;
@@ -254,9 +266,15 @@ export function DonateAlertSettingsProvider({
   const saveSettings = useCallback(async () => {
     setSaving(true);
     try {
-      const widgetId = settings.id || FIXED_WIDGET_ID;
-      const requestPayload = buildWidgetPatchRequest(FIXED_USER_ID, settings);
-      const response = await saveDonateSettings(widgetId, requestPayload);
+      const resolvedWidgetId = settings.id || widgetId;
+
+      if (!userId || !resolvedWidgetId) {
+        alertNotifier.error("Cannot save because the Alert widget does not exist for this user");
+        return;
+      }
+
+      const requestPayload = buildWidgetPatchRequest(userId, settings);
+      const response = await saveDonateSettings(resolvedWidgetId, requestPayload);
 
       if (!response) throw new Error("Save failed");
 
@@ -271,7 +289,7 @@ export function DonateAlertSettingsProvider({
     } finally {
       setSaving(false);
     }
-  }, [settings]);
+  }, [settings, userId, widgetId]);
 
   const openFullscreenEditor = useCallback((editorSettings, updateFn) => {
     setFullscreenEditorContext({
@@ -288,6 +306,7 @@ export function DonateAlertSettingsProvider({
   const value = useMemo(
     () => ({
       settings,
+      widgetId,
       normalizedSettings,
       effectiveSettings,
       loading,
@@ -327,6 +346,7 @@ export function DonateAlertSettingsProvider({
     }),
     [
       settings,
+      widgetId,
       normalizedSettings,
       effectiveSettings,
       loading,

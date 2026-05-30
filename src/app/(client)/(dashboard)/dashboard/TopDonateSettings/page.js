@@ -4,6 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 
+import WidgetUrlHeaderField from '../components/WidgetUrlHeaderField';
 import PreviewPanel from './components/PreviewPanel';
 import TopDonateSettingsForm from './components/TopDonateSettingsForm';
 import {
@@ -12,7 +13,7 @@ import {
 } from './components/context/TopDonateSettingsProvider';
 
 function TopDonateHeader() {
-  const { showHeader } = useTopDonateSettings();
+  const { showHeader, widgetId } = useTopDonateSettings();
 
   return (
     <div className={`overflow-hidden transition-all duration-300 ease-out ${showHeader ? 'max-h-[999px] opacity-100' : 'max-h-0 opacity-0'}`}>
@@ -32,6 +33,7 @@ function TopDonateHeader() {
             </div>
           </div>
         </div>
+        <WidgetUrlHeaderField type="top" widgetId={widgetId} accentClass="text-purple-300" />
       </motion.div>
     </div>
   );

@@ -7,10 +7,11 @@ import DonationChart from '../components/dashboard/DonationChart';
 import RecentDonations from '../components/dashboard/RecentDonations';
 import VisitsWidget from '../components/dashboard/VisitsWidget';
 import { Button } from '@/components/ui/button';
+import { WIDGET_BASE_URL } from '@/utils/widgetUrls';
 
 export default function Dashboard() {
   const [copied, setCopied] = useState(false);
-  const donateLink = 'easydonate.app/creator';
+  const donateLink = `${WIDGET_BASE_URL.replace(/^https?:\/\//, '')}/creator`;
 
   const copyLink = () => {
     navigator.clipboard.writeText(`https://${donateLink}`);

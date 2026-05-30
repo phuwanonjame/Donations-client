@@ -4,6 +4,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Target } from "lucide-react";
 
+import WidgetUrlHeaderField from "../components/WidgetUrlHeaderField";
 import GoalSettingsForm from "./components/GoalSettingsForm";
 import PreviewPanel from "./components/PreviewPanel";
 import {
@@ -12,7 +13,7 @@ import {
 } from "./components/context/DonateGoalSettingsProvider";
 
 function GoalSettingsHeader() {
-  const { showHeader } = useDonateGoalSettings();
+  const { showHeader, widgetId } = useDonateGoalSettings();
 
   return (
     <div className={`overflow-hidden transition-all duration-300 ease-out ${showHeader ? "max-h-[999px] opacity-100" : "max-h-0 opacity-0"}`}>
@@ -32,6 +33,7 @@ function GoalSettingsHeader() {
             </div>
           </div>
         </div>
+        <WidgetUrlHeaderField type="goal" widgetId={widgetId} accentClass="text-emerald-300" />
       </motion.div>
     </div>
   );

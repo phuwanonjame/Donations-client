@@ -30,6 +30,9 @@ export const fetchTopDonateSettings = async (userId, widgetId) => {
       widget?.type === "TOP_DONATE" ||
       widget?.type === "TOPDONATE" ||
       widget?.type === "TOP" ||
+      widget?.widgetTypeCode === "TOP_DONATE" ||
+      widget?.widgetTypeCode === "TOPDONATE" ||
+      widget?.widgetTypeCode === "TOP" ||
       widget?.metadata?.type === "top_donate" ||
       widget?.metadata?.type === "topDonate" ||
       widget?.metadata?.topDonate

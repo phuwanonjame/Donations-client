@@ -1,9 +1,7 @@
 import React, { useCallback } from 'react';
-import { Copy, RotateCcw } from 'lucide-react';
+import { RotateCcw } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 
 import LeaderboardPreview from './LeaderboardPreview';
 import SectionWrapper from './SectionWrapper';
@@ -18,10 +16,6 @@ const PreviewPanel = React.memo(({ settings: settingsProp, onSave }) => {
     saving,
   } = useLeaderboardSettings();
   const settings = settingsProp ?? contextSettings;
-
-  const handleCopyUrl = useCallback(() => {
-    navigator.clipboard?.writeText('https://easydonate.app/w/leaderboard/abc123');
-  }, []);
 
   const handleSave = useCallback(() => {
     const metadataPayload = toApiMetadata(settings);
@@ -49,27 +43,6 @@ const PreviewPanel = React.memo(({ settings: settingsProp, onSave }) => {
 
       <div className="mb-4 min-h-[55vh] rounded-xl bg-slate-900 p-5">
         <LeaderboardPreview settings={settings} />
-      </div>
-
-      <div className="space-y-2">
-        <Label className="text-sm text-slate-400">Widget URL</Label>
-        <div className="flex gap-2">
-          <Input
-            type="url"
-            value="https://easydonate.app/w/leaderboard/abc123"
-            readOnly
-            inputMode="url"
-            className="border-slate-700 bg-slate-800/80 font-mono text-sm text-amber-400"
-          />
-          <Button
-            size="icon"
-            variant="outline"
-            className="border-slate-700 hover:bg-slate-800"
-            onClick={handleCopyUrl}
-          >
-            <Copy className="h-4 w-4" />
-          </Button>
-        </div>
       </div>
 
       <div className="mt-4 flex gap-2">

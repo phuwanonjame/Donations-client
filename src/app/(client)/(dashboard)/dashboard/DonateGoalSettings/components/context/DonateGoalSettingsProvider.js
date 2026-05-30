@@ -4,13 +4,13 @@ import {
   fetchDonateGoalSettings,
   saveDonateGoalSettings,
 } from "@/actions/DonateGoalapi/donateGoalSettingsApi";
+import { useAuth } from "@/contexts/AuthContext";
 import { createWidgetSettingsNotifier } from "@/lib/notifications/widget-settings-toast";
 
 import { defaultSettings } from "../../constants/donate-goal";
 import { fromMetadata, toMetadata } from "../../utils/donate-goal";
 
 const DonateGoalSettingsContext = createContext(null);
-const FIXED_USER_ID = "244bad71-4990-4a79-9a19-9ff983a55442";
 const goalNotifier = createWidgetSettingsNotifier("Goal settings");
 
 const logGoalProvider = (label, payload) => {
@@ -18,6 +18,8 @@ const logGoalProvider = (label, payload) => {
 };
 
 export function DonateGoalSettingsProvider({ children }) {
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const userId = user?.id;
   const [settings, setSettings] = useState(defaultSettings);
   const [widgetId, setWidgetId] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -35,10 +37,18 @@ export function DonateGoalSettingsProvider({ children }) {
 
   useEffect(() => {
     const loadSettings = async () => {
+      if (isAuthLoading) return;
+
+      if (!userId) {
+        setWidgetId(null);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
 
       try {
-        const widget = await fetchDonateGoalSettings(FIXED_USER_ID);
+        const widget = await fetchDonateGoalSettings(userId);
         logGoalProvider("loaded widget from api", widget);
 
         if (!widget?.id) {
@@ -70,7 +80,7 @@ export function DonateGoalSettingsProvider({ children }) {
     };
 
     loadSettings();
-  }, []);
+  }, [isAuthLoading, userId]);
 
   const updateSettings = useCallback((patchOrUpdater) => {
     setSettings((previous) => {
@@ -102,7 +112,7 @@ export function DonateGoalSettingsProvider({ children }) {
   }, []);
 
   const saveSettings = useCallback(async (metadataPayload) => {
-    if (!widgetId) {
+    if (!userId || !widgetId) {
       goalNotifier.error("Cannot save because the Goal widget does not exist yet");
       return;
     }
@@ -110,7 +120,7 @@ export function DonateGoalSettingsProvider({ children }) {
     const loadingToastId = goalNotifier.saveLoading();
     const resolvedMetadataPayload = metadataPayload ?? toMetadata(settings);
     const payload = {
-      userId: FIXED_USER_ID,
+      userId,
       metadata: resolvedMetadataPayload?.metadata ?? {},
     };
 
@@ -138,7 +148,7 @@ export function DonateGoalSettingsProvider({ children }) {
     } finally {
       setSaving(false);
     }
-  }, [settings, widgetId]);
+  }, [settings, userId, widgetId]);
 
   const metadata = useMemo(() => toMetadata(settings), [settings]);
 

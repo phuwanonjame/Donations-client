@@ -200,7 +200,7 @@ export default function DeveloperZone() {
           </div>
           <div>
             <h2 className="text-xl font-bold text-white">API Access</h2>
-            <p className="text-slate-400 text-sm">Integrate EasyDonate with your applications</p>
+            <p className="text-slate-400 text-sm">Integrate StreamFlow with your applications</p>
           </div>
         </div>
 

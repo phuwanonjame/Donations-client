@@ -23,7 +23,11 @@ export const fetchDonateGoalSettings = async (userId) => {
 
     const payload = await res.json();
     const matchedWidget = (payload?.data || []).find((widget) =>
-      widget?.type === "GOAL" || widget?.metadata?.goal
+      widget?.type === "GOAL" ||
+      widget?.type === "DONATE_GOAL" ||
+      widget?.widgetTypeCode === "GOAL" ||
+      widget?.widgetTypeCode === "DONATE_GOAL" ||
+      widget?.metadata?.goal
     ) ?? null;
 
     logGoalApi("fetch response", payload);

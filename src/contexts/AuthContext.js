@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 const AuthContext = createContext(null);
+const AUTH_API_URL = process.env.NEXT_PUBLIC_AUTH_API_URL || 'http://localhost:5000/api/auth';
 
 export const useAuth = () => {
   return useContext(AuthContext);
@@ -40,7 +41,7 @@ export const AuthProvider = ({ children }) => {
 
     try {
       // 🌟 แก้ไข: ส่ง Token ผ่าน Authorization Header
-      const response = await fetch('http://localhost:4000/api/auth/me', {
+      const response = await fetch(`${AUTH_API_URL}/me`, {
         method: 'GET',
         headers: {
             'Content-Type': 'application/json',

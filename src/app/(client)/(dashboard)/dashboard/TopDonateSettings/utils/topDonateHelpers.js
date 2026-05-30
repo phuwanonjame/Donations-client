@@ -1,5 +1,7 @@
-export function generateWidgetUrl(widgetId = 'abc123') {
-  return `https://easydonate.app/w/top/${widgetId}`;
+import { createWidgetUrl } from "@/utils/widgetUrls";
+
+export function generateWidgetUrl(widgetId = 'preview') {
+  return createWidgetUrl('top', widgetId);
 }
 
 export function getDefaultSettings() {

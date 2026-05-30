@@ -4,22 +4,23 @@ import {
   fetchRecentDonateSettings,
   saveRecentDonateSettings,
 } from "@/actions/RecentDonateapi/recentDonateSettingsApi";
+import { useAuth } from "@/contexts/AuthContext";
 import { createWidgetSettingsNotifier } from "@/lib/notifications/widget-settings-toast";
 
 import { getDefaultRecentDonations, getDefaultSettings } from "../../constants/recentDonateOptions";
 import { fromMetadata, toMetadata } from "../../utils/recent-donate";
 
 const RecentDonateSettingsContext = createContext(null);
-const FIXED_USER_ID = "244bad71-4990-4a79-9a19-9ff983a55442";
-const FIXED_WIDGET_ID = "2a8c9185-313d-4716-88c2-215d00ce6d21";
 const recentDonateNotifier = createWidgetSettingsNotifier("Recent Donate settings");
-const MISSING_WIDGET_MESSAGE = `Recent Donate widget was not found. Please create it first or update the widget id. Current id: ${FIXED_WIDGET_ID}`;
+const MISSING_WIDGET_MESSAGE = "Recent Donate widget was not found for this user";
 
 const logRecentDonateProvider = (label, payload) => {
   console.log(`[RecentDonate Provider] ${label}`, payload);
 };
 
 export function RecentDonateSettingsProvider({ children }) {
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const userId = user?.id;
   const [settings, setSettings] = useState(getDefaultSettings());
   const [donations, setDonations] = useState(getDefaultRecentDonations());
   const [widgetId, setWidgetId] = useState(null);
@@ -38,10 +39,18 @@ export function RecentDonateSettingsProvider({ children }) {
 
   useEffect(() => {
     const loadSettings = async () => {
+      if (isAuthLoading) return;
+
+      if (!userId) {
+        setWidgetId(null);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
 
       try {
-        const widget = await fetchRecentDonateSettings(FIXED_USER_ID, FIXED_WIDGET_ID);
+        const widget = await fetchRecentDonateSettings(userId);
         logRecentDonateProvider("loaded widget from api", widget);
 
         const resolvedWidgetId = widget?.id || null;
@@ -72,7 +81,7 @@ export function RecentDonateSettingsProvider({ children }) {
     };
 
     loadSettings();
-  }, []);
+  }, [isAuthLoading, userId]);
 
   const updateSettings = useCallback((patchOrUpdater) => {
     setSettings((previous) => {
@@ -124,7 +133,7 @@ export function RecentDonateSettingsProvider({ children }) {
   const saveSettings = useCallback(async (metadataPayload) => {
     const resolvedWidgetId = widgetId;
 
-    if (!resolvedWidgetId) {
+    if (!userId || !resolvedWidgetId) {
       recentDonateNotifier.error(MISSING_WIDGET_MESSAGE);
       console.error(MISSING_WIDGET_MESSAGE);
       return;
@@ -133,7 +142,7 @@ export function RecentDonateSettingsProvider({ children }) {
     const loadingToastId = recentDonateNotifier.saveLoading();
     const resolvedMetadataPayload = metadataPayload ?? toMetadata(settings);
     const payload = {
-      userId: FIXED_USER_ID,
+      userId,
       metadata: resolvedMetadataPayload?.metadata ?? {},
     };
 
@@ -162,7 +171,7 @@ export function RecentDonateSettingsProvider({ children }) {
     } finally {
       setSaving(false);
     }
-  }, [settings, widgetId]);
+  }, [settings, userId, widgetId]);
 
   const metadata = useMemo(() => toMetadata(settings), [settings]);
 

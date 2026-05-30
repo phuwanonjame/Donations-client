@@ -4,6 +4,7 @@ import {
   fetchTopDonateSettings,
   saveTopDonateSettings,
 } from "@/actions/TopDonateapi/topDonateSettingsApi";
+import { useAuth } from "@/contexts/AuthContext";
 import { createWidgetSettingsNotifier } from "@/lib/notifications/widget-settings-toast";
 
 import { getDefaultSettings } from "../../constants/topDonateOptions";
@@ -14,8 +15,6 @@ import {
 } from "../../utils/top-donate";
 
 const TopDonateSettingsContext = createContext(null);
-const FIXED_USER_ID = "244bad71-4990-4a79-9a19-9ff983a55442";
-const FIXED_WIDGET_ID = "eaaff98c-2256-4c0d-9ada-c6431ab8598a";
 const topDonateNotifier = createWidgetSettingsNotifier("Top Donate settings");
 
 const logTopDonateProvider = (label, payload) => {
@@ -23,6 +22,8 @@ const logTopDonateProvider = (label, payload) => {
 };
 
 export function TopDonateSettingsProvider({ children }) {
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const userId = user?.id;
   const [settings, setSettings] = useState(getDefaultSettings());
   const [donorData, setDonorData] = useState(DEFAULT_DONOR_DATA);
   const [widgetId, setWidgetId] = useState(null);
@@ -41,13 +42,21 @@ export function TopDonateSettingsProvider({ children }) {
 
   useEffect(() => {
     const loadSettings = async () => {
+      if (isAuthLoading) return;
+
+      if (!userId) {
+        setWidgetId(null);
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
 
       try {
-        const widget = await fetchTopDonateSettings(FIXED_USER_ID, FIXED_WIDGET_ID);
+        const widget = await fetchTopDonateSettings(userId);
         logTopDonateProvider("loaded widget from api", widget);
 
-        const resolvedWidgetId = widget?.id || FIXED_WIDGET_ID;
+        const resolvedWidgetId = widget?.id || null;
         setWidgetId(resolvedWidgetId);
 
         if (!widget?.metadata) {
@@ -68,14 +77,14 @@ export function TopDonateSettingsProvider({ children }) {
       } catch (error) {
         console.error(error);
         topDonateNotifier.loadError(error);
-        setWidgetId(FIXED_WIDGET_ID);
+        setWidgetId(null);
       } finally {
         setLoading(false);
       }
     };
 
     loadSettings();
-  }, []);
+  }, [isAuthLoading, userId]);
 
   const updateSettings = useCallback((patchOrUpdater) => {
     setSettings((previous) => {
@@ -129,9 +138,9 @@ export function TopDonateSettingsProvider({ children }) {
   }, []);
 
   const saveSettings = useCallback(async (metadataPayload) => {
-    const resolvedWidgetId = widgetId || FIXED_WIDGET_ID;
+    const resolvedWidgetId = widgetId;
 
-    if (!resolvedWidgetId) {
+    if (!userId || !resolvedWidgetId) {
       topDonateNotifier.error("Cannot save because the Top Donate widget does not exist yet");
       return;
     }
@@ -139,7 +148,7 @@ export function TopDonateSettingsProvider({ children }) {
     const loadingToastId = topDonateNotifier.saveLoading();
     const resolvedMetadataPayload = metadataPayload ?? toMetadata(settings, donorData);
     const payload = {
-      userId: FIXED_USER_ID,
+      userId,
       metadata: resolvedMetadataPayload?.metadata ?? {},
     };
 
@@ -168,7 +177,7 @@ export function TopDonateSettingsProvider({ children }) {
     } finally {
       setSaving(false);
     }
-  }, [donorData, settings, widgetId]);
+  }, [donorData, settings, userId, widgetId]);
 
   const metadata = useMemo(() => toMetadata(settings, donorData), [donorData, settings]);
 

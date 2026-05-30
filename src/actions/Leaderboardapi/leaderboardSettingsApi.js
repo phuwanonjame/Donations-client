@@ -33,6 +33,7 @@ export const fetchLeaderboardSettings = async (userId, widgetId) => {
       const matchedWidget = widgets.find((widget) =>
         widget?.id === widgetId ||
         widget?.type === "LEADERBOARD" ||
+        widget?.widgetTypeCode === "LEADERBOARD" ||
         widget?.metadata?.type === "leaderboard" ||
         widget?.metadata?.podium
       ) ?? null;

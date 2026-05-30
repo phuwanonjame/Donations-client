@@ -2,13 +2,9 @@
 "use client";
 import React from 'react';
 import {
-  Copy,
   Sparkles, Crown, Star, Heart, Zap, Trophy, Flame, Diamond,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input }  from '@/components/ui/input';
-import { Label }  from '@/components/ui/label';
-import { generateWidgetUrl } from '../constants/topDonateOptions';
 
 const ICON_MAP = {
   sparkles: Sparkles, crown: Crown,   star:    Star,  heart:   Heart,
@@ -113,8 +109,6 @@ function resolveTitle(text, donorData) {
 }
 
 export default function TopDonatePreview({ settings, donorData }) {
-  const widgetUrl = generateWidgetUrl();
-
   // ค่าจริงจาก donorData
   const donorName    = donorData?.name    ?? 'SuperFan123';
   const donorAmount  = donorData?.amount  ?? '฿5,000';
@@ -297,24 +291,6 @@ export default function TopDonatePreview({ settings, donorData }) {
         </div>
       </div>
 
-      {/* Widget URL */}
-      <div className="space-y-2">
-        <Label className="text-slate-400 text-sm">Widget URL</Label>
-        <div className="flex gap-2">
-          <Input
-            value={widgetUrl}
-            readOnly
-            className="bg-slate-800/80 border-slate-700 text-purple-400 font-mono text-sm"
-          />
-          <Button
-            size="icon" variant="outline"
-            className="border-slate-700 hover:bg-slate-800"
-            onClick={() => navigator.clipboard?.writeText(widgetUrl)}
-          >
-            <Copy className="w-4 h-4" />
-          </Button>
-        </div>
-      </div>
     </div>
   );
 }

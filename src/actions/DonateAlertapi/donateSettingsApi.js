@@ -18,7 +18,11 @@ export const fetchDonateSettings = async (userId) => {
     if (!res.ok) throw new Error(`Error: ${res.status}`);
 
     const payload = await res.json();
-    return (payload?.data || []).find((widget) => widget?.type === "ALERT") ?? null;
+    return (payload?.data || []).find((widget) =>
+      widget?.type === "ALERT" ||
+      widget?.widgetTypeCode === "ALERT" ||
+      widget?.metadata?.type === "alert"
+    ) ?? null;
   } catch (err) {
     console.error("Failed to fetch donate settings:", err);
     return null;

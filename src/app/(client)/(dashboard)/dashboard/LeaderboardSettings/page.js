@@ -2,6 +2,7 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Trophy } from 'lucide-react';
+import WidgetUrlHeaderField from '../components/WidgetUrlHeaderField';
 import PreviewPanel from './components/PreviewPanel';
 import LeaderboardSettingsForm from './components/LeaderboardSettingsForm';
 import {
@@ -10,7 +11,7 @@ import {
 } from './components/context/LeaderboardSettingsProvider';
 
 function LeaderboardHeader() {
-  const { showHeader } = useLeaderboardSettings();
+  const { showHeader, widgetId } = useLeaderboardSettings();
 
   return (
     <div className={`overflow-hidden transition-all duration-300 ease-out ${showHeader ? 'max-h-[999px] opacity-100' : 'max-h-0 opacity-0'}`}>
@@ -30,6 +31,7 @@ function LeaderboardHeader() {
             </div>
           </div>
         </div>
+        <WidgetUrlHeaderField type="leaderboard" widgetId={widgetId} accentClass="text-amber-300" />
       </motion.div>
     </div>
   );
