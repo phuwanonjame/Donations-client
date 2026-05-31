@@ -1,6 +1,7 @@
-import { useState, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Rocket, Upload, Download, X, Check } from "lucide-react";
+import { createDonation } from "@/actions/Donationsapi/donationHistoryApi";
 
 const PAYMENT_METHODS = [
   { id: "promptpay", label: "พร้อมเพย์", description: "สแกน QR ทุกธนาคาร", color: "#009688", tag: "PromptPay" },
@@ -9,6 +10,7 @@ const PAYMENT_METHODS = [
 ];
 
 const QUICK_AMOUNTS = [10, 20, 50, 100, 200, 500];
+const DONATION_USER_ID = "244bad71-4990-4a79-9a19-9ff983a55442";
 
 const theme = {
   primary: "186, 230, 253",
@@ -27,9 +29,19 @@ export default function DonationForm({ selectedSticker }) {
   const [isDragging, setIsDragging] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState("");
+  const [submitSuccessMessage, setSubmitSuccessMessage] = useState("");
   const fileInputRef = useRef(null);
 
   const totalAmount = amount + (selectedSticker?.price || 0);
+
+  useEffect(() => {
+    return () => {
+      if (slipPreview) {
+        URL.revokeObjectURL(slipPreview);
+      }
+    };
+  }, [slipPreview]);
 
   const handleQuickAmount = (val) => {
     setAmount(val);
@@ -46,8 +58,12 @@ export default function DonationForm({ selectedSticker }) {
   const handleFileChange = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    if (slipPreview) {
+      URL.revokeObjectURL(slipPreview);
+    }
     setSlipFile(file);
     setSlipPreview(URL.createObjectURL(file));
+    setSubmitError("");
   };
 
   const handleDrop = (e) => {
@@ -55,25 +71,63 @@ export default function DonationForm({ selectedSticker }) {
     setIsDragging(false);
     const file = e.dataTransfer.files?.[0];
     if (!file) return;
+    if (slipPreview) {
+      URL.revokeObjectURL(slipPreview);
+    }
     setSlipFile(file);
     setSlipPreview(URL.createObjectURL(file));
+    setSubmitError("");
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!donorName || !slipFile) return;
-    setIsSubmitting(true);
-    await new Promise((r) => setTimeout(r, 1500));
-    setIsSubmitting(false);
-    setSubmitted(true);
+    if (!donorName || !slipFile) {
+      setSubmitError("กรุณากรอกชื่อและแนบสลิปก่อนส่งโดเนท");
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setSubmitError("");
+
+      const formData = new FormData();
+      formData.append("userId", DONATION_USER_ID);
+      formData.append("donorName", donorName);
+      formData.append("donorMessage", message);
+      formData.append("amount", String(totalAmount));
+      formData.append("currency", "THB");
+      formData.append("paymentMethod", paymentMethod.toUpperCase());
+      formData.append("slip", slipFile);
+
+      const response = await createDonation(formData);
+
+      setSubmitSuccessMessage(
+        response?.message ||
+        response?.data?.message ||
+        "ระบบได้รับข้อมูลโดเนทของคุณเรียบร้อยแล้ว"
+      );
+      setSubmitted(true);
+    } catch (error) {
+      setSubmitError(error?.message || "ส่งข้อมูลโดเนทไม่สำเร็จ");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleReset = () => {
     setSubmitted(false);
+    setSubmitSuccessMessage("");
+    setSubmitError("");
+    if (slipPreview) {
+      URL.revokeObjectURL(slipPreview);
+    }
     setSlipFile(null);
     setSlipPreview(null);
     setDonorName("");
     setMessage("");
+    setAmount(10);
+    setCustomAmount("10");
+    setPaymentMethod("promptpay");
   };
 
   if (submitted) {
@@ -106,7 +160,9 @@ export default function DonationForm({ selectedSticker }) {
           <Check style={{ width: 32, height: 32, color: `rgb(${theme.primary})` }} />
         </motion.div>
         <h2 style={{ fontSize: 22, fontWeight: 500, color: "#fff", marginBottom: 4 }}>ส่งสำเร็จแล้ว!</h2>
-        <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 24 }}>ขอบคุณที่โดเนทให้ streamer นะครับ</p>
+        <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 24 }}>
+          {submitSuccessMessage || "ขอบคุณที่โดเนทให้ streamer นะครับ"}
+        </p>
         <button
           onClick={handleReset}
           style={{
@@ -400,6 +456,22 @@ export default function DonationForm({ selectedSticker }) {
         )}
 
         <input ref={fileInputRef} type="file" accept="image/*" onChange={handleFileChange} style={{ display: "none" }} />
+
+        {submitError && (
+          <div
+            style={{
+              marginTop: 12,
+              borderRadius: 12,
+              border: "1px solid rgba(248,113,113,0.35)",
+              background: "rgba(248,113,113,0.08)",
+              padding: "10px 12px",
+              fontSize: 12,
+              color: "rgb(254,202,202)",
+            }}
+          >
+            {submitError}
+          </div>
+        )}
 
         <motion.button
           type="submit"

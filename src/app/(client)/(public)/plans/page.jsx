@@ -230,26 +230,16 @@ function getDurationLabel(months) {
   return `${months} เดือน`;
 }
 
-function getPurchaseOrderNumber(response) {
-  return (
-    response?.orderNumber ||
-    response?.data?.orderNumber ||
-    response?.po ||
-    response?.data?.po ||
-    response?.purchaseOrderNo ||
-    response?.data?.purchaseOrderNo ||
-    response?.purchaseOrderNumber ||
-    response?.data?.purchaseOrderNumber ||
-    null
-  );
+function getPlanOrderId(response) {
+  return response?.data?.id || response?.id || null;
 }
 
-function buildPaymentRedirectUrl(po) {
+function buildPaymentRedirectUrl(planOrderId) {
   const normalizedBase = PAYMENT_BASE_URL.endsWith('/')
     ? PAYMENT_BASE_URL
     : `${PAYMENT_BASE_URL}/`;
 
-  return `${normalizedBase}${po}`;
+  return `${normalizedBase}${planOrderId}`;
 }
 
 function normalizePlan(apiPlan) {
@@ -381,16 +371,16 @@ export default function PlansPage() {
         durationMonths: selectedMonths,
         provider: PURCHASE_PROVIDER,
       });
-      const po = getPurchaseOrderNumber(response);
+      const planOrderId = getPlanOrderId(response);
 
       setPurchaseResult(response);
-      if (!po) {
-        toast.error('สร้างรายการสำเร็จ แต่ไม่พบเลข PO สำหรับ redirect');
+      if (!planOrderId) {
+        toast.error('สร้างรายการสำเร็จ แต่ไม่พบ id สำหรับ redirect');
         return;
       }
 
       toast.success('สร้างรายการอัปเกรดสำเร็จ กำลังไปหน้าชำระเงิน...');
-      window.location.href = buildPaymentRedirectUrl(po);
+      window.location.href = buildPaymentRedirectUrl(planOrderId);
     } catch (error) {
       const message = error?.message || 'ไม่สามารถสร้างรายการอัปเกรดได้';
       toast.error(message);

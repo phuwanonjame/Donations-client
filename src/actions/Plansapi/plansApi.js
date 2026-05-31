@@ -1,5 +1,7 @@
 const PLANS_API_URL = "http://localhost:5000/api/plans";
 const PLAN_PURCHASE_API_URL = "http://localhost:5000/api/plans/purchase";
+const PLAN_HISTORY_API_BASE_URL = "http://localhost:5000/api/plans/history";
+const PLAN_STATUS_API_BASE_URL = "http://localhost:5000/api/plans/status";
 
 const logPlansApi = (label, payload) => {
   console.log(`[Plans API] ${label}`, payload);
@@ -82,5 +84,67 @@ export const purchasePlan = async ({ userId, planId, durationMonths, provider = 
   } catch (err) {
     console.error("Failed to purchase plan:", err);
     throw err;
+  }
+};
+
+export const fetchPlanHistory = async (userId) => {
+  if (!userId) {
+    console.error("Failed to fetch plan history: missing userId");
+    return [];
+  }
+
+  try {
+    const url = `${PLAN_HISTORY_API_BASE_URL}/${userId}`;
+    logPlansApi("history request", { url, userId });
+
+    const res = await fetch(url, {
+      method: "GET",
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      logPlansApi("history error response", { status: res.status, errorText });
+      throw new Error(`Error: ${res.status} ${errorText}`);
+    }
+
+    const payload = await res.json();
+    logPlansApi("history response", payload);
+
+    return Array.isArray(payload?.data) ? payload.data : [];
+  } catch (err) {
+    console.error("Failed to fetch plan history:", err);
+    return [];
+  }
+};
+
+export const fetchPlanStatus = async (userId) => {
+  if (!userId) {
+    console.error("Failed to fetch plan status: missing userId");
+    return null;
+  }
+
+  try {
+    const url = `${PLAN_STATUS_API_BASE_URL}/${userId}`;
+    logPlansApi("status request", { url, userId });
+
+    const res = await fetch(url, {
+      method: "GET",
+      cache: "no-store",
+    });
+
+    if (!res.ok) {
+      const errorText = await res.text();
+      logPlansApi("status error response", { status: res.status, errorText });
+      throw new Error(`Error: ${res.status} ${errorText}`);
+    }
+
+    const payload = await res.json();
+    logPlansApi("status response", payload);
+
+    return payload?.data || null;
+  } catch (err) {
+    console.error("Failed to fetch plan status:", err);
+    return null;
   }
 };

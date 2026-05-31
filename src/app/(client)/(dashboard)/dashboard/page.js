@@ -1,7 +1,9 @@
 "use client"
-import React, { useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Wallet, TrendingUp, DollarSign, Link as LinkIcon, Copy, ExternalLink } from 'lucide-react';
+import { toast } from 'sonner';
+import { fetchDonationHistory } from '@/actions/Donationsapi/donationHistoryApi';
 import StatCard from '../components/dashboard/StatCard';
 import DonationChart from '../components/dashboard/DonationChart';
 import RecentDonations from '../components/dashboard/RecentDonations';
@@ -10,12 +12,77 @@ import { Button } from '@/components/ui/button';
 
 export default function Dashboard() {
   const [copied, setCopied] = useState(false);
+  const [donations, setDonations] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const donateLink = 'easydonate.app/creator';
+  const dashboardUserId = '244bad71-4990-4a79-9a19-9ff983a55442';
 
   const copyLink = () => {
     navigator.clipboard.writeText(`https://${donateLink}`);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+  };
+
+  useEffect(() => {
+    let active = true;
+
+    async function loadDonations() {
+      setIsLoading(true);
+      const result = await fetchDonationHistory(dashboardUserId);
+
+      if (!active) {
+        return;
+      }
+
+      setDonations(
+        [...result].sort(
+          (a, b) => new Date(b?.createdAt || 0).getTime() - new Date(a?.createdAt || 0).getTime()
+        )
+      );
+      setIsLoading(false);
+    }
+
+    loadDonations();
+
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  const completedDonations = useMemo(
+    () => donations.filter((item) => item?.status === 'COMPLETED'),
+    [donations]
+  );
+
+  const totalEarnings = useMemo(
+    () => completedDonations.reduce((sum, item) => sum + Number(item?.amount || 0), 0),
+    [completedDonations]
+  );
+
+  const todayEarnings = useMemo(() => {
+    const now = new Date();
+    return completedDonations
+      .filter((item) => {
+        const date = new Date(item?.createdAt);
+        return (
+          date.getDate() === now.getDate() &&
+          date.getMonth() === now.getMonth() &&
+          date.getFullYear() === now.getFullYear()
+        );
+      })
+      .reduce((sum, item) => sum + Number(item?.amount || 0), 0);
+  }, [completedDonations]);
+
+  const recentDonations = useMemo(() => completedDonations.slice(0, 5), [completedDonations]);
+
+  const formatMoney = (value) =>
+    `฿${Number(value || 0).toLocaleString('th-TH', {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    })}`;
+
+  const openDonatePage = () => {
+    window.location.assign(`https://${donateLink}`);
   };
 
   return (
@@ -50,6 +117,7 @@ export default function Dashboard() {
             </Button>
             <Button
               variant="outline"
+              onClick={openDonatePage}
               className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
             >
               <ExternalLink className="w-4 h-4" />
@@ -62,16 +130,16 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <StatCard
           title="Total Earnings"
-          value="฿0.00"
-          subtitle="All time revenue"
+          value={formatMoney(totalEarnings)}
+          subtitle={isLoading ? 'Loading...' : 'All time revenue'}
           icon={Wallet}
           gradient="from-cyan-500 to-blue-500"
           delay={0}
         />
         <StatCard
           title="Earnings Today"
-          value="฿0.00"
-          subtitle="Since midnight"
+          value={formatMoney(todayEarnings)}
+          subtitle={isLoading ? 'Loading...' : 'Since midnight'}
           icon={TrendingUp}
           gradient="from-purple-500 to-pink-500"
           delay={0.1}
@@ -84,10 +152,10 @@ export default function Dashboard() {
       {/* Charts and Recent Activity */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         <div className="xl:col-span-2">
-          <DonationChart />
+          <DonationChart donations={completedDonations} />
         </div>
         <div className="xl:col-span-1">
-          <RecentDonations />
+          <RecentDonations donations={recentDonations} />
         </div>
       </div>
     </div>

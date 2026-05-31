@@ -2,8 +2,32 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Gift, Clock } from 'lucide-react';
 
-export default function RecentDonations() {
-  const donations = []; // Empty for realistic new account state
+function formatRelativeTime(value) {
+  if (!value) {
+    return '-';
+  }
+
+  const diffMs = Date.now() - new Date(value).getTime();
+  const diffMinutes = Math.max(Math.floor(diffMs / 60000), 0);
+
+  if (diffMinutes < 1) {
+    return 'just now';
+  }
+
+  if (diffMinutes < 60) {
+    return `${diffMinutes}m ago`;
+  }
+
+  const diffHours = Math.floor(diffMinutes / 60);
+  if (diffHours < 24) {
+    return `${diffHours}h ago`;
+  }
+
+  const diffDays = Math.floor(diffHours / 24);
+  return `${diffDays}d ago`;
+}
+
+export default function RecentDonations({ donations = [] }) {
 
   return (
     <motion.div
@@ -43,17 +67,17 @@ export default function RecentDonations() {
               className="flex items-center gap-4 p-4 rounded-xl bg-slate-800/50 hover:bg-slate-700/50 transition-colors"
             >
               <div className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-500 to-purple-500 flex items-center justify-center text-white font-bold">
-                {donation.name[0]}
+                {(donation.donorName || 'A')[0]}
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-white font-medium truncate">{donation.name}</p>
-                <p className="text-slate-500 text-sm truncate">{donation.message}</p>
+                <p className="text-white font-medium truncate">{donation.donorName || 'Anonymous'}</p>
+                <p className="text-slate-500 text-sm truncate">{donation.donorMessage || '-'}</p>
               </div>
               <div className="text-right">
-                <p className="text-cyan-400 font-bold">{donation.amount} ฿</p>
+                <p className="text-cyan-400 font-bold">{Number(donation.amount || 0).toLocaleString('th-TH')} ฿</p>
                 <p className="text-slate-500 text-xs flex items-center gap-1">
                   <Clock className="w-3 h-3" />
-                  {donation.time}
+                  {formatRelativeTime(donation.createdAt)}
                 </p>
               </div>
             </motion.div>
