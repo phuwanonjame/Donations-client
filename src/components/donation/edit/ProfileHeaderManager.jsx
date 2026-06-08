@@ -25,6 +25,12 @@ export default function ProfileHeaderManager({ profile, themeColors, festival })
   const [showDropdown, setShowDropdown] = useState(false);
   const bannerFileRef = useRef(null);
 
+  // ── Avatar state ───────────────────────────────────────────────────────────
+  const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url || profile.avatarUrl || null);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [isAvatarEditing, setIsAvatarEditing] = useState(false);
+  const avatarFileRef = useRef(null);
+
   // ── Bio state ──────────────────────────────────────────────────────────────
   const [bio, setBio] = useState(profile.bio || "");
   const [bioInput, setBioInput] = useState(bio);
@@ -72,6 +78,44 @@ export default function ProfileHeaderManager({ profile, themeColors, festival })
 
   const displayBanner = bannerPreview || bannerUrl;
 
+  // ── Avatar handlers ────────────────────────────────────────────────────────
+  const handleAvatarPick = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    const url = URL.createObjectURL(file);
+    setAvatarPreview(url);
+    setIsAvatarEditing(true);
+    e.target.value = "";
+  };
+
+  const handleAvatarSave = () => {
+    if (avatarPreview) {
+      if (avatarUrl?.startsWith("blob:")) URL.revokeObjectURL(avatarUrl);
+      setAvatarUrl(avatarPreview);
+      setAvatarPreview(null);
+    }
+    setIsAvatarEditing(false);
+    toast.success("บันทึกรูปโปรไฟล์แล้ว!");
+  };
+
+  const handleAvatarCancel = () => {
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    setAvatarPreview(null);
+    setIsAvatarEditing(false);
+  };
+
+  const handleAvatarDelete = () => {
+    if (avatarUrl?.startsWith("blob:")) URL.revokeObjectURL(avatarUrl);
+    if (avatarPreview) URL.revokeObjectURL(avatarPreview);
+    setAvatarUrl(null);
+    setAvatarPreview(null);
+    setIsAvatarEditing(false);
+    toast.success("ลบรูปโปรไฟล์แล้ว");
+  };
+
+  const displayAvatar = avatarPreview || avatarUrl;
+
   // ── Bio handlers ───────────────────────────────────────────────────────────
   const handleBioSave = () => {
     setBio(bioInput.trim());
@@ -93,6 +137,7 @@ export default function ProfileHeaderManager({ profile, themeColors, festival })
       {/* ── Banner ── */}
       {/* hidden file input — อยู่นอก banner div เพื่อไม่ถูก overflow-hidden ตัด */}
       <input ref={bannerFileRef} type="file" accept="image/*" className="hidden" onChange={handleBannerPick} />
+      <input ref={avatarFileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarPick} />
 
       <div className="relative h-48 sm:h-64 rounded-2xl" onClick={() => showDropdown && setShowDropdown(false)}>
         {/* Image / gradient bg — overflow-hidden แยกไว้ใน div ลูก */}
@@ -200,20 +245,64 @@ export default function ProfileHeaderManager({ profile, themeColors, festival })
         {/* Avatar */}
         <div className="relative">
           <div
-            className="w-28 h-28 rounded-2xl overflow-hidden border-4"
+            className="group relative w-28 overflow-hidden rounded-2xl border-4"
             style={{ borderColor: primaryColor, boxShadow: `0 0 25px ${glowColor}50` }}
           >
-            {profile.avatar_url ? (
-              <img src={profile.avatar_url} alt={profile.display_name} className="w-full h-full object-cover" />
-            ) : (
-              <div
-                className="w-full h-full flex items-center justify-center text-3xl font-black text-white"
-                style={{ background: `linear-gradient(135deg, ${primaryColor}, ${glowColor})` }}
+            <div className="h-28 w-28 overflow-hidden">
+              {displayAvatar ? (
+                <img src={displayAvatar} alt={profile.display_name} className="w-full h-full object-cover" />
+              ) : (
+                <div
+                  className="w-full h-full flex items-center justify-center text-3xl font-black text-white"
+                  style={{ background: `linear-gradient(135deg, ${primaryColor}, ${glowColor})` }}
+                >
+                  {profile.name?.[0] || "?"}
+                </div>
+              )}
+            </div>
+
+            {!isAvatarEditing ? (
+              <button
+                onClick={() => avatarFileRef.current?.click()}
+                className="absolute inset-0 flex items-center justify-center rounded-[12px] bg-black/40 opacity-0 transition-opacity group-hover:opacity-100"
               >
-                {profile.name?.[0] || "?"}
+                <Camera className="h-6 w-6 text-white" />
+              </button>
+            ) : (
+              <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-black/55 px-3 text-white">
+                <span className="text-[10px] font-medium tracking-[0.16em] text-white/70">
+                  PREVIEW
+                </span>
+                <div className="flex w-full gap-2">
+                  <button
+                    onClick={handleAvatarCancel}
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-xl border border-white/10 bg-black/50 px-3 py-2 text-[11px] text-white/80 backdrop-blur-sm transition-all hover:bg-black/70"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                    ยกเลิก
+                  </button>
+                  <button
+                    onClick={handleAvatarSave}
+                    className="flex flex-1 items-center justify-center gap-1.5 rounded-xl px-3 py-2 text-[11px] font-semibold transition-all"
+                    style={{ background: "rgb(186,230,253)", color: "#0c1a2e" }}
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    บันทึก
+                  </button>
+                </div>
+                {displayAvatar && (
+                  <button
+                    onClick={handleAvatarDelete}
+                    className="flex items-center justify-center gap-1.5 rounded-xl border border-red-400/20 bg-red-500/10 px-3 py-2 text-[11px] font-medium text-red-200 transition-all hover:bg-red-500/20"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    ลบรูปโปรไฟล์
+                  </button>
+                )}
               </div>
             )}
           </div>
+
           <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-black flex items-center justify-center ${profile.is_online ? "bg-green-500" : "bg-gray-500"}`}>
             {profile.is_online ? <Wifi className="w-3 h-3 text-white" /> : <WifiOff className="w-3 h-3 text-white" />}
           </div>
