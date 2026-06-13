@@ -1,5 +1,3 @@
-
-
 const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       return (
@@ -11,46 +9,97 @@ const CustomTooltip = ({ active, payload, label }) => {
     }
     return null;
   };
-import React, { useState } from 'react';
+import React, { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-const dailyData = [
-  { name: 'Mon', amount: 0 },
-  { name: 'Tue', amount: 0 },
-  { name: 'Wed', amount: 0 },
-  { name: 'Thu', amount: 0 },
-  { name: 'Fri', amount: 0 },
-  { name: 'Sat', amount: 0 },
-  { name: 'Sun', amount: 0 },
-];
+function buildDailyData(donations) {
+  const now = new Date();
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const date = new Date(now.getFullYear(), now.getMonth(), now.getDate() - (6 - index));
+    return {
+      key: `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`,
+      name: new Intl.DateTimeFormat('en-US', { weekday: 'short' }).format(date),
+      amount: 0,
+    };
+  });
 
-const monthlyData = [
-  { name: 'Jan', amount: 0 },
-  { name: 'Feb', amount: 0 },
-  { name: 'Mar', amount: 0 },
-  { name: 'Apr', amount: 0 },
-  { name: 'May', amount: 0 },
-  { name: 'Jun', amount: 0 },
-];
+  const map = new Map(days.map((item) => [item.key, item]));
 
-const yearlyData = [
-  { name: '2020', amount: 0 },
-  { name: '2021', amount: 0 },
-  { name: '2022', amount: 0 },
-  { name: '2023', amount: 0 },
-  { name: '2024', amount: 0 },
-  { name: '2025', amount: 0 },
-];
+  donations.forEach((item) => {
+    const date = new Date(item?.createdAt);
+    const key = `${date.getFullYear()}-${date.getMonth()}-${date.getDate()}`;
+    const bucket = map.get(key);
+    if (bucket) {
+      bucket.amount += Number(item?.amount || 0);
+    }
+  });
 
-export default function DonationChart() {
+  return days;
+}
+
+function buildMonthlyData(donations) {
+  const now = new Date();
+  const months = Array.from({ length: 6 }, (_, index) => {
+    const date = new Date(now.getFullYear(), now.getMonth() - (5 - index), 1);
+    return {
+      key: `${date.getFullYear()}-${date.getMonth()}`,
+      name: new Intl.DateTimeFormat('en-US', { month: 'short' }).format(date),
+      amount: 0,
+    };
+  });
+
+  const map = new Map(months.map((item) => [item.key, item]));
+
+  donations.forEach((item) => {
+    const date = new Date(item?.createdAt);
+    const key = `${date.getFullYear()}-${date.getMonth()}`;
+    const bucket = map.get(key);
+    if (bucket) {
+      bucket.amount += Number(item?.amount || 0);
+    }
+  });
+
+  return months;
+}
+
+function buildYearlyData(donations) {
+  const now = new Date();
+  const years = Array.from({ length: 6 }, (_, index) => {
+    const year = now.getFullYear() - (5 - index);
+    return {
+      key: String(year),
+      name: String(year),
+      amount: 0,
+    };
+  });
+
+  const map = new Map(years.map((item) => [item.key, item]));
+
+  donations.forEach((item) => {
+    const year = String(new Date(item?.createdAt).getFullYear());
+    const bucket = map.get(year);
+    if (bucket) {
+      bucket.amount += Number(item?.amount || 0);
+    }
+  });
+
+  return years;
+}
+
+export default function DonationChart({ donations = [] }) {
   const [timeframe, setTimeframe] = useState('daily');
+  const chartData = useMemo(() => ({
+    daily: buildDailyData(donations),
+    monthly: buildMonthlyData(donations),
+    yearly: buildYearlyData(donations),
+  }), [donations]);
   
   const getData = () => {
     switch(timeframe) {
-      case 'monthly': return monthlyData;
-      case 'yearly': return yearlyData;
-      default: return dailyData;
+      case 'monthly': return chartData.monthly;
+      case 'yearly': return chartData.yearly;
+      default: return chartData.daily;
     }
   };
 
