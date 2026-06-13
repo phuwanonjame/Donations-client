@@ -25,6 +25,7 @@ import { fetchDonationHistory } from "@/actions/Donationsapi/donationHistoryApi"
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Select,
   SelectContent,
@@ -40,8 +41,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-const EARNING_HISTORY_USER_ID = "244bad71-4990-4a79-9a19-9ff983a55442";
 
 export const CustomTooltip = ({ active, payload, label }) => {
   if (active && payload && payload.length) {
@@ -81,12 +80,6 @@ function getMonthKey(dateString) {
   return `${date.getFullYear()}-${date.getMonth()}`;
 }
 
-function getMonthLabel(dateString) {
-  return new Intl.DateTimeFormat("en-US", {
-    month: "short",
-  }).format(new Date(dateString));
-}
-
 function getStatusBadgeClass(status) {
   if (status === "COMPLETED") {
     return "bg-emerald-500/20 text-emerald-400 border-emerald-500/30";
@@ -100,20 +93,34 @@ function getStatusBadgeClass(status) {
 }
 
 export default function EarningHistory() {
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [searchTerm, setSearchTerm] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [history, setHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [historyError, setHistoryError] = useState("");
+  const earningHistoryUserId = user?.id;
 
   useEffect(() => {
     let active = true;
 
     async function loadHistory() {
+      if (isAuthLoading) {
+        setIsLoading(true);
+        return;
+      }
+
+      if (!earningHistoryUserId) {
+        setHistory([]);
+        setHistoryError("");
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
       setHistoryError("");
 
-      const result = await fetchDonationHistory(EARNING_HISTORY_USER_ID);
+      const result = await fetchDonationHistory(earningHistoryUserId);
 
       if (!active) {
         return;
@@ -139,7 +146,7 @@ export default function EarningHistory() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [earningHistoryUserId, isAuthLoading]);
 
   const completedDonations = useMemo(
     () => history.filter((item) => item?.status === "COMPLETED"),

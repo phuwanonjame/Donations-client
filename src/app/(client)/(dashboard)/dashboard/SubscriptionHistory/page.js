@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { fetchPlanHistory, fetchPlanStatus } from "@/actions/Plansapi/plansApi";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Table,
   TableBody,
@@ -26,7 +27,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-const HISTORY_USER_ID = "244bad71-4990-4a79-9a19-9ff983a55442";
 const PAYMENT_BASE_URL = process.env.NEXT_PUBLIC_PAYMENT_BASE_URL || "http://localhost:3002/";
 
 const planPresentation = {
@@ -111,23 +111,39 @@ function canShowPendingActions(item) {
 
 export default function SubscriptionHistory() {
   const router = useRouter();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [history, setHistory] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [historyError, setHistoryError] = useState("");
   const [planStatus, setPlanStatus] = useState(null);
   const [planStatusError, setPlanStatusError] = useState("");
+  const historyUserId = user?.id;
 
   useEffect(() => {
     let active = true;
 
     async function loadData() {
+      if (isAuthLoading) {
+        setIsLoading(true);
+        return;
+      }
+
+      if (!historyUserId) {
+        setHistory([]);
+        setPlanStatus(null);
+        setHistoryError("");
+        setPlanStatusError("");
+        setIsLoading(false);
+        return;
+      }
+
       setIsLoading(true);
       setHistoryError("");
       setPlanStatusError("");
 
       const [historyResult, statusResult] = await Promise.all([
-        fetchPlanHistory(HISTORY_USER_ID),
-        fetchPlanStatus(HISTORY_USER_ID),
+        fetchPlanHistory(historyUserId),
+        fetchPlanStatus(historyUserId),
       ]);
 
       if (!active) {
@@ -160,12 +176,11 @@ export default function SubscriptionHistory() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [historyUserId, isAuthLoading]);
   const currentPlan = planStatus?.currentPlan || planStatus?.freeFallback || null;
   const currentPlanCode = currentPlan?.code?.toLowerCase?.() || "free";
   const currentPlanStyle = planPresentation[currentPlanCode] || planPresentation.free;
   const currentPlanName = currentPlan?.name || "Free";
-  const currentPlanPrice = currentPlan?.finalAmount || 0;
   const currentPlanStatus = planStatus?.planSource || "FREE";
   const currentUsage = planStatus?.usage || planStatus?.freeFallback || null;
   const isFreePlan = currentPlanCode === "free" || currentPlanStatus === "FREE";

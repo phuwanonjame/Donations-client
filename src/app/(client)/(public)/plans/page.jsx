@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import {
   ArrowRight,
   Check,
@@ -18,6 +19,7 @@ import {
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { fetchPlans, purchasePlan } from '@/actions/Plansapi/plansApi';
+import { useAuth } from '@/contexts/AuthContext';
 import {
   Dialog,
   DialogContent,
@@ -172,7 +174,6 @@ const trustItems = [
   'พร้อมขยายตามการเติบโตของช่อง',
 ];
 
-const PURCHASE_USER_ID = '244bad71-4990-4a79-9a19-9ff983a55442';
 const PURCHASE_PROVIDER = 'PROMPTPAY';
 const PAYMENT_BASE_URL = process.env.NEXT_PUBLIC_PAYMENT_BASE_URL || 'http://localhost:3002/';
 
@@ -277,6 +278,8 @@ function normalizePlan(apiPlan) {
 }
 
 export default function PlansPage() {
+  const router = useRouter();
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [billing, setBilling] = useState('monthly');
   const [plans, setPlans] = useState([]);
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -285,6 +288,7 @@ export default function PlansPage() {
   const [plansError, setPlansError] = useState('');
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [purchaseResult, setPurchaseResult] = useState(null);
+  const purchaseUserId = user?.id;
   const totalPrice = getPlanPrice(selectedPlan, selectedMonths);
   const baseMonthlyTotal = getBaseMonthlyTotal(selectedPlan, selectedMonths);
   const discountAmount = getDiscountAmount(selectedPlan, selectedMonths);
@@ -361,12 +365,24 @@ export default function PlansPage() {
       return;
     }
 
+    if (isAuthLoading) {
+      toast.error('กำลังตรวจสอบข้อมูลผู้ใช้ กรุณาลองอีกครั้ง');
+      return;
+    }
+
+    if (!purchaseUserId) {
+      toast.error('กรุณาเข้าสู่ระบบก่อนอัปเกรดแพลน');
+      setSelectedPlan(null);
+      router.push('/login');
+      return;
+    }
+
     try {
       setIsPurchasing(true);
       setPurchaseResult(null);
 
       const response = await purchasePlan({
-        userId: PURCHASE_USER_ID,
+        userId: purchaseUserId,
         planId: selectedPlan.id,
         durationMonths: selectedMonths,
         provider: PURCHASE_PROVIDER,
