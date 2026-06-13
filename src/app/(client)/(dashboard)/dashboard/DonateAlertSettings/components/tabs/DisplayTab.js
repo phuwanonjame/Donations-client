@@ -8,7 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Sparkles, Clock, Palette, Eye } from "lucide-react";
 
-export default function DisplayTab({ settings, updateSetting }) {
+export default function DisplayTab({ settings, updateSetting, copy }) {
   // ✅ flat structure เท่านั้น
   const displayDuration  = settings?.animationDisplayDuration  ?? 3;
   const inAnimation      = settings?.animationEnterType      ?? "fadeInUp";
@@ -29,7 +29,7 @@ export default function DisplayTab({ settings, updateSetting }) {
       className="space-y-5 sm:space-y-6"
     >
       <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-        <Sparkles className="w-5 h-5 text-cyan-400" /> Animation & Timing
+        <Sparkles className="w-5 h-5 text-cyan-400" /> {copy?.sections?.display || "Animation & Timing"}
       </h3>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -106,7 +106,7 @@ export default function DisplayTab({ settings, updateSetting }) {
       {/* Visibility Controls */}
       <div className="space-y-3 mt-6">
         <h4 className="text-md font-semibold text-white flex items-center gap-2">
-          <Eye className="w-4 h-4 text-cyan-400" /> Visibility Settings
+          <Eye className="w-4 h-4 text-cyan-400" /> {copy?.sections?.visibility || "Visibility Settings"}
         </h4>
         {[
           { key: "titleShowName",    label: "Show Donor Name" },

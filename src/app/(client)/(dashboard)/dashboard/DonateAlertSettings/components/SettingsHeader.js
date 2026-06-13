@@ -2,11 +2,16 @@ import React from "react";
 import { motion } from "framer-motion";
 import { Bell, Check } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { getDashboardCopy } from "../../i18n";
 import { useDonateAlertSettings } from "./context/DonateAlertSettingsProvider";
 import WidgetUrlHeaderField from "../../components/WidgetUrlHeaderField";
 
 export default function SettingsHeader() {
   const { settings, updateSetting, hasChanges, saveSuccess, widgetId } = useDonateAlertSettings();
+  const { language } = useLanguage();
+  const copy = getDashboardCopy(language);
+  const text = copy.settings.alert;
 
   // Helper function to get enabled status (support both flat and grouped)
   const getEnabledStatus = () => {
@@ -48,10 +53,10 @@ export default function SettingsHeader() {
           </div>
           <div className="min-w-0">
             <h2 className="text-xl sm:text-2xl font-bold text-white leading-tight">
-              Donate Alert Settings
+              {text.title}
             </h2>
             <p className="text-sm sm:text-base text-slate-400">
-              Customize how donation alerts appear on your stream
+              {text.description}
             </p>
           </div>
         </div>
@@ -66,7 +71,7 @@ export default function SettingsHeader() {
                 className="px-3 py-1 bg-yellow-500/20 text-yellow-400 rounded-full text-sm flex items-center gap-2 border border-yellow-500/30"
               >
                 <div className="w-2 h-2 bg-yellow-400 rounded-full animate-pulse" />
-                Unsaved Changes
+                {copy.common.unsavedChanges}
               </motion.div>
             )}
             {saveSuccess && (
@@ -76,7 +81,7 @@ export default function SettingsHeader() {
                 className="px-3 py-1 bg-green-500/20 text-green-400 rounded-full text-sm flex items-center gap-2 border border-green-500/30"
               >
                 <Check className="w-4 h-4" />
-                Saved
+                {copy.common.saved}
               </motion.div>
             )}
           </div>
@@ -91,7 +96,7 @@ export default function SettingsHeader() {
             <span
               className={isEnabled ? "text-cyan-400" : "text-slate-500"}
             >
-              {isEnabled ? "Enabled" : "Disabled"}
+              {isEnabled ? copy.common.enabled : copy.common.disabled}
             </span>
           </div>
         </div>

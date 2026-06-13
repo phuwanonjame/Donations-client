@@ -1,9 +1,11 @@
 "use client";
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Plus, RotateCcw } from 'lucide-react';
+import { Plus, RotateCcw, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { getDashboardCopy } from '../../i18n';
 import {
   RECENT_DONATE_THEME_BACKGROUNDS,
   RECENT_DONATE_THEME_PRESETS,
@@ -62,7 +64,9 @@ const getAnimationInitial = (type) => {
   return map[type] || map.fade;
 };
 
-export default function RecentDonatePreview({ settings, donations, onReset }) {
+export default function RecentDonatePreview({ settings, donations, onReset, onSave, saving = false }) {
+  const { language } = useLanguage();
+  const copy = getDashboardCopy(language);
   const maxEntries = getNumberValue(settings.maxEntries, 5);
   const visibleDonations = donations.slice(0, maxEntries);
   const itemSpacing = getNumberValue(settings.itemSpacing, 12);
@@ -100,11 +104,17 @@ export default function RecentDonatePreview({ settings, donations, onReset }) {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-white">Preview</h3>
-        <Button size="sm" variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800" onClick={onReset}>
-          <RotateCcw className="w-4 h-4 mr-2" />
-          Reset
-        </Button>
+        <h3 className="text-lg font-semibold text-white">{copy.common.preview}</h3>
+        <div className="flex items-center gap-2">
+          <Button size="sm" className="bg-blue-600 hover:bg-blue-500" onClick={onSave} disabled={saving}>
+            <Save className="w-4 h-4 mr-2" />
+            {saving ? copy.common.saving : copy.common.saveSettings}
+          </Button>
+          <Button size="sm" variant="outline" className="border-slate-700 bg-slate-900 text-slate-300 hover:bg-slate-800" onClick={onReset}>
+            <RotateCcw className="w-4 h-4 mr-2" />
+            {copy.common.reset}
+          </Button>
+        </div>
       </div>
 
       <div className={`flex min-h-[460px] overflow-auto rounded-xl border border-slate-700/50 bg-slate-950/70 p-4 ${previewPosition}`}>

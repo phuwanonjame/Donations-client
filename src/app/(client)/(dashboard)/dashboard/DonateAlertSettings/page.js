@@ -3,6 +3,8 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Check, X, RotateCcw, Copy, AlertCircle, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { getDashboardCopy } from "../i18n";
 
 import SettingsTabs from "./components/SettingsTabs";
 import PreviewPanel from "./components/PreviewPanel";
@@ -14,6 +16,9 @@ import {
 } from "./components/context/DonateAlertSettingsProvider";
 
 function LoadingState() {
+  const { language } = useLanguage();
+  const text = getDashboardCopy(language).settings.alert;
+
   return (
     <div className="h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 flex items-center justify-center">
       <motion.div
@@ -25,7 +30,7 @@ function LoadingState() {
           <div className="w-20 h-20 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin mx-auto" />
           <Sparkles className="w-6 h-6 text-cyan-400 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
         </div>
-        <p className="text-slate-400">Loading your settings...</p>
+        <p className="text-slate-400">{text.loading}</p>
       </motion.div>
     </div>
   );
@@ -33,6 +38,8 @@ function LoadingState() {
 
 function SaveNotification() {
   const { showSaveNotification, setShowSaveNotification } = useDonateAlertSettings();
+  const { language } = useLanguage();
+  const text = getDashboardCopy(language).settings.alert;
 
   return (
     <AnimatePresence>
@@ -44,7 +51,7 @@ function SaveNotification() {
           className="fixed top-20 right-4 z-50 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-6 py-3 rounded-xl shadow-2xl flex items-center gap-3"
         >
           <Check className="w-5 h-5" />
-          <span>Settings saved successfully!</span>
+          <span>{text.savedMessage}</span>
           <button
             onClick={() => setShowSaveNotification(false)}
             className="ml-2 hover:bg-white/20 rounded-lg p-1"
@@ -69,6 +76,9 @@ function DonateAlertSettingsContent() {
     resetSettings,
     saveSettings,
   } = useDonateAlertSettings();
+  const { language } = useLanguage();
+  const copy = getDashboardCopy(language);
+  const text = copy.settings.alert;
 
   return (
     <div className="h-full w-full overflow-y-auto overflow-x-hidden">
@@ -89,7 +99,7 @@ function DonateAlertSettingsContent() {
             <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center justify-between gap-3 p-3 sm:p-4 bg-slate-900/50 rounded-xl border border-slate-800">
               <div className="flex items-center gap-2 text-sm text-slate-400 min-w-0">
                 <AlertCircle className="w-4 h-4" />
-                <span className="min-w-0">Changes are automatically reflected in preview</span>
+                <span className="min-w-0">{copy.common.autoPreview}</span>
               </div>
               <div className="grid grid-cols-2 sm:flex sm:items-center gap-2 w-full sm:w-auto">
                 <Button
@@ -100,11 +110,11 @@ function DonateAlertSettingsContent() {
                 >
                   {copied ? (
                     <>
-                      <Check className="w-4 h-4 mr-2" />Copied!
+                      <Check className="w-4 h-4 mr-2" />{copy.common.copied}
                     </>
                   ) : (
                     <>
-                      <Copy className="w-4 h-4 mr-2" />Copy JSON
+                      <Copy className="w-4 h-4 mr-2" />{copy.common.copyJson}
                     </>
                   )}
                 </Button>
@@ -114,7 +124,7 @@ function DonateAlertSettingsContent() {
                   className="bg-slate-800/50 border-slate-700 hover:bg-slate-700/50 text-slate-300 w-full sm:w-auto"
                 >
                   <RotateCcw className="w-4 h-4 mr-2" />
-                  Reset All
+                  {copy.common.resetAll}
                 </Button>
               </div>
             </div>
@@ -142,25 +152,15 @@ function DonateAlertSettingsContent() {
               <div className="p-4 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 rounded-xl border border-cyan-500/20">
                 <h4 className="text-sm font-medium text-cyan-400 mb-3 flex items-center gap-2">
                   <Sparkles className="w-4 h-4" />
-                  Quick Tips
+                  {text.quickTips}
                 </h4>
                 <ul className="space-y-2 text-sm text-slate-400">
-                  <li className="flex items-start gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 mt-1.5" />
-                    <span>Default settings are used when no donation range matches.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 mt-1.5" />
-                    <span>Each range can override the global master settings independently.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 mt-1.5" />
-                    <span>Use the Config button on a range to jump into scoped editing.</span>
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 mt-1.5" />
-                    <span>The preview follows the currently active range context automatically.</span>
-                  </li>
+                  {text.tips.map((tip) => (
+                    <li key={tip} className="flex items-start gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-cyan-500 mt-1.5" />
+                      <span>{tip}</span>
+                    </li>
+                  ))}
                 </ul>
               </div>
             </div>

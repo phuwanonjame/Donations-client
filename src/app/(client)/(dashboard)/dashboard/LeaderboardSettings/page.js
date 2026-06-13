@@ -2,6 +2,8 @@
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Trophy } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { getDashboardCopy } from '../i18n';
 import WidgetUrlHeaderField from '../components/WidgetUrlHeaderField';
 import PreviewPanel from './components/PreviewPanel';
 import LeaderboardSettingsForm from './components/LeaderboardSettingsForm';
@@ -12,6 +14,8 @@ import {
 
 function LeaderboardHeader() {
   const { showHeader, widgetId } = useLeaderboardSettings();
+  const { language } = useLanguage();
+  const text = getDashboardCopy(language).settings.leaderboard;
 
   return (
     <div className={`overflow-hidden transition-all duration-300 ease-out ${showHeader ? 'max-h-[999px] opacity-100' : 'max-h-0 opacity-0'}`}>
@@ -26,8 +30,8 @@ function LeaderboardHeader() {
               <Trophy className="w-6 h-6 sm:w-8 sm:h-8 text-white" />
             </div>
             <div>
-              <h2 className="text-xl sm:text-2xl font-bold text-white">Leaderboard Settings</h2>
-              <p className="text-slate-400 text-sm sm:text-base">Show top supporters ranking</p>
+              <h2 className="text-xl sm:text-2xl font-bold text-white">{text.title}</h2>
+              <p className="text-slate-400 text-sm sm:text-base">{text.description}</p>
             </div>
           </div>
         </div>
@@ -39,6 +43,8 @@ function LeaderboardHeader() {
 
 function LeaderboardContent() {
   const { loading } = useLeaderboardSettings();
+  const { language } = useLanguage();
+  const text = getDashboardCopy(language).settings.leaderboard;
 
   return (
     <div className="space-y-6 sm:space-y-8 px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
@@ -46,7 +52,7 @@ function LeaderboardContent() {
 
       {loading ? (
         <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-8 text-center text-slate-400">
-          Loading leaderboard settings...
+          {text.loading}
         </div>
       ) : (
         <div className="flex flex-col gap-6 lg:flex-row">

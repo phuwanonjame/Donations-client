@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Loader2, Music, RefreshCw, Upload, Volume2 } from "lucide-react";
 
-export default function SoundTab({ settings, updateSetting }) {
+export default function SoundTab({ settings, updateSetting, copy }) {
   const alertSound = settings?.notificationSound ?? "bb_spirit";
   const useCustomSound = settings?.notificationUseCustom ?? false;
   const customSound = settings?.notificationCustomSound ?? null;
@@ -193,7 +193,7 @@ export default function SoundTab({ settings, updateSetting }) {
     >
       <div>
         <h3 className="text-lg font-semibold text-white mb-6 flex items-center gap-2">
-          <Music className="w-5 h-5 text-cyan-400" /> Sound Settings
+          <Music className="w-5 h-5 text-cyan-400" /> {copy?.sections?.sound || "Sound Settings"}
         </h3>
 
         <div className="space-y-3">
@@ -273,7 +273,7 @@ export default function SoundTab({ settings, updateSetting }) {
 
         <div className="mt-8 pt-4 border-t border-slate-700/50">
           <h4 className="text-md font-semibold text-white mb-4 flex items-center gap-2">
-            <Volume2 className="w-4 h-4 text-cyan-400" /> Text-to-Speech Settings
+            <Volume2 className="w-4 h-4 text-cyan-400" /> {copy?.sections?.tts || "Text-to-Speech Settings"}
           </h4>
         </div>
 

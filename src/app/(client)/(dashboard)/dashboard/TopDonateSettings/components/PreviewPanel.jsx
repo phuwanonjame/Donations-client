@@ -2,6 +2,8 @@ import React, { useCallback } from 'react';
 import { RotateCcw } from 'lucide-react';
 
 import { Button } from '@/components/ui/button';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { getDashboardCopy } from '../../i18n';
 
 import TopDonatePreview from './TopDonatePreview';
 import SectionWrapper from './SectionWrapper';
@@ -16,6 +18,8 @@ const PreviewPanel = React.memo(({ settings: settingsProp, donorData: donorDataP
     resetSettings,
     saving,
   } = useTopDonateSettings();
+  const { language } = useLanguage();
+  const copy = getDashboardCopy(language);
   const settings = settingsProp ?? contextSettings;
   const donorData = donorDataProp ?? contextDonorData;
 
@@ -31,7 +35,7 @@ const PreviewPanel = React.memo(({ settings: settingsProp, donorData: donorDataP
   return (
     <SectionWrapper delay={0.3}>
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-white">Preview</h3>
+        <h3 className="text-lg font-semibold text-white">{copy.common.preview}</h3>
         <Button
           size="sm"
           variant="outline"
@@ -39,7 +43,7 @@ const PreviewPanel = React.memo(({ settings: settingsProp, donorData: donorDataP
           onClick={resetSettings}
         >
           <RotateCcw className="mr-2 h-4 w-4" />
-          Reset
+          {copy.common.reset}
         </Button>
       </div>
 
@@ -53,7 +57,7 @@ const PreviewPanel = React.memo(({ settings: settingsProp, donorData: donorDataP
           onClick={handleSave}
           disabled={saving}
         >
-          {saving ? 'Saving...' : 'Save Settings'}
+          {saving ? copy.common.saving : copy.common.saveSettings}
         </Button>
       </div>
     </SectionWrapper>

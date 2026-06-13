@@ -3,6 +3,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { getDashboardCopy } from '../../i18n';
 
 import GoalPreview from './GoalPreview';
 import SectionWrapper from './SectionWrapper';
@@ -16,6 +18,8 @@ const PreviewPanel = React.memo(({ settings: settingsProp, update: updateProp, o
     saveSettings,
     saving,
   } = useDonateGoalSettings();
+  const { language } = useLanguage();
+  const copy = getDashboardCopy(language);
   const settings = settingsProp ?? contextSettings;
   const update = updateProp ?? contextUpdate;
   const [showBackground, setShowBackground] = useState(true);
@@ -62,10 +66,10 @@ const PreviewPanel = React.memo(({ settings: settingsProp, update: updateProp, o
   return (
     <SectionWrapper delay={0.3}>
       <div className="mb-4 flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-white">Preview</h3>
+        <h3 className="text-lg font-semibold text-white">{copy.common.preview}</h3>
         <div className="flex items-center gap-3">
           <Label htmlFor="bg-toggle" className="cursor-pointer text-sm text-slate-400">
-            พื้นหลัง
+            {copy.common.background}
           </Label>
           <Switch
             id="bg-toggle"
@@ -86,7 +90,7 @@ const PreviewPanel = React.memo(({ settings: settingsProp, update: updateProp, o
 
       <div className="mb-4">
         <div className="mb-1 flex justify-between">
-          <Label className="text-sm text-slate-400">ทดสอบยอดบริจาคปัจจุบัน</Label>
+          <Label className="text-sm text-slate-400">{copy.common.testCurrentAmount}</Label>
           <span className="text-sm text-emerald-400">฿{settings.currentAmount}</span>
         </div>
         <Slider
@@ -104,7 +108,7 @@ const PreviewPanel = React.memo(({ settings: settingsProp, update: updateProp, o
           onClick={handleSave}
           disabled={saving}
         >
-          {saving ? 'Saving...' : 'บันทึก'}
+          {saving ? copy.common.saving : copy.common.saveSettings}
         </Button>
       </div>
     </SectionWrapper>

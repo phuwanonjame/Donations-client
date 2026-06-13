@@ -190,7 +190,7 @@ function RangeCard({ range, onEdit, onEditConfig, onDelete, onDuplicate, onReset
   );
 }
 
-export default function RangesTab({ onEditRange }) {
+export default function RangesTab({ onEditRange, copy }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingRange, setEditingRange] = useState(null);
   const {
@@ -278,7 +278,7 @@ export default function RangesTab({ onEditRange }) {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-1">
         <div className="min-w-0">
           <h3 className="text-lg font-semibold text-white flex items-center gap-2">
-            <Layers className="w-5 h-5 text-cyan-400" /> Donation Ranges System
+            <Layers className="w-5 h-5 text-cyan-400" /> {copy?.sections?.ranges || "Donation Ranges System"}
           </h3>
           <p className="text-slate-400 text-sm mt-1">Set different alert configs by donation amount.</p>
         </div>
@@ -333,7 +333,7 @@ export default function RangesTab({ onEditRange }) {
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <h4 className="text-white font-medium flex items-center gap-2">
               <Zap className="w-4 h-4 text-yellow-400" />
-              Configured Ranges
+              {copy?.sections?.configuredRanges || "Configured Ranges"}
               <span className="text-slate-500 text-sm font-normal">({ranges.length})</span>
             </h4>
             <Button

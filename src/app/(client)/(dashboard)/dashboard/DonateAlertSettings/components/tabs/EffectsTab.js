@@ -14,7 +14,7 @@ import {
   effectOptions,
 } from "../utils/settingsUtils";
 
-export default function EffectsTab({ settings, updateSetting }) {
+export default function EffectsTab({ settings, updateSetting, copy }) {
   // Safe value access with fallbacks
   const textEffect = settings?.titleTextEffect ?? settings?.effect ?? "realistic_look";
   const imageGlow = settings?.imageGlow ?? false;
@@ -35,7 +35,7 @@ export default function EffectsTab({ settings, updateSetting }) {
       className="space-y-5 sm:space-y-6"
     >
       <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-        <Zap className="w-5 h-5 text-cyan-400" /> General Effects
+        <Zap className="w-5 h-5 text-cyan-400" /> {copy?.sections?.effects || "General Effects"}
       </h3>
 
       {/* --- Text / Amount Effect --- */}
@@ -125,7 +125,7 @@ export default function EffectsTab({ settings, updateSetting }) {
         <div className="flex items-center justify-between gap-3">
           <h4 className="text-lg font-semibold text-white flex items-center gap-2">
             <Droplet className="w-5 h-5 text-indigo-400" />
-            Confetti Animation
+            {copy?.sections?.confetti || "Confetti Animation"}
           </h4>
           <Switch
             checked={showConfetti}

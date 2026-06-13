@@ -486,6 +486,7 @@ export default function TemplateTab({
   handleCopyJSON,
   onTemplateSelect,
   currentTemplate = "basic",
+  copy,
 }) {
   const [selectedTemplate, setSelectedTemplate] = useState(currentTemplate);
   const [galleryOpen, setGalleryOpen] = useState(true);
@@ -555,7 +556,7 @@ export default function TemplateTab({
               <Sparkles className="w-4 h-4 text-cyan-400" />
             </div>
             <div className="text-left">
-              <p className="text-sm font-semibold text-white">Template Gallery</p>
+              <p className="text-sm font-semibold text-white">{copy?.sections?.template || "Template Gallery"}</p>
               <p className="text-[11px] text-slate-400">เลือกรูปแบบสำเร็จรูปสำหรับ alert ทั้งชุด</p>
             </div>
           </div>

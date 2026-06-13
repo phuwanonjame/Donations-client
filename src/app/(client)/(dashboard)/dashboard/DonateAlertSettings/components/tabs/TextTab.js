@@ -12,7 +12,7 @@ function optFamily(opt) {
   return opt?.family || opt?.name || opt?.id || "";
 }
 
-export default function TextTab({ settings, updateSetting }) {
+export default function TextTab({ settings, updateSetting, copy }) {
   const titleText   = settings?.titleText     ?? "{{user}}";
   const titleSuffixText   = settings?.titleSuffixText     ?? "โดเนทมา";
   const amountText   = settings?.titleAmountText     ?? "{{amount}}฿";
@@ -60,7 +60,7 @@ export default function TextTab({ settings, updateSetting }) {
     >
       <div>
         <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-          <MessageSquare className="w-5 h-5 text-cyan-400" /> Message Settings
+          <MessageSquare className="w-5 h-5 text-cyan-400" /> {copy?.sections?.text || "Message Settings"}
         </h3>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -193,7 +193,7 @@ export default function TextTab({ settings, updateSetting }) {
 
       {/* Message Styling */}
       <div className="mt-6 pt-6 border-t border-slate-700/50">
-        <h4 className="text-lg font-semibold text-white mb-4">Message Styling</h4>
+        <h4 className="text-lg font-semibold text-white mb-4">{copy?.sections?.messageStyling || "Message Styling"}</h4>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="space-y-2">
             <Label className="text-slate-300">Message Font Family</Label>

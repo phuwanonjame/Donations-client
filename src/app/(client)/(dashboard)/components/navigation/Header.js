@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { Bell, LogOut, Menu, Search } from "lucide-react";
+import { Bell, Globe2, LogOut, Menu, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
 
 const deleteTokenCookie = () => {
@@ -35,6 +36,7 @@ const getInitials = (name) =>
 
 export default function Header({ onMenuClick, title }) {
   const { user, isLoading, refetchUser } = useAuth();
+  const { language, setLanguage } = useLanguage();
   const router = useRouter();
 
   useEffect(() => {
@@ -103,6 +105,28 @@ export default function Header({ onMenuClick, title }) {
         </div>
 
         <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1 rounded-xl border border-slate-700/70 bg-slate-950/50 p-1">
+            <Globe2 className="ml-2 hidden h-4 w-4 text-slate-500 sm:block" />
+            {[
+              ["en", "EN"],
+              ["th", "TH"],
+            ].map(([code, label]) => (
+              <button
+                key={code}
+                type="button"
+                onClick={() => setLanguage(code)}
+                className={`h-8 rounded-lg px-2.5 text-xs font-semibold transition sm:px-3 ${
+                  language === code
+                    ? "bg-cyan-400 text-slate-950 shadow-lg shadow-cyan-500/20"
+                    : "text-slate-400 hover:bg-slate-800 hover:text-white"
+                }`}
+                aria-label={`Switch language to ${label}`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+
           <div className="hidden md:flex items-center gap-2 px-4 py-2 rounded-xl bg-slate-800/50 border border-slate-700/50">
             <Search className="w-4 h-4 text-slate-500" />
             <input

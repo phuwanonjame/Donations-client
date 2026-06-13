@@ -315,17 +315,29 @@ const translations = {
 const LanguageContext = createContext();
 
 export function LanguageProvider({ children }) {
-  const [language, setLanguage] = useState("en");
+  const [language, setLanguage] = useState(() => {
+    if (typeof window === "undefined") return "en";
+    const storedLanguage = window.localStorage.getItem("streamflow-language");
+    return storedLanguage === "en" || storedLanguage === "th" ? storedLanguage : "en";
+  });
 
   const t = translations[language];
 
+  const changeLanguage = (nextLanguage) => {
+    if (nextLanguage !== "en" && nextLanguage !== "th") return;
+    setLanguage(nextLanguage);
+    if (typeof window !== "undefined") {
+      window.localStorage.setItem("streamflow-language", nextLanguage);
+    }
+  };
+
   const toggleLanguage = () => {
-    setLanguage((prev) => (prev === "en" ? "th" : "en"));
+    changeLanguage(language === "en" ? "th" : "en");
   };
 
   return (
     <LanguageContext.Provider
-      value={{ language, setLanguage, toggleLanguage, t }}
+      value={{ language, setLanguage: changeLanguage, toggleLanguage, t }}
     >
       {children}
     </LanguageContext.Provider>

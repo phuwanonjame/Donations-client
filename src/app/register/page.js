@@ -2,7 +2,7 @@
 
 import React, { useMemo, useState } from 'react';
 import { motion } from "framer-motion";
-import { ArrowRight, Lock, Mail, ShieldCheck, Sparkles, User } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, Lock, Mail, ShieldCheck, Sparkles, User } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { getSocialAuthUrl, registerService, requestOtpService } from "../services/authService/authService";
 
@@ -32,10 +32,16 @@ const GoogleIcon = () => (
 );
 
 const FacebookIcon = () => <span className="text-xl font-bold leading-none text-[#1877F2]">f</span>;
+const StreamlabsIcon = () => (
+  <svg className="h-6 w-6 text-[#80F5D2]" viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">
+    <path d="M8.6878 1.3459a1.365 1.365 0 0 0-.2734.0058c-.528.066-1.0133.1616-1.4843.3086A10.0568 10.0568 0 0 0 .3208 8.2697c-.147.471-.2445.9583-.3105 1.4863-.091.734.431 1.4041 1.166 1.4961.734.091 1.404-.43 1.496-1.164.05-.406.119-.7316.209-1.0196A7.3736 7.3736 0 0 1 7.727 4.221c.288-.09.6145-.157 1.0195-.207.735-.092 1.255-.7631 1.164-1.4981a1.3394 1.3394 0 0 0-1.2226-1.17Zm4.0488 5.2226c-2.629 0-3.9432.0007-4.9472.5117A4.684 4.684 0 0 0 5.7406 9.131c-.512 1.004-.5117 2.3183-.5117 4.9473v4.289c0 1.502-.001 2.2542.291 2.8282.257.505.6679.9149 1.1719 1.1719.574.292 1.326.291 2.828.291h6.9706c2.628 0 3.9442.0012 4.9472-.5098a4.6883 4.6883 0 0 0 2.0507-2.0508c.512-1.004.5117-2.3182.5117-4.9472v-1.0723c0-2.629.0003-3.9433-.5117-4.9473a4.6883 4.6883 0 0 0-2.0507-2.0508c-1.003-.511-2.3193-.5117-4.9472-.5117zm.537 6.7051c.741 0 1.3399.5998 1.3399 1.3398v2.6836c0 .74-.5988 1.3399-1.3398 1.3399-.74 0-1.3418-.5999-1.3418-1.3399v-2.6836c0-.74.6018-1.3398 1.3418-1.3398zm5.3632 0c.74 0 1.3399.5998 1.3399 1.3398v2.6836c0 .74-.5999 1.3399-1.3399 1.3399-.741 0-1.3398-.5999-1.3398-1.3399v-2.6836c0-.74.5989-1.3398 1.3398-1.3398z" />
+  </svg>
+);
 
 const socialProviders = [
   { provider: "google", label: "Google", icon: GoogleIcon },
   { provider: "facebook", label: "Facebook", icon: FacebookIcon },
+  { provider: "streamlabs", label: "Streamlabs", icon: StreamlabsIcon },
 ];
 
 const particles = [
@@ -87,6 +93,8 @@ export default function RegisterPage() {
     password: '',
     confirmPassword: ''
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const particleVariants = useMemo(() => ({
@@ -156,7 +164,7 @@ export default function RegisterPage() {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45 }}
-          className="w-full max-w-[30rem]"
+          className="w-full max-w-[36rem]"
         >
           <div className="rounded-2xl border border-cyan-300/15 bg-[#0D1B2A]/95 p-6 shadow-2xl shadow-black/30 backdrop-blur sm:p-8">
             <div className="mb-7">
@@ -169,7 +177,7 @@ export default function RegisterPage() {
 
             <div className="space-y-4">
               <p className="text-sm font-medium text-slate-300">{t.register.socialTitle}</p>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
                 {socialProviders.map((provider) => (
                   <SocialButton key={provider.provider} {...provider} />
                 ))}
@@ -218,13 +226,22 @@ export default function RegisterPage() {
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
                     <input
-                      type="password"
+                      type={showPassword ? "text" : "password"}
                       value={form.password}
                       onChange={(e) => handleChange('password', e.target.value)}
-                      className="h-12 w-full rounded-xl border border-slate-700/80 bg-slate-950/40 pl-10 pr-4 text-white outline-none transition focus:border-cyan-300/80 focus:ring-2 focus:ring-cyan-300/15"
+                      className="h-12 w-full rounded-xl border border-slate-700/80 bg-slate-950/40 pl-10 pr-12 text-white outline-none transition focus:border-cyan-300/80 focus:ring-2 focus:ring-cyan-300/15"
                       placeholder="********"
                       required
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((value) => !value)}
+                      className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-800/80 hover:text-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/60"
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                      title={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
                   </div>
                 </div>
 
@@ -233,13 +250,22 @@ export default function RegisterPage() {
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-500" />
                     <input
-                      type="password"
+                      type={showConfirmPassword ? "text" : "password"}
                       value={form.confirmPassword}
                       onChange={(e) => handleChange('confirmPassword', e.target.value)}
-                      className="h-12 w-full rounded-xl border border-slate-700/80 bg-slate-950/40 pl-10 pr-4 text-white outline-none transition focus:border-cyan-300/80 focus:ring-2 focus:ring-cyan-300/15"
+                      className="h-12 w-full rounded-xl border border-slate-700/80 bg-slate-950/40 pl-10 pr-12 text-white outline-none transition focus:border-cyan-300/80 focus:ring-2 focus:ring-cyan-300/15"
                       placeholder="********"
                       required
                     />
+                    <button
+                      type="button"
+                      onClick={() => setShowConfirmPassword((value) => !value)}
+                      className="absolute right-3 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-800/80 hover:text-cyan-300 focus:outline-none focus:ring-2 focus:ring-cyan-300/60"
+                      aria-label={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                      title={showConfirmPassword ? "Hide confirm password" : "Show confirm password"}
+                    >
+                      {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                    </button>
                   </div>
                 </div>
               </div>

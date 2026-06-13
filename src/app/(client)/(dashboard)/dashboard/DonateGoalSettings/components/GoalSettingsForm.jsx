@@ -6,6 +6,8 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Target, RotateCcw, Sparkles, Type, Palette, Eye, EyeOff } from 'lucide-react';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { getDashboardCopy } from '../../i18n';
 import ColorInput from './ColorInput';
 import DropdownSelect from './DropdownSelect';
 import StringDropdownSelect from './StringDropdownSelect';
@@ -17,13 +19,13 @@ import { getResetDates } from '../utils/donate-goal';
 import { useDonateGoalSettings } from './context/DonateGoalSettingsProvider';
 
 const GOAL_TABS = [
-  { id: 'settings', label: 'Settings', icon: Target, color: 'from-emerald-500 to-teal-500' },
-  { id: 'progress', label: 'Progress', icon: Sparkles, color: 'from-cyan-500 to-blue-500' },
-  { id: 'description', label: 'Description', icon: Type, color: 'from-violet-500 to-purple-500' },
-  { id: 'typography', label: 'Typography', icon: Palette, color: 'from-amber-500 to-orange-500' },
+  { id: 'settings', icon: Target, color: 'from-emerald-500 to-teal-500' },
+  { id: 'progress', icon: Sparkles, color: 'from-cyan-500 to-blue-500' },
+  { id: 'description', icon: Type, color: 'from-violet-500 to-purple-500' },
+  { id: 'typography', icon: Palette, color: 'from-amber-500 to-orange-500' },
 ];
 
-function GoalTabNav({ activeTab, onSelect }) {
+function GoalTabNav({ activeTab, labels, onSelect }) {
   return (
     <div className="relative">
       <div className="absolute inset-0 bg-gradient-to-r from-slate-800/50 to-slate-900/50 rounded-xl blur" />
@@ -52,7 +54,7 @@ function GoalTabNav({ activeTab, onSelect }) {
                 )}
                 <div className="relative z-10 flex flex-col items-center gap-1">
                   <Icon className={`w-4 h-4 sm:w-5 sm:h-5 transition-all duration-300 ${isActive ? 'scale-110' : 'group-hover:scale-105'}`} />
-                  <span className="text-[10px] sm:text-xs font-medium">{tab.label}</span>
+                  <span className="text-[10px] sm:text-xs font-medium">{labels[tab.id]}</span>
                 </div>
               </motion.button>
             );
@@ -72,6 +74,8 @@ export default function GoalSettingsForm({ settings: settingsProp, update: updat
   } = useDonateGoalSettings();
   const settings = settingsProp ?? contextSettings;
   const update = updateProp ?? contextUpdate;
+  const { language } = useLanguage();
+  const formText = getDashboardCopy(language).settings.goal.form;
   const textInputClassName = 'bg-slate-800/80 border-slate-700 text-white';
   const templateInputClassName = `${textInputClassName} font-mono`;
 
@@ -130,7 +134,7 @@ export default function GoalSettingsForm({ settings: settingsProp, update: updat
 
   return (
     <div className="space-y-5 sm:space-y-6 px-4 sm:px-0">
-      <GoalTabNav activeTab={activeTab} onSelect={setActiveTab} />
+      <GoalTabNav activeTab={activeTab} labels={formText.tabs} onSelect={setActiveTab} />
 
       <AnimatePresence mode="wait">
         <motion.div
@@ -141,6 +145,14 @@ export default function GoalSettingsForm({ settings: settingsProp, update: updat
           exit="exit"
           className="space-y-5 sm:space-y-6 min-w-0"
         >
+          <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3">
+            <h3 className="text-sm font-semibold text-emerald-200">
+              {activeTab === 'settings' && formText.goalConfig}
+              {activeTab === 'progress' && formText.progressBar}
+              {activeTab === 'description' && formText.tabs.description}
+              {activeTab === 'typography' && formText.tabs.typography}
+            </h3>
+          </div>
       {activeTab === 'settings' && (
         <>
       {/* Widget Type */}

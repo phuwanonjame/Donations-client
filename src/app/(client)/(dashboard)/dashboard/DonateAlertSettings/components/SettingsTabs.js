@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 import MediaTab from "./tabs/MediaTab";
 import SoundTab from "./tabs/SoundTab";
@@ -29,6 +30,7 @@ import EffectsTab from "./tabs/EffectsTab";
 import RangesTab from "./tabs/RangesTab";
 import TemplateTab from "./tabs/TemplateTab";
 import { useDonateAlertSettings } from "./context/DonateAlertSettingsProvider";
+import { getDashboardCopy } from "../../i18n";
 
 const CONTENT_TABS = [
   { id: "media", label: "Media", icon: Image, color: "from-blue-500 to-cyan-500", description: "Images & animations" },
@@ -44,7 +46,58 @@ const ALL_TABS = [
   { id: "template", label: "Template", icon: RotateCcw, color: "from-indigo-500 to-purple-500", description: "Presets & layouts" },
 ];
 
-function RangeContextSelector({ ranges, activeRangeId, onSelect, onClear }) {
+const TH_ALERT_FORM_COPY = {
+  visualEditor: "ตัวแก้ไขแบบเห็นภาพ",
+  visualEditorBadge: "ใหม่",
+  visualEditorDescription: "แก้ไขแจ้งเตือนแบบเต็มจอพร้อมดูตัวอย่างทันที",
+  openVisualEditor: "เปิดตัวแก้ไขแบบเห็นภาพ",
+  rangePrefix: "ช่วง",
+  defaultGlobal: "ค่าเริ่มต้น (รวม)",
+  useGlobalSettings: "ใช้การตั้งค่ารวม",
+  ranges: "ช่วงโดเนท",
+  noRanges: "ยังไม่มีช่วงโดเนท สร้างได้ในแท็บช่วงโดเนท",
+  createFirstRangeHint: "ไปที่แท็บช่วงโดเนทเพื่อสร้างช่วงแรก",
+  editingRange: "กำลังแก้ไขช่วง",
+  customized: "ปรับแต่งแล้ว",
+  defaultBadge: "= ค่าเริ่มต้น",
+  resetToDefault: "รีเซ็ตเป็นค่าเริ่มต้น",
+  backToGlobal: "กลับไปการตั้งค่ารวม",
+  resetRangeConfirm: "รีเซ็ตช่วงนี้กลับเป็นค่าเริ่มต้นใช่ไหม?",
+  tabs: {
+    media: "สื่อ",
+    sound: "เสียง",
+    text: "ข้อความ",
+    display: "การแสดงผล",
+    effects: "เอฟเฟกต์",
+    ranges: "ช่วงโดเนท",
+    template: "เทมเพลต",
+  },
+  tabDescriptions: {
+    media: "รูปภาพและแอนิเมชัน",
+    sound: "เสียงและเอฟเฟกต์",
+    text: "ฟอนต์และสไตล์ข้อความ",
+    display: "รูปแบบการแสดงผล",
+    effects: "ทรานซิชันและแอนิเมชัน",
+    ranges: "ช่วงยอดโดเนท",
+    template: "พรีเซ็ตและเลย์เอาต์",
+  },
+  sections: {
+    media: "รูปภาพ / GIF แจ้งเตือน",
+    sound: "ตั้งค่าเสียง",
+    tts: "ตั้งค่าเสียงอ่านข้อความ",
+    text: "ตั้งค่าข้อความ",
+    messageStyling: "สไตล์ข้อความ",
+    display: "แอนิเมชันและเวลา",
+    visibility: "ตั้งค่าการแสดงผล",
+    effects: "เอฟเฟกต์ทั่วไป",
+    confetti: "แอนิเมชันกระดาษโปรย",
+    ranges: "ระบบช่วงโดเนท",
+    configuredRanges: "ช่วงที่ตั้งค่าไว้",
+    template: "แกลเลอรีเทมเพลต",
+  },
+};
+
+function RangeContextSelector({ ranges, activeRangeId, onSelect, onClear, copy }) {
   const [open, setOpen] = useState(false);
   const activeRange = ranges.find((range) => range.id === activeRangeId);
 
@@ -69,7 +122,7 @@ function RangeContextSelector({ ranges, activeRangeId, onSelect, onClear }) {
           ) : (
             <>
               <Globe className="w-3.5 h-3.5 text-slate-400 shrink-0" />
-              <span>Default (Global)</span>
+              <span>{copy.defaultGlobal}</span>
             </>
           )}
         </div>
@@ -96,8 +149,8 @@ function RangeContextSelector({ ranges, activeRangeId, onSelect, onClear }) {
             >
               <Globe className="w-4 h-4 text-slate-400 shrink-0" />
               <div className="min-w-0">
-                <p className="font-medium truncate">Default (Global)</p>
-                <p className="text-[10px] text-slate-500">Use global settings</p>
+                <p className="font-medium truncate">{copy.defaultGlobal}</p>
+                <p className="text-[10px] text-slate-500">{copy.useGlobalSettings}</p>
               </div>
               {!activeRange && <Check className="w-3.5 h-3.5 ml-auto text-cyan-400 shrink-0" />}
             </button>
@@ -107,7 +160,7 @@ function RangeContextSelector({ ranges, activeRangeId, onSelect, onClear }) {
                 <div className="h-px bg-slate-700/60 mx-2" />
                 <div className="px-2 py-1.5">
                   <p className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider px-1">
-                    Ranges ({ranges.length})
+                    {copy.ranges} ({ranges.length})
                   </p>
                 </div>
                 {ranges
@@ -133,9 +186,9 @@ function RangeContextSelector({ ranges, activeRangeId, onSelect, onClear }) {
                         <p className="text-[10px] text-slate-500">
                           {range.minAmount ?? 0}฿{range.maxAmount ? ` - ${range.maxAmount}฿` : "+"}
                           {range.isCustomized ? (
-                            <span className="ml-1.5 text-cyan-500/80">custom</span>
+                            <span className="ml-1.5 text-cyan-500/80">{copy.customized}</span>
                           ) : (
-                            <span className="ml-1.5 text-slate-600">= default</span>
+                            <span className="ml-1.5 text-slate-600">{copy.defaultBadge}</span>
                           )}
                         </p>
                       </div>
@@ -147,7 +200,7 @@ function RangeContextSelector({ ranges, activeRangeId, onSelect, onClear }) {
 
             {ranges.length === 0 && (
               <div className="px-3 py-3 text-xs text-slate-500 text-center">
-                No ranges yet. Create one in the Ranges tab.
+                {copy.noRanges}
               </div>
             )}
           </motion.div>
@@ -157,7 +210,7 @@ function RangeContextSelector({ ranges, activeRangeId, onSelect, onClear }) {
   );
 }
 
-function RangeContextBanner({ range, onClear, onResetToDefault }) {
+function RangeContextBanner({ range, onClear, onResetToDefault, copy }) {
   return (
     <motion.div
       initial={{ opacity: 0, height: 0 }}
@@ -170,15 +223,15 @@ function RangeContextBanner({ range, onClear, onResetToDefault }) {
         <div className="flex items-center gap-2 min-w-0 w-full sm:w-auto">
           <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ background: range.color || "#00e5ff" }} />
           <span className="text-cyan-300 font-medium truncate">
-            Editing Range: {range.name || `Range #${range.id}`}
+            {copy.editingRange}: {range.name || `${copy.rangePrefix} #${range.id}`}
           </span>
           <span className="text-slate-500 text-xs hidden sm:inline">
             ({range.minAmount ?? 0}฿{range.maxAmount ? ` - ${range.maxAmount}฿` : "+"})
           </span>
           {range.isCustomized ? (
-            <Badge className="bg-cyan-500/20 text-cyan-400 border-0 text-[10px] px-1.5 py-0.5">Customized</Badge>
+            <Badge className="bg-cyan-500/20 text-cyan-400 border-0 text-[10px] px-1.5 py-0.5">{copy.customized}</Badge>
           ) : (
-            <Badge className="bg-slate-700/50 text-slate-400 border-0 text-[10px] px-1.5 py-0.5">= Default</Badge>
+            <Badge className="bg-slate-700/50 text-slate-400 border-0 text-[10px] px-1.5 py-0.5">{copy.defaultBadge}</Badge>
           )}
         </div>
         <div className="grid grid-cols-[1fr_auto] sm:flex sm:items-center gap-1.5 shrink-0 w-full sm:w-auto">
@@ -187,12 +240,12 @@ function RangeContextBanner({ range, onClear, onResetToDefault }) {
             className="flex items-center justify-center gap-1.5 px-2.5 py-1.5 text-xs rounded-lg bg-slate-700/60 hover:bg-slate-700 text-slate-300 hover:text-white border border-slate-600/50 transition-all"
           >
             <RefreshCw className="w-3 h-3" />
-            Reset to Default
+            {copy.resetToDefault}
           </button>
           <button
             onClick={onClear}
             className="p-1.5 rounded-lg bg-slate-700/40 hover:bg-slate-700 text-slate-400 hover:text-white transition-all border border-slate-600/50"
-            title="Back to global settings"
+            title={copy.backToGlobal}
           >
             <ArrowLeft className="w-3.5 h-3.5" />
           </button>
@@ -243,6 +296,7 @@ function TabNav({ tabs, activeTab, onSelect }) {
 }
 
 export default function SettingsTabs() {
+  const { language } = useLanguage();
   const [activeTab, setActiveTab] = useState("template");
   const [isHoveringVisual, setIsHoveringVisual] = useState(false);
   const {
@@ -261,6 +315,10 @@ export default function SettingsTabs() {
     copySettingsJSON,
     openFullscreenEditor,
   } = useDonateAlertSettings();
+  const dashboardCopy = getDashboardCopy(language);
+  const formCopy = language === "th"
+    ? TH_ALERT_FORM_COPY
+    : dashboardCopy.settings.alert.form;
 
   const handleTabSelect = (tabId) => {
     if (tabId === "ranges") clearActiveRange();
@@ -276,9 +334,15 @@ export default function SettingsTabs() {
 
   const handleResetCurrentRange = useCallback(() => {
     if (!activeRange) return;
-    if (!window.confirm(`Reset "${activeRange.name}" back to Default settings?`)) return;
+    if (!window.confirm(formCopy.resetRangeConfirm)) return;
     resetActiveRangeToDefault();
-  }, [activeRange, resetActiveRangeToDefault]);
+  }, [activeRange, formCopy.resetRangeConfirm, resetActiveRangeToDefault]);
+
+  const localizedVisibleTabs = visibleTabs.map((tab) => ({
+    ...tab,
+    label: formCopy.tabs?.[tab.id] || tab.label,
+    description: formCopy.tabDescriptions?.[tab.id] || tab.description,
+  }));
 
   const containerVariants = {
     hidden: { opacity: 0, y: 20 },
@@ -312,14 +376,14 @@ export default function SettingsTabs() {
               </div>
               <div className="min-w-0">
                 <h3 className="text-base sm:text-lg font-semibold text-white flex items-center gap-2 flex-wrap">
-                  Visual Editor
+                  {formCopy.visualEditor}
                   <span className="px-2 py-0.5 text-xs font-medium bg-cyan-500/20 text-cyan-300 rounded-full border border-cyan-500/30">
-                    NEW
+                    {formCopy.visualEditorBadge}
                   </span>
                 </h3>
                 <p className="text-sm text-slate-400 mt-1">
-                  Edit your alert in fullscreen mode with real-time preview
-                  {activeRange && <span className="ml-2 text-cyan-400/80 text-xs">Range: {activeRange.name}</span>}
+                  {formCopy.visualEditorDescription}
+                  {activeRange && <span className="ml-2 text-cyan-400/80 text-xs">{formCopy.rangePrefix}: {activeRange.name}</span>}
                 </p>
               </div>
             </div>
@@ -330,7 +394,7 @@ export default function SettingsTabs() {
             >
               <span className="relative z-10 flex items-center">
                 <Layout className="w-4 h-4 mr-2" />
-                Open Visual Editor
+                {formCopy.openVisualEditor}
                 <ChevronRight className="w-4 h-4 ml-2 group-hover/btn:translate-x-1 transition-transform duration-200" />
               </span>
               <motion.div
@@ -350,6 +414,7 @@ export default function SettingsTabs() {
             <RangeContextSelector
               ranges={ranges}
               activeRangeId={activeRangeId}
+              copy={formCopy}
               onSelect={(id) => {
                 setActiveRangeId(id);
                 if (!CONTENT_TABS.find((tab) => tab.id === activeTab)) setActiveTab("media");
@@ -360,7 +425,7 @@ export default function SettingsTabs() {
           {normalizedSettings?.rangesUseRanges && ranges.length === 0 && (
             <div className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700/50 text-xs text-slate-400">
               <AlertCircle className="w-3.5 h-3.5 text-yellow-500/70" />
-              <span>Go to the Ranges tab to create your first range.</span>
+              <span>{formCopy.createFirstRangeHint}</span>
             </div>
           )}
         </div>
@@ -371,11 +436,12 @@ export default function SettingsTabs() {
               range={activeRange}
               onClear={clearActiveRange}
               onResetToDefault={handleResetCurrentRange}
+              copy={formCopy}
             />
           )}
         </AnimatePresence>
 
-        <TabNav tabs={visibleTabs} activeTab={safeActiveTab} onSelect={handleTabSelect} />
+        <TabNav tabs={localizedVisibleTabs} activeTab={safeActiveTab} onSelect={handleTabSelect} />
 
         <AnimatePresence mode="wait">
           <motion.div
@@ -386,13 +452,14 @@ export default function SettingsTabs() {
             exit="exit"
             className="bg-slate-800/30 rounded-xl border border-slate-700/50 p-3 sm:p-5 lg:p-6 min-w-0 overflow-hidden"
           >
-            {safeActiveTab === "media" && <MediaTab settings={effectiveSettings} updateSetting={updateContextSetting} />}
-            {safeActiveTab === "sound" && <SoundTab settings={effectiveSettings} updateSetting={updateContextSetting} />}
-            {safeActiveTab === "text" && <TextTab settings={effectiveSettings} updateSetting={updateContextSetting} />}
-            {safeActiveTab === "display" && <DisplayTab settings={effectiveSettings} updateSetting={updateContextSetting} />}
-            {safeActiveTab === "effects" && <EffectsTab settings={effectiveSettings} updateSetting={updateContextSetting} />}
+            {safeActiveTab === "media" && <MediaTab settings={effectiveSettings} updateSetting={updateContextSetting} copy={formCopy} />}
+            {safeActiveTab === "sound" && <SoundTab settings={effectiveSettings} updateSetting={updateContextSetting} copy={formCopy} />}
+            {safeActiveTab === "text" && <TextTab settings={effectiveSettings} updateSetting={updateContextSetting} copy={formCopy} />}
+            {safeActiveTab === "display" && <DisplayTab settings={effectiveSettings} updateSetting={updateContextSetting} copy={formCopy} />}
+            {safeActiveTab === "effects" && <EffectsTab settings={effectiveSettings} updateSetting={updateContextSetting} copy={formCopy} />}
             {safeActiveTab === "ranges" && (
               <RangesTab
+                copy={formCopy}
                 onEditRange={(rangeId) => {
                   setActiveRangeId(rangeId);
                   setActiveTab("media");
@@ -401,6 +468,7 @@ export default function SettingsTabs() {
             )}
             {safeActiveTab === "template" && (
               <TemplateTab
+                copy={formCopy}
                 currentTemplate={settings.templateId || "basic"}
                 handleReset={resetSettings}
                 handleCopyJSON={copySettingsJSON}
