@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import { useToast } from "./use-toast";
 
-export function toaster() {
+export function Toaster() {
   const { toasts } = useToast();
 
   useEffect(() => {}, [toasts]);

@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { fetchPlans, purchasePlan } from '@/actions/Plansapi/plansApi';
+import { fetchPlanStatus, fetchPlans, purchasePlan } from '@/actions/Plansapi/plansApi';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   Dialog,
@@ -176,6 +176,12 @@ const trustItems = [
 
 const PURCHASE_PROVIDER = 'PROMPTPAY';
 const PAYMENT_BASE_URL = process.env.NEXT_PUBLIC_PAYMENT_BASE_URL || 'http://localhost:3002/';
+const PLAN_ORDER = {
+  free: 0,
+  lite: 1,
+  pro: 2,
+  ultra: 3,
+};
 
 function formatPrice(value) {
   return Number(value || 0).toLocaleString('th-TH', {
@@ -288,11 +294,14 @@ export default function PlansPage() {
   const [plansError, setPlansError] = useState('');
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [purchaseResult, setPurchaseResult] = useState(null);
+  const [currentPlanCode, setCurrentPlanCode] = useState(null);
   const purchaseUserId = user?.id;
   const totalPrice = getPlanPrice(selectedPlan, selectedMonths);
   const baseMonthlyTotal = getBaseMonthlyTotal(selectedPlan, selectedMonths);
   const discountAmount = getDiscountAmount(selectedPlan, selectedMonths);
   const hasDiscount = discountAmount > 0;
+  const isCurrentSelectedPlan =
+    Boolean(selectedPlan?.code) && selectedPlan?.code?.toLowerCase?.() === currentPlanCode;
 
   const selectedSuffix =
     billingOptions.find((option) => option.id === billing)?.suffix ?? '/เดือน';
@@ -333,8 +342,48 @@ export default function PlansPage() {
     };
   }, []);
 
+  useEffect(() => {
+    let active = true;
+
+    async function loadCurrentPlanStatus() {
+      if (isAuthLoading) {
+        return;
+      }
+
+      if (!purchaseUserId) {
+        setCurrentPlanCode(null);
+        return;
+      }
+
+      const result = await fetchPlanStatus(purchaseUserId);
+
+      if (!active) {
+        return;
+      }
+
+      const resolvedCode =
+        result?.currentPlan?.code?.toLowerCase?.() ||
+        result?.freeFallback?.code?.toLowerCase?.() ||
+        null;
+
+      setCurrentPlanCode(resolvedCode);
+    }
+
+    loadCurrentPlanStatus();
+
+    return () => {
+      active = false;
+    };
+  }, [isAuthLoading, purchaseUserId]);
+
   function handleUpgradeClick(plan) {
-    if (plan.current) {
+    const planCode = plan?.code?.toLowerCase?.() || 'free';
+    const currentRank = PLAN_ORDER[currentPlanCode] ?? -1;
+    const planRank = PLAN_ORDER[planCode] ?? -1;
+    const isCurrentPlan = currentPlanCode ? planCode === currentPlanCode : Boolean(plan.current);
+    const isLowerPlan = currentPlanCode ? planRank < currentRank : false;
+
+    if (isLowerPlan) {
       return;
     }
 
@@ -488,6 +537,17 @@ export default function PlansPage() {
           {plans.map((plan, index) => {
             const Icon = plan.icon;
             const price = plan.price[billing];
+            const planCode = plan?.code?.toLowerCase?.() || 'free';
+            const currentRank = PLAN_ORDER[currentPlanCode] ?? -1;
+            const planRank = PLAN_ORDER[planCode] ?? -1;
+            const isCurrentPlan = currentPlanCode ? planCode === currentPlanCode : Boolean(plan.current);
+            const isLowerPlan = currentPlanCode ? planRank < currentRank : false;
+            const isDisabledPlan = isLowerPlan;
+            const buttonLabel = isCurrentPlan
+              ? 'Current Plan'
+              : isLowerPlan
+                ? 'Lower Plan'
+                : plan.cta;
 
             return (
               <motion.article
@@ -532,16 +592,19 @@ export default function PlansPage() {
                   <Button
                     type="button"
                     onClick={() => handleUpgradeClick(plan)}
+                    disabled={isDisabledPlan}
                     className={`mb-6 h-12 w-full rounded-full text-sm font-semibold transition-all ${
-                      plan.featured
+                      isCurrentPlan
+                        ? 'border border-cyan-300/30 bg-cyan-400/15 text-white hover:bg-cyan-400/20'
+                        : isLowerPlan
+                          ? 'cursor-not-allowed border border-slate-700 bg-slate-800/70 text-slate-500 hover:bg-slate-800/70'
+                          : plan.featured
                         ? 'bg-gradient-to-r from-cyan-400 via-sky-300 to-teal-200 text-[#0A1628] shadow-lg shadow-cyan-500/20 hover:brightness-110'
-                        : plan.current
-                          ? 'border border-white/15 bg-white/10 text-white hover:bg-white/15'
                           : 'border border-cyan-400/25 bg-cyan-400/10 text-cyan-100 hover:bg-cyan-400/20'
                     }`}
                   >
-                    {plan.cta}
-                    {!plan.current && <ArrowRight className="ml-1 h-4 w-4" />}
+                    {buttonLabel}
+                    {!isDisabledPlan && <ArrowRight className="ml-1 h-4 w-4" />}
                   </Button>
 
                   <div className="mt-auto">
@@ -724,7 +787,11 @@ export default function PlansPage() {
                     disabled={isPurchasing}
                     className="h-12 flex-1 rounded-full bg-gradient-to-r from-cyan-400 via-sky-300 to-teal-200 text-[#0A1628] shadow-lg shadow-cyan-500/20 hover:brightness-110"
                   >
-                    {isPurchasing ? 'กำลังสร้างรายการ...' : 'ดำเนินการอัปเกรด'}
+                    {isPurchasing
+                      ? 'กำลังสร้างรายการ...'
+                      : isCurrentSelectedPlan
+                        ? 'ดำเนินการซื้อเพิ่ม'
+                        : 'ดำเนินการอัปเกรด'}
                     {!isPurchasing && <ArrowRight className="h-4 w-4" />}
                   </Button>
                 </div>
