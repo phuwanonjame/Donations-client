@@ -12,13 +12,48 @@ const PAYMENT_METHODS = [
 const QUICK_AMOUNTS = [10, 20, 50, 100, 200, 500];
 const DONATION_USER_ID = "244bad71-4990-4a79-9a19-9ff983a55442";
 
-const theme = {
+const defaultTheme = {
   primary: "186, 230, 253",
   secondary: "147, 197, 253",
   accent: "255, 255, 255",
+  base: "4, 15, 30",
+  baseSecondary: "12, 28, 48",
+  text: "255, 255, 255",
+  mutedText: "255, 255, 255",
+  buttonText: "13, 42, 58",
+  buttonBackground: "linear-gradient(120deg, rgb(186, 230, 253), rgb(255, 255, 255))",
+  cardBackground: "linear-gradient(180deg, rgba(4, 15, 30, 0.96), rgba(9, 24, 44, 0.94))",
+  innerBackground: "rgba(4, 15, 30, 0.95)",
 };
 
-export default function DonationForm({ selectedSticker }) {
+const defaultDecorations = {
+  step1Left: { src: "/imgs/ice.png", alt: "decoration-step-1-left", className: "pointer-events-none absolute -top-1 left-0 w-10 z-20 opacity-90" },
+  step1Right: { src: "/imgs/ice_bar_1.png", alt: "decoration-step-1-right", className: "pointer-events-none absolute -top-12 -right-5 w-90 z-20 opacity-90" },
+  step2Left: { src: "/imgs/ice_bar_2.png", alt: "decoration-step-2-left", className: "pointer-events-none absolute -top-1 -left-1 w-20 z-20 opacity-90" },
+  step2Right: { src: "/imgs/ice_bar_2.png", alt: "decoration-step-2-right", className: "pointer-events-none absolute -top-7 -right-3 w-90 z-20 opacity-90" },
+  step3Left: { src: "/imgs/ice_bar_2.png", alt: "decoration-step-3-left", className: "pointer-events-none absolute -top-1 -left-1 w-20 z-20 opacity-90" },
+  step3Right: { src: "/imgs/ice_bar_2.png", alt: "decoration-step-3-right", className: "pointer-events-none absolute -top-7 -right-3 w-90 z-20 opacity-90" },
+};
+
+function DecorationImage({ decoration }) {
+  if (!decoration?.src) return null;
+
+  return (
+    <img
+      src={decoration.src}
+      alt={decoration.alt || "decoration"}
+      className={decoration.className}
+    />
+  );
+}
+
+const rgba = (rgb, opacity) => `rgba(${rgb},${opacity})`;
+
+export default function DonationForm({
+  selectedSticker,
+  decorations = defaultDecorations,
+  visualTheme = defaultTheme,
+}) {
   const [donorName, setDonorName] = useState("");
   const [message, setMessage] = useState("");
   const [amount, setAmount] = useState(10);
@@ -32,6 +67,7 @@ export default function DonationForm({ selectedSticker }) {
   const [submitError, setSubmitError] = useState("");
   const [submitSuccessMessage, setSubmitSuccessMessage] = useState("");
   const fileInputRef = useRef(null);
+  const theme = { ...defaultTheme, ...visualTheme };
 
   const totalAmount = amount + (selectedSticker?.price || 0);
 
@@ -140,7 +176,7 @@ export default function DonationForm({ selectedSticker }) {
           borderRadius: 16,
           padding: 40,
           textAlign: "center",
-          background: "linear-gradient(135deg, rgba(0,0,0,0.55), rgba(0,0,0,0.35))",
+          background: theme.cardBackground,
           backdropFilter: "blur(18px)",
         }}
       >
@@ -151,7 +187,7 @@ export default function DonationForm({ selectedSticker }) {
           style={{
             width: 80, height: 80, borderRadius: "50%",
             border: `1px solid rgba(${theme.primary},0.4)`,
-            background: `rgba(${theme.primary},0.1)`,
+            background: rgba(theme.primary, 0.12),
             display: "flex", alignItems: "center", justifyContent: "center",
             margin: "0 auto 16px",
             boxShadow: `0 0 24px rgba(${theme.primary},0.3)`,
@@ -159,8 +195,8 @@ export default function DonationForm({ selectedSticker }) {
         >
           <Check style={{ width: 32, height: 32, color: `rgb(${theme.primary})` }} />
         </motion.div>
-        <h2 style={{ fontSize: 22, fontWeight: 500, color: "#fff", marginBottom: 4 }}>ส่งสำเร็จแล้ว!</h2>
-        <p style={{ fontSize: 13, color: "rgba(255,255,255,0.5)", marginBottom: 24 }}>
+        <h2 style={{ fontSize: 22, fontWeight: 500, color: `rgb(${theme.text})`, marginBottom: 4 }}>ส่งสำเร็จแล้ว!</h2>
+        <p style={{ fontSize: 13, color: rgba(theme.mutedText, 0.68), marginBottom: 24 }}>
           {submitSuccessMessage || "ขอบคุณที่โดเนทให้ streamer นะครับ"}
         </p>
         <button
@@ -170,7 +206,7 @@ export default function DonationForm({ selectedSticker }) {
             fontSize: 13, color: `rgb(${theme.primary})`,
             border: `1px solid rgba(${theme.primary},0.35)`,
             padding: "8px 24px", borderRadius: 99,
-            background: `rgba(${theme.primary},0.08)`,
+            background: rgba(theme.primary, 0.08),
             cursor: "pointer",
           }}
         >
@@ -183,20 +219,12 @@ export default function DonationForm({ selectedSticker }) {
   return (
     <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
       {/* Step 1 */}
-      <StepCard step={1} title="กรอกข้อความที่ต้องการบอก">
-        <img
-        src="/imgs/ice.png"
-        alt="ice-left"
-        className="pointer-events-none absolute -top-1 left-0 w-10 z-20 opacity-90"
-      />
-
-      <img
-        src="/imgs/ice_bar_1.png"
-        alt="ice-left"
-        className="pointer-events-none absolute -top-12 -right-5 w-90 z-20 opacity-90"
-      />
+      <StepCard step={1} title="กรอกข้อความที่ต้องการบอก" theme={theme}>
+        <DecorationImage decoration={decorations.step1Left} />
+        <DecorationImage decoration={decorations.step1Right} />
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           <InputField
+            theme={theme}
             label="ชื่อของคุณ"
             required
             value={donorName}
@@ -204,7 +232,7 @@ export default function DonationForm({ selectedSticker }) {
             placeholder="เช่น คุณน้องชาย"
           />
           <div>
-            <label style={{ display: "block", fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>
+            <label style={{ display: "block", fontSize: 11, color: rgba(theme.mutedText, 0.58), marginBottom: 6 }}>
               ข้อความ (ไม่บังคับ)
             </label>
             <textarea
@@ -216,8 +244,8 @@ export default function DonationForm({ selectedSticker }) {
                 width: "100%", boxSizing: "border-box",
                 border: `1px solid rgba(${theme.primary},0.25)`,
                 borderRadius: 12, padding: "10px 14px",
-                fontSize: 13, color: "#fff",
-                background: `rgba(${theme.primary},0.06)`,
+                fontSize: 13, color: `rgb(${theme.text})`,
+                background: rgba(theme.primary, 0.08),
                 outline: "none", resize: "none",
               }}
             />
@@ -226,12 +254,12 @@ export default function DonationForm({ selectedSticker }) {
             <div style={{
               display: "flex", alignItems: "center", gap: 8,
               padding: 10, borderRadius: 12,
-              background: `rgba(${theme.primary},0.08)`,
+              background: rgba(theme.primary, 0.08),
               border: `1px solid rgba(${theme.primary},0.25)`,
             }}>
               <span style={{ fontSize: 24 }}>{selectedSticker.emoji}</span>
               <div>
-                <p style={{ fontSize: 12, color: "#fff", fontWeight: 500 }}>{selectedSticker.name}</p>
+                <p style={{ fontSize: 12, color: `rgb(${theme.text})`, fontWeight: 500 }}>{selectedSticker.name}</p>
                 <p style={{ fontSize: 11, color: `rgb(${theme.primary})` }}>+฿{selectedSticker.price} สติ๊กเกอร์</p>
               </div>
             </div>
@@ -240,18 +268,9 @@ export default function DonationForm({ selectedSticker }) {
       </StepCard>
 
       {/* Step 2 */}
-      <StepCard step={2} title="เลือกช่องทางและจำนวนเงิน">
-        <img
-        src="/imgs/ice_bar_2.png"
-        alt="ice-left"
-        className="pointer-events-none absolute -top-1 -left-1 w-20 z-20 opacity-90"
-      />
-
-      <img
-        src="/imgs/ice_bar_2.png"
-        alt="ice-left"
-        className="pointer-events-none absolute -top-7 -right-3 w-90 z-20 opacity-90"
-      />
+      <StepCard step={2} title="เลือกช่องทางและจำนวนเงิน" theme={theme}>
+        <DecorationImage decoration={decorations.step2Left} />
+        <DecorationImage decoration={decorations.step2Right} />
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8, marginBottom: 20 }}>
           {PAYMENT_METHODS.map((pm) => (
             <button
@@ -265,8 +284,8 @@ export default function DonationForm({ selectedSticker }) {
                   ? `1px solid rgba(${theme.primary},0.7)`
                   : `1px solid rgba(255,255,255,0.12)`,
                 background: paymentMethod === pm.id
-                  ? `rgba(${theme.primary},0.15)`
-                  : "rgba(255,255,255,0.04)",
+                  ? rgba(theme.primary, 0.16)
+                  : rgba(theme.baseSecondary, 0.35),
                 boxShadow: paymentMethod === pm.id
                   ? `0 0 12px rgba(${theme.primary},0.3)`
                   : "none",
@@ -274,7 +293,7 @@ export default function DonationForm({ selectedSticker }) {
               }}
             >
               <span style={{
-                fontSize: 10, fontWeight: 600, color: "#fff",
+                fontSize: 10, fontWeight: 600, color: `rgb(${theme.text})`,
                 padding: "2px 6px", borderRadius: 6, marginBottom: 8,
                 background: pm.color,
               }}>
@@ -282,11 +301,11 @@ export default function DonationForm({ selectedSticker }) {
               </span>
               <span style={{
                 fontSize: 12, fontWeight: 500,
-                color: paymentMethod === pm.id ? `rgb(${theme.primary})` : "#fff",
+                color: paymentMethod === pm.id ? `rgb(${theme.primary})` : `rgb(${theme.text})`,
               }}>
                 {pm.label}
               </span>
-              <span style={{ fontSize: 11, color: "rgba(255,255,255,0.45)", marginTop: 2, lineHeight: 1.4 }}>
+              <span style={{ fontSize: 11, color: rgba(theme.mutedText, 0.5), marginTop: 2, lineHeight: 1.4 }}>
                 {pm.description}
               </span>
             </button>
@@ -310,12 +329,12 @@ export default function DonationForm({ selectedSticker }) {
                     <img src={`https://promptpay.io/0826589650/${customAmount}.png`} alt="QR Code" />
                   </div>
                 </div>
-                <p style={{ fontSize: 11, color: "rgba(255,255,255,0.5)", textAlign: "center" }}>สแกน QR พร้อมเพย์</p>
+                <p style={{ fontSize: 11, color: rgba(theme.mutedText, 0.6), textAlign: "center" }}>สแกน QR พร้อมเพย์</p>
                 <button
                   type="button"
                   style={{
                     display: "inline-flex", alignItems: "center", gap: 4,
-                    fontSize: 11, color: `rgba(${theme.primary},0.8)`,
+                    fontSize: 11, color: rgba(theme.primary, 0.88),
                     border: `1px solid rgba(${theme.primary},0.25)`,
                     padding: "4px 10px", borderRadius: 99,
                     background: "none", cursor: "pointer",
@@ -328,7 +347,7 @@ export default function DonationForm({ selectedSticker }) {
 
             <div style={{ flex: 1, minWidth: 0, display: "flex", flexDirection: "column", gap: 12 }}>
               <div>
-                <label style={{ display: "block", fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>
+                <label style={{ display: "block", fontSize: 11, color: rgba(theme.mutedText, 0.58), marginBottom: 6 }}>
                   จำนวนเงิน (บาท) <span style={{ color: `rgb(${theme.primary})` }}>*</span>
                 </label>
                 <input
@@ -343,7 +362,7 @@ export default function DonationForm({ selectedSticker }) {
                     borderRadius: 12, padding: "10px 14px",
                     fontSize: 20, fontWeight: 500,
                     color: `rgb(${theme.primary})`,
-                    background: `rgba(${theme.primary},0.08)`,
+                    background: rgba(theme.primary, 0.08),
                     outline: "none",
                   }}
                 />
@@ -358,7 +377,7 @@ export default function DonationForm({ selectedSticker }) {
                         border: amount === v
                           ? `1px solid rgba(${theme.primary},0.7)`
                           : `1px solid rgba(255,255,255,0.15)`,
-                        background: amount === v ? `rgba(${theme.primary},0.2)` : "transparent",
+                        background: amount === v ? rgba(theme.primary, 0.18) : "transparent",
                         color: amount === v ? `rgb(${theme.primary})` : "rgba(255,255,255,0.55)",
                         boxShadow: amount === v ? `0 0 8px rgba(${theme.primary},0.25)` : "none",
                         transition: "all .2s",
@@ -374,10 +393,10 @@ export default function DonationForm({ selectedSticker }) {
                 <div style={{
                   display: "flex", alignItems: "center", justifyContent: "space-between",
                   padding: 10, borderRadius: 12,
-                  background: "rgba(255,255,255,0.04)",
+                  background: rgba(theme.baseSecondary, 0.42),
                   border: `1px solid rgba(${theme.primary},0.2)`,
                 }}>
-                  <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)" }}>รวมสติ๊กเกอร์</span>
+                  <span style={{ fontSize: 12, color: rgba(theme.mutedText, 0.58) }}>รวมสติ๊กเกอร์</span>
                   <span style={{ fontSize: 14, fontWeight: 500, color: `rgb(${theme.primary})` }}>฿{totalAmount}</span>
                 </div>
               )}
@@ -387,18 +406,9 @@ export default function DonationForm({ selectedSticker }) {
       </StepCard>
 
       {/* Step 3 */}
-      <StepCard step={3} title="แนบสลิปการโอนเงิน">
-        <img
-        src="/imgs/ice_bar_2.png"
-        alt="ice-left"
-        className="pointer-events-none absolute -top-1 -left-1 w-20 z-20 opacity-90"
-      />
-
-      <img
-        src="/imgs/ice_bar_2.png"
-        alt="ice-left"
-        className="pointer-events-none absolute -top-7 -right-3 w-90 z-20 opacity-90"
-      />
+      <StepCard step={3} title="แนบสลิปการโอนเงิน" theme={theme}>
+        <DecorationImage decoration={decorations.step3Left} />
+        <DecorationImage decoration={decorations.step3Right} />
         
         {slipPreview ? (
           <div style={{ position: "relative" }}>
@@ -419,7 +429,7 @@ export default function DonationForm({ selectedSticker }) {
                 border: `1px solid rgba(${theme.primary},0.3)`,
                 background: "rgba(0,0,0,0.6)",
                 display: "flex", alignItems: "center", justifyContent: "center",
-                cursor: "pointer", color: "rgba(255,255,255,0.7)",
+                cursor: "pointer", color: rgba(theme.text, 0.7),
               }}
             >
               <X style={{ width: 14, height: 14 }} />
@@ -438,20 +448,20 @@ export default function DonationForm({ selectedSticker }) {
                 ? `2px dashed rgba(${theme.primary},0.8)`
                 : `2px dashed rgba(${theme.primary},0.3)`,
               borderRadius: 12, padding: 32, cursor: "pointer",
-              background: isDragging ? `rgba(${theme.primary},0.08)` : "rgba(255,255,255,0.02)",
+              background: isDragging ? rgba(theme.primary, 0.1) : rgba(theme.baseSecondary, 0.28),
               transition: "all .2s",
             }}
           >
             <div style={{
               width: 48, height: 48, borderRadius: 12,
               border: `1px solid rgba(${theme.primary},0.3)`,
-              background: `rgba(${theme.primary},0.08)`,
+              background: rgba(theme.primary, 0.1),
               display: "flex", alignItems: "center", justifyContent: "center",
             }}>
               <Upload style={{ width: 20, height: 20, color: `rgba(${theme.primary},0.8)` }} />
             </div>
-            <p style={{ fontSize: 13, fontWeight: 500, color: "#fff" }}>คลิกหรือลากสลิปมาวางที่นี่</p>
-            <p style={{ fontSize: 11, color: "rgba(255,255,255,0.4)" }}>PNG, JPG (ต้องมี QR Code)</p>
+            <p style={{ fontSize: 13, fontWeight: 500, color: `rgb(${theme.text})` }}>คลิกหรือลากสลิปมาวางที่นี่</p>
+            <p style={{ fontSize: 11, color: rgba(theme.mutedText, 0.48) }}>PNG, JPG (ต้องมี QR Code)</p>
           </div>
         )}
 
@@ -482,9 +492,9 @@ export default function DonationForm({ selectedSticker }) {
             marginTop: 16, width: "100%",
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
             background: isSubmitting || !donorName || !slipFile
-              ? "rgba(186,230,253,0.2)"
-              : `rgb(${theme.primary})`,
-            color: isSubmitting || !donorName || !slipFile ? "rgba(255,255,255,0.3)" : "#0d2a3a",
+              ? rgba(theme.primary, 0.22)
+              : theme.buttonBackground,
+            color: isSubmitting || !donorName || !slipFile ? "rgba(255,255,255,0.3)" : `rgb(${theme.buttonText})`,
             fontWeight: 500, fontSize: 14,
             padding: "14px 24px", borderRadius: 99, border: "none",
             cursor: isSubmitting || !donorName || !slipFile ? "not-allowed" : "pointer",
@@ -498,8 +508,8 @@ export default function DonationForm({ selectedSticker }) {
             <>
               <span style={{
                 width: 16, height: 16, borderRadius: "50%",
-                border: "2px solid rgba(13,42,58,0.3)",
-                borderTopColor: "#0d2a3a",
+                border: `2px solid rgba(${theme.buttonText},0.3)`,
+                borderTopColor: `rgb(${theme.buttonText})`,
                 animation: "spin 0.8s linear infinite",
                 display: "inline-block",
               }} />
@@ -517,7 +527,7 @@ export default function DonationForm({ selectedSticker }) {
   );
 }
 
-function StepCard({ step, title, children }) {
+function StepCard({ step, title, children, theme }) {
   return (
     <motion.div
       initial={{ opacity: 0, y: 30, scale: 0.96 }}
@@ -540,7 +550,7 @@ function StepCard({ step, title, children }) {
       />
 
       {/* dark base */}
-      <div style={{ position: "absolute", inset: 0, background: "rgba(4, 15, 30, 0.92)" }} />
+      <div style={{ position: "absolute", inset: 0, background: theme.cardBackground }} />
 
       {/* glass */}
       <div style={{ position: "absolute", inset: 0, backdropFilter: "blur(20px)", WebkitBackdropFilter: "blur(20px)" }} />
@@ -550,7 +560,7 @@ function StepCard({ step, title, children }) {
         position: "absolute", inset: 0, borderRadius: 16, padding: 1,
         background: `linear-gradient(120deg, rgba(${theme.primary},0.8), rgba(${theme.secondary},0.8), rgba(${theme.accent},0.8))`,
       }}>
-        <div style={{ width: "100%", height: "100%", borderRadius: 15, background: "rgba(4, 15, 30, 0.95)" }} />
+        <div style={{ width: "100%", height: "100%", borderRadius: 15, background: theme.innerBackground }} />
       </div>
 
       {/* glow */}
@@ -576,7 +586,7 @@ function StepCard({ step, title, children }) {
             <div style={{
               position: "relative", width: 36, height: 36, borderRadius: 10,
               display: "flex", alignItems: "center", justifyContent: "center",
-              fontSize: 14, fontWeight: 700, color: "#0d2a3a",
+              fontSize: 14, fontWeight: 700, color: `rgb(${theme.buttonText})`,
               background: `linear-gradient(120deg, rgb(${theme.primary}), rgb(${theme.accent}))`,
             }}>
               {step}
@@ -584,10 +594,10 @@ function StepCard({ step, title, children }) {
           </motion.div>
 
           <div>
-            <p style={{ fontSize: 10, color: "rgba(255,255,255,0.4)", letterSpacing: "0.1em", textTransform: "uppercase" }}>
+            <p style={{ fontSize: 10, color: rgba(theme.mutedText, 0.42), letterSpacing: "0.1em", textTransform: "uppercase" }}>
               STEP {step}
             </p>
-            <h3 style={{ fontSize: 14, fontWeight: 500, color: "#fff" }}>{title}</h3>
+            <h3 style={{ fontSize: 14, fontWeight: 500, color: `rgb(${theme.text})` }}>{title}</h3>
           </div>
         </div>
 
@@ -597,10 +607,10 @@ function StepCard({ step, title, children }) {
   );
 }
 
-function InputField({ label, required, ...props }) {
+function InputField({ label, required, theme, ...props }) {
   return (
     <div>
-      <label style={{ display: "block", fontSize: 11, color: "rgba(255,255,255,0.5)", marginBottom: 6 }}>
+      <label style={{ display: "block", fontSize: 11, color: rgba(theme.mutedText, 0.58), marginBottom: 6 }}>
         {label} {required && <span style={{ color: `rgb(${theme.primary})` }}>*</span>}
       </label>
       <input
@@ -610,8 +620,8 @@ function InputField({ label, required, ...props }) {
           width: "100%", boxSizing: "border-box",
           border: `1px solid rgba(${theme.primary},0.25)`,
           borderRadius: 12, padding: "10px 14px",
-          fontSize: 13, color: "#fff",
-          background: `rgba(${theme.primary},0.06)`,
+          fontSize: 13, color: `rgb(${theme.text})`,
+          background: rgba(theme.primary, 0.08),
           outline: "none",
         }}
         {...props}

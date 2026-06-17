@@ -11,41 +11,45 @@ const SCHEDULE = [
   { day: "อาทิตย์", time: "15:00 - 20:00", game: "Special Event", live: false },
 ];
 
-export default function StreamSchedule() {
-  const theme = {
-  primary: "186, 230, 253",   // ฟ้าน้ำแข็งอ่อน (icy blue)
-  secondary: "147, 197, 253", // ฟ้าเย็น
-  accent: "255, 255, 255",    // ขาวหิมะ
+const defaultTheme = {
+  primary: "186, 230, 253",
+  secondary: "147, 197, 253",
+  accent: "255, 255, 255",
+  base: "4, 15, 30",
+  baseSecondary: "12, 28, 48",
+  text: "255, 255, 255",
+  mutedText: "255, 255, 255",
 };
+
+const rgba = (rgb, opacity) => `rgba(${rgb},${opacity})`;
+
+export default function StreamSchedule({
+  schedule = SCHEDULE,
+  visualTheme = defaultTheme,
+}) {
+  const theme = { ...defaultTheme, ...visualTheme };
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.3 }}
-      style={{
-        "--primary": theme.primary,
-        "--secondary": theme.secondary,
-        "--accent": theme.accent,
-      }}
-      className="relative overflow-hidden p-4 rounded-2xl"
+      className="relative overflow-hidden rounded-2xl p-4"
     >
-      {/* 🔥 Dark base */}
-      <div className="absolute inset-0 bg-black/30" />
-
-      {/* 🧊 Glass */}
       <div
         className="absolute inset-0"
         style={{
-          background: `linear-gradient(135deg, rgba(0,0,0,0.55), rgba(0,0,0,0.35))`,
+          background: `linear-gradient(135deg, ${rgba(theme.base, 0.82)}, ${rgba(
+            theme.baseSecondary,
+            0.68
+          )})`,
           backdropFilter: "blur(18px)",
         }}
       />
 
-      {/* 🌈 Gradient border */}
-      <div className="absolute inset-0 rounded-2xl p-[1px] pointer-events-none">
+      <div className="pointer-events-none absolute inset-0 rounded-2xl p-[1px]">
         <div
-          className="w-full h-full rounded-2xl"
+          className="h-full w-full rounded-2xl"
           style={{
             background: `linear-gradient(120deg, rgba(${theme.primary},0.6), rgba(${theme.secondary},0.6), rgba(${theme.accent},0.6))`,
             WebkitMask:
@@ -57,65 +61,82 @@ export default function StreamSchedule() {
         />
       </div>
 
-      {/* 💡 Glow */}
       <div
-        className="absolute -top-10 -right-10 w-40 h-40 rounded-full blur-3xl"
-        style={{ background: `rgba(${theme.primary},0.25)` }}
+        className="absolute -right-10 -top-10 h-40 w-40 rounded-full blur-3xl"
+        style={{ background: rgba(theme.primary, 0.25) }}
       />
       <div
-        className="absolute -bottom-10 -left-10 w-40 h-40 rounded-full blur-3xl"
-        style={{ background: `rgba(${theme.secondary},0.25)` }}
+        className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full blur-3xl"
+        style={{ background: rgba(theme.secondary, 0.25) }}
       />
 
-      {/* CONTENT */}
       <div className="relative z-10">
-        <div className="flex items-center gap-2 mb-4">
+        <div className="mb-4 flex items-center gap-2">
           <Calendar
-            className="w-4 h-4"
+            className="h-4 w-4"
             style={{ color: `rgb(${theme.primary})` }}
           />
-          <span className="text-xs font-medium text-white/60 uppercase tracking-wider">
+          <span
+            className="text-xs font-medium uppercase tracking-wider"
+            style={{ color: rgba(theme.mutedText, 0.6) }}
+          >
             ตารางสตรีม
           </span>
         </div>
 
         <div className="space-y-1.5">
-          {SCHEDULE.map((s, i) => (
+          {schedule.map((s, i) => (
             <motion.div
               key={i}
               initial={{ opacity: 0, x: 15 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.3 + i * 0.05 }}
-              className={`flex items-center gap-3 px-3 py-2 rounded-xl transition-all ${
+              className={`flex items-center gap-3 rounded-xl px-3 py-2 transition-all ${
                 s.live
-                  ? "bg-white/10 border border-white/20"
+                  ? "border border-white/20 bg-white/10"
                   : s.time === "OFF"
                   ? "opacity-40"
                   : "hover:bg-white/10"
               }`}
             >
               <span
-                className="text-xs font-medium w-12"
+                className="w-12 text-xs font-medium"
                 style={{
                   color: s.live
                     ? `rgb(${theme.primary})`
-                    : "rgba(255,255,255,0.6)",
+                    : rgba(theme.mutedText, 0.6),
                 }}
               >
                 {s.day}
               </span>
 
-              <div className="flex-1 min-w-0">
+              <div className="min-w-0 flex-1">
                 {s.time === "OFF" ? (
-                  <span className="text-xs text-white/50">วันหยุด</span>
+                  <span
+                    className="text-xs"
+                    style={{ color: rgba(theme.mutedText, 0.5) }}
+                  >
+                    วันหยุด
+                  </span>
                 ) : (
                   <>
                     <div className="flex items-center gap-1.5">
-                      <Clock className="w-3 h-3 text-white/50" />
-                      <span className="text-xs text-white">{s.time}</span>
+                      <Clock
+                        className="h-3 w-3"
+                        style={{ color: rgba(theme.mutedText, 0.5) }}
+                      />
+                      <span
+                        className="text-xs"
+                        style={{ color: `rgb(${theme.text})` }}
+                      >
+                        {s.time}
+                      </span>
                     </div>
                     {s.game && (
-                      <span className="text-[10px] text-white/50">
+                      <span
+                        className="text-[10px]"
+                        style={{ color: rgba(theme.mutedText, 0.5) }}
+                      >
                         {s.game}
                       </span>
                     )}
@@ -124,8 +145,8 @@ export default function StreamSchedule() {
               </div>
 
               {s.live && (
-                <span className="flex items-center gap-1 text-[10px] font-semibold text-red-400 bg-red-500/10 px-2 py-0.5 rounded-full">
-                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                <span className="flex items-center gap-1 rounded-full bg-red-500/10 px-2 py-0.5 text-[10px] font-semibold text-red-400">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-red-500" />
                   LIVE
                 </span>
               )}

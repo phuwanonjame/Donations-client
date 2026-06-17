@@ -1,4 +1,5 @@
 "use client";
+
 import { useEffect, useRef, useState } from "react";
 import {
   Play,
@@ -14,32 +15,40 @@ import { Slider } from "@/components/ui/slider";
 
 const MAX_TRACKS = 3;
 
+const defaultTheme = {
+  primary: "186, 230, 253",
+  secondary: "147, 197, 253",
+  accent: "255, 255, 255",
+  base: "4, 15, 30",
+  baseSecondary: "12, 28, 48",
+  text: "255, 255, 255",
+  mutedText: "255, 255, 255",
+  buttonText: "13, 42, 58",
+  buttonBackground:
+    "linear-gradient(120deg, rgb(186, 230, 253), rgb(255, 255, 255))",
+};
+
+const rgba = (rgb, opacity) => `rgba(${rgb},${opacity})`;
+
 function getVideoId(url) {
-  const reg =
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/;
+  const reg = /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&]+)/;
   const match = url.match(reg);
   return match ? match[1] : null;
 }
 
-export default function MusicPlayer() {
-  const playerRef = useRef(null);
+export default function MusicUploadPanel({ visualTheme = defaultTheme }) {
   const ytRef = useRef(null);
-
   const [ready, setReady] = useState(false);
-
   const [playlist, setPlaylist] = useState([]);
   const [urlInput, setUrlInput] = useState("");
-
   const [currentIndex, setCurrentIndex] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
-
   const [progress, setProgress] = useState(0);
   const [duration, setDuration] = useState(0);
-
   const [volume, setVolume] = useState(70);
   const [isMuted, setIsMuted] = useState(false);
+  const theme = { ...defaultTheme, ...visualTheme };
 
-  // 🔥 โหลด YouTube API
   useEffect(() => {
     if (window.YT) {
       setReady(true);
@@ -55,7 +64,6 @@ export default function MusicPlayer() {
     };
   }, []);
 
-  // 🎧 create player
   useEffect(() => {
     if (!ready || ytRef.current) return;
 
@@ -74,7 +82,6 @@ export default function MusicPlayer() {
     });
   }, [ready]);
 
-  // ⏱ sync progress
   useEffect(() => {
     const interval = setInterval(() => {
       if (!ytRef.current || !isPlaying) return;
@@ -89,7 +96,6 @@ export default function MusicPlayer() {
     return () => clearInterval(interval);
   }, [isPlaying]);
 
-  // 🎵 add track
   const addTrack = () => {
     if (playlist.length >= MAX_TRACKS) return;
 
@@ -108,19 +114,16 @@ export default function MusicPlayer() {
     setUrlInput("");
   };
 
-  // ▶️ play track
   const playTrack = (index) => {
     const track = playlist[index];
     if (!track || !ytRef.current) return;
 
     ytRef.current.loadVideoById(track.id);
     ytRef.current.setVolume(volume);
-
     setCurrentIndex(index);
     setIsPlaying(true);
   };
 
-  // ⏯ play pause
   const togglePlay = () => {
     if (!ytRef.current) return;
 
@@ -133,25 +136,20 @@ export default function MusicPlayer() {
     setIsPlaying(!isPlaying);
   };
 
-  // ⏩ next
   const nextTrack = () => {
-    if (playlist.length === 0) return;
+    if (playlist.length === 0 || currentIndex === null) return;
     const next = (currentIndex + 1) % playlist.length;
     playTrack(next);
   };
 
-  // ⏪ prev
   const prevTrack = () => {
-    if (playlist.length === 0) return;
-    const prev =
-      (currentIndex - 1 + playlist.length) % playlist.length;
+    if (playlist.length === 0 || currentIndex === null) return;
+    const prev = (currentIndex - 1 + playlist.length) % playlist.length;
     playTrack(prev);
   };
 
-  // 🧹 remove track
   const removeTrack = (index) => {
     const isCurrent = index === currentIndex;
-
     const newList = playlist.filter((_, i) => i !== index);
     setPlaylist(newList);
 
@@ -162,13 +160,11 @@ export default function MusicPlayer() {
     }
   };
 
-  // 🎚 seek
   const handleSeek = ([v]) => {
     ytRef.current?.seekTo(v, true);
     setProgress(v);
   };
 
-  // 🔊 volume
   const handleVolume = ([v]) => {
     setVolume(v);
     ytRef.current?.setVolume(v);
@@ -176,97 +172,140 @@ export default function MusicPlayer() {
   };
 
   return (
-    <div className="p-4 rounded-2xl bg-black/40 border border-white/10">
-      {/* INPUT */}
-      <div className="flex gap-2 mb-3">
-        <input
-          value={urlInput}
-          onChange={(e) => setUrlInput(e.target.value)}
-          placeholder="Paste YouTube link..."
-          className="flex-1 text-xs px-3 py-2 rounded-lg bg-white/5 text-white"
+    <div className="relative overflow-hidden rounded-2xl border border-white/10 p-4">
+      <div
+        className="absolute inset-0"
+        style={{
+          background: `linear-gradient(135deg, ${rgba(theme.base, 0.82)}, ${rgba(
+            theme.baseSecondary,
+            0.68
+          )})`,
+          backdropFilter: "blur(18px)",
+        }}
+      />
+
+      <div className="pointer-events-none absolute inset-0 rounded-2xl p-[1px]">
+        <div
+          className="h-full w-full rounded-2xl"
+          style={{
+            background: `linear-gradient(120deg, rgba(${theme.primary},0.6), rgba(${theme.secondary},0.6), rgba(${theme.accent},0.6))`,
+            WebkitMask:
+              "linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0)",
+            WebkitMaskComposite: "xor",
+            maskComposite: "exclude",
+            padding: "1px",
+          }}
         />
-        <button onClick={addTrack}>
-          <Plus />
-        </button>
       </div>
 
-      {/* PLAYER */}
-      {currentIndex !== null && playlist[currentIndex] && (
-        <div className="mb-3">
-          <img
-            src={playlist[currentIndex].thumbnail}
-            className="w-16 h-16 rounded mb-2"
+      <div
+        className="absolute -right-10 -top-10 h-40 w-40 rounded-full blur-3xl"
+        style={{ background: rgba(theme.primary, 0.18) }}
+      />
+      <div
+        className="absolute -bottom-10 -left-10 h-40 w-40 rounded-full blur-3xl"
+        style={{ background: rgba(theme.secondary, 0.18) }}
+      />
+
+      <div className="relative z-10">
+        <div className="mb-3 flex gap-2">
+          <input
+            value={urlInput}
+            onChange={(e) => setUrlInput(e.target.value)}
+            placeholder="Paste YouTube link..."
+            className="flex-1 rounded-lg border border-white/10 px-3 py-2 text-xs outline-none"
+            style={{
+              background: rgba(theme.baseSecondary, 0.45),
+              color: `rgb(${theme.text})`,
+            }}
           />
-
-          <Slider
-            value={[progress]}
-            max={duration || 100}
-            step={1}
-            onValueChange={handleSeek}
-          />
-
-          <div className="flex justify-between text-xs text-white/50">
-            <span>{Math.floor(progress)}s</span>
-            <span>{Math.floor(duration)}s</span>
-          </div>
-        </div>
-      )}
-
-      {/* CONTROLS */}
-      <div className="flex justify-between items-center mb-3">
-        <div className="flex items-center gap-2">
-          <button onClick={prevTrack}>
-            <SkipBack />
-          </button>
-
-          <button onClick={togglePlay}>
-            {isPlaying ? <Pause /> : <Play />}
-          </button>
-
-          <button onClick={nextTrack}>
-            <SkipForward />
-          </button>
-        </div>
-
-        <div className="flex items-center gap-2 w-32">
-          {isMuted ? <VolumeX /> : <Volume2 />}
-          <Slider
-            value={[volume]}
-            max={100}
-            step={1}
-            onValueChange={handleVolume}
-          />
-        </div>
-      </div>
-
-      {/* PLAYLIST */}
-      <div className="space-y-2">
-        {playlist.map((t, i) => (
-          <div
-            key={i}
-            className="flex items-center gap-2 p-2 bg-white/5 rounded"
+          <button
+            onClick={addTrack}
+            className="rounded-lg p-2"
+            style={{ color: `rgb(${theme.text})` }}
           >
+            <Plus />
+          </button>
+        </div>
+
+        {currentIndex !== null && playlist[currentIndex] && (
+          <div className="mb-3">
             <img
-              src={t.thumbnail}
-              className="w-10 h-10 rounded"
+              src={playlist[currentIndex].thumbnail}
+              className="mb-2 h-16 w-16 rounded"
             />
 
-            <button
-              onClick={() => playTrack(i)}
-              className="flex-1 text-left text-white text-sm"
+            <Slider
+              value={[progress]}
+              max={duration || 100}
+              step={1}
+              onValueChange={handleSeek}
+            />
+
+            <div
+              className="flex justify-between text-xs"
+              style={{ color: rgba(theme.mutedText, 0.5) }}
             >
-              Track {i + 1}
+              <span>{Math.floor(progress)}s</span>
+              <span>{Math.floor(duration)}s</span>
+            </div>
+          </div>
+        )}
+
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <button onClick={prevTrack} style={{ color: `rgb(${theme.text})` }}>
+              <SkipBack />
             </button>
 
-            <button onClick={() => removeTrack(i)}>
-              <Trash2 className="text-red-400" />
+            <button onClick={togglePlay} style={{ color: `rgb(${theme.text})` }}>
+              {isPlaying ? <Pause /> : <Play />}
+            </button>
+
+            <button onClick={nextTrack} style={{ color: `rgb(${theme.text})` }}>
+              <SkipForward />
             </button>
           </div>
-        ))}
-      </div>
 
-      {/* HIDDEN PLAYER */}
-      <div id="yt-player" />
+          <div className="flex w-32 items-center gap-2">
+            <span style={{ color: `rgb(${theme.text})` }}>
+              {isMuted ? <VolumeX /> : <Volume2 />}
+            </span>
+            <Slider
+              value={[volume]}
+              max={100}
+              step={1}
+              onValueChange={handleVolume}
+            />
+          </div>
+        </div>
+
+        <div className="space-y-2">
+          {playlist.map((t, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-2 rounded p-2"
+              style={{ background: rgba(theme.baseSecondary, 0.42) }}
+            >
+              <img src={t.thumbnail} className="h-10 w-10 rounded" />
+
+              <button
+                onClick={() => playTrack(i)}
+                className="flex-1 text-left text-sm"
+                style={{ color: `rgb(${theme.text})` }}
+              >
+                Track {i + 1}
+              </button>
+
+              <button onClick={() => removeTrack(i)}>
+                <Trash2 className="text-red-400" />
+              </button>
+            </div>
+          ))}
+        </div>
+
+        <div id="yt-player" />
+      </div>
     </div>
   );
 }
