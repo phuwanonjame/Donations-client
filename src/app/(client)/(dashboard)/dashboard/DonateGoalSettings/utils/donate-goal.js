@@ -1,4 +1,4 @@
-import { thaiGoogleFonts } from "../../DonateAlertSettings/components/utils/fontUtils";
+﻿import { thaiGoogleFonts } from "../../DonateAlertSettings/components/utils/fontUtils";
 
 const FONT_WEIGHT_TO_API = {
   normal: "400",
@@ -18,6 +18,32 @@ const resolveFontName = (fontValue, fallback = "IBM Plex Sans Thai") => {
   if (!fontValue) return fallback;
   const matchedById = thaiGoogleFonts.find((font) => font.id === fontValue);
   return matchedById?.name || fontValue;
+};
+
+export const resolveFontCssFamily = (fontValue, fallback = "'IBM Plex Sans Thai', sans-serif") => {
+  if (!fontValue) return fallback;
+
+  const normalized = String(fontValue).trim().toLowerCase();
+  const matched = thaiGoogleFonts.find((font) =>
+    font.id.toLowerCase() === normalized ||
+    font.name.toLowerCase() === normalized ||
+    font.cssFamily.toLowerCase() === normalized
+  );
+
+  return matched?.cssFamily || fontValue || fallback;
+};
+
+export const resolveFontLoadFamily = (fontValue, fallback = "IBM Plex Sans Thai") => {
+  if (!fontValue) return fallback;
+
+  const normalized = String(fontValue).trim().toLowerCase();
+  const matched = thaiGoogleFonts.find((font) =>
+    font.id.toLowerCase() === normalized ||
+    font.name.toLowerCase() === normalized ||
+    font.cssFamily.toLowerCase() === normalized
+  );
+
+  return matched?.name || fontValue || fallback;
 };
 
 const resolveFontId = (fontValue, fallback = "ibmplex") => {
@@ -61,7 +87,7 @@ export const createDefaultGoalMetadata = () => {
   return {
     type: "large",
     goal: {
-      name: "ค่าอาหารหมา",
+      name: "à¸„à¹ˆà¸²à¸­à¸²à¸«à¸²à¸£à¸«à¸¡à¸²",
       amount: 100,
       showAmount: true,
       color: "#FFFFFF",
@@ -72,7 +98,7 @@ export const createDefaultGoalMetadata = () => {
       strokeWidth: 2.5,
     },
     progress: {
-      text: "{{amount}}฿ ({{percentage}}%)",
+      text: "{{amount}}à¸¿ ({{percentage}}%)",
       color: "#0EA5E9",
       shine: true,
       shineEffect: "sweep",
@@ -83,16 +109,16 @@ export const createDefaultGoalMetadata = () => {
       fontFamily: "IBM Plex Sans Thai",
       barHeight: 32,
       largeTopFontSize: 30,
-      largeTopRightText: "{{amount}}฿/{{goal}}฿",
+      largeTopRightText: "{{amount}}à¸¿/{{goal}}à¸¿",
       largeBottomFontSize: 20,
-      largeBottomLeftText: "สิ้นสุดใน {{days}} วัน",
+      largeBottomLeftText: "à¸ªà¸´à¹‰à¸™à¸ªà¸¸à¸”à¹ƒà¸™ {{days}} à¸§à¸±à¸™",
       largeBottomRightText: "{{percentage}}%",
     },
     description: {
       color: "#FFFFFF",
       fontSize: 24,
-      leftText: "จากเป้าหมาย {{amount}}฿",
-      rightText: "สิ้นสุดใน {{days}} วัน",
+      leftText: "à¸ˆà¸²à¸à¹€à¸›à¹‰à¸²à¸«à¸¡à¸²à¸¢ {{amount}}à¸¿",
+      rightText: "à¸ªà¸´à¹‰à¸™à¸ªà¸¸à¸”à¹ƒà¸™ {{days}} à¸§à¸±à¸™",
       fontFamily: "IBM Plex Sans Thai",
       fontWeight: "500",
       strokeColor: "#000000",
@@ -267,3 +293,4 @@ export const calculateDaysRemaining = (endDate, isUseEndAt) => {
   const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
   return diffDays > 0 ? diffDays : 0;
 };
+

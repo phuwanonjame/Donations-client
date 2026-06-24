@@ -395,8 +395,8 @@ const PodiumCardClassic = memo(({ rank, name, amount, settings, highlightKey, an
   const isHighlight = useHighlight(highlightKey, keys.highlightKeys);
   const cs = useCardSettings(rank, settings, keys);
   const clipPath = getPedestalClipPath(cs.pedestalShape);
-  const boxShadow = cs.glowBlur > 0 ? `0 0 ${cs.glowBlur}px ${cs.glowColor}` : 'none';
-  const cardBackground = cs.backgroundColor || cs.pedestalColor;
+  const rankDef = RANK_DEFAULTS[rank];
+  const cardBackground = cs.backgroundColor || cs.pedestalColor || 'rgba(15,23,42,0.72)';
 
   return (
     <motion.div layout layoutId={`podium-classic-${rank}`}
@@ -406,36 +406,40 @@ const PodiumCardClassic = memo(({ rank, name, amount, settings, highlightKey, an
       style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0,
         outline: isHighlight ? '2px solid rgba(245,158,11,0.6)' : 'none',
-        borderRadius: cs.cardBorderRadius, position: 'relative',
+        borderRadius: cs.cardBorderRadius || 14, position: 'relative',
       }}
     >
-      {cs.showShine && (
-        <div style={{
-          position: 'absolute', top: -30, left: -30, right: -30, bottom: -30,
-          borderRadius: '50%', pointerEvents: 'none', zIndex: -1, animation: 'pulseShine 2s infinite',
-          background: `radial-gradient(circle, ${cs.glowColor.replace(')', ',0.35)').replace('rgba','rgba')} 0%, transparent 70%)`,
-        }} />
-      )}
       {cs.showBadge && (
-        <div style={{ marginBottom: cs.badgeOffsetY, zIndex: 2 }}>
+        <div style={{ marginBottom: cs.badgeOffsetY - 8, zIndex: 2 }}>
           <PodiumBadge rank={rank} settings={settings} keys={keys} />
         </div>
       )}
       <div style={{
-        width: '100%', height: cs.pedestalHeight, background: cardBackground,
+        width: '100%', height: cs.pedestalHeight,
+        background: `linear-gradient(180deg, ${withAlpha(rankDef.accentColor, 0.12)} 0%, ${cardBackground} 28%, ${cardBackground} 100%)`,
         clipPath,
         border: `${cs.cardBorderWidth}px ${cs.cardBorderStyle} ${cs.cardBorderColor}`,
         borderTop: cs.showBadge ? 'none' : `${cs.cardBorderWidth}px ${cs.cardBorderStyle} ${cs.cardBorderColor}`,
-        borderRadius: cs.cardBorderRadius,
+        borderRadius: `${cs.cardBorderRadius || 14}px ${cs.cardBorderRadius || 14}px 4px 4px`,
         display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: cs.textVerticalAlign,
-        padding: `12px ${cs.cardPaddingX}px ${cs.cardPaddingBottom}px`,
-        boxShadow, position: 'relative', overflow: 'hidden',
+        padding: `18px ${Math.max(cs.cardPaddingX, 12)}px ${Math.max(cs.cardPaddingBottom, 22)}px`,
+        position: 'relative', overflow: 'hidden',
+        boxShadow: `0 18px 40px ${withAlpha(rankDef.accentColor, 0.16)}, inset 0 1px 0 rgba(255,255,255,0.10)`,
       }}>
+        <div style={{
+          position: 'absolute', top: 0, left: 12, right: 12, height: 3,
+          borderRadius: 999, background: withAlpha(rankDef.accentColor, 0.9), opacity: 0.8,
+        }} />
         <PodiumBgLayers cs={cs} />
         <PodiumTextBlock name={name} amount={amount} showAmount={settings?.showAmount} cs={cs} />
       </div>
       {cs.showPedestalBase && cs.pedestalBaseHeight > 0 && (
-        <div style={{ height: cs.pedestalBaseHeight, width: '100%', background: cs.pedestalBaseColor, borderTop: '1px solid rgba(255,255,255,0.15)' }} />
+        <div style={{
+          height: Math.max(cs.pedestalBaseHeight, 10), width: '100%',
+          background: cs.pedestalBaseColor || 'rgba(255,255,255,0.05)',
+          borderTop: '1px solid rgba(255,255,255,0.10)',
+          borderRadius: '0 0 4px 4px',
+        }} />
       )}
     </motion.div>
   );
@@ -450,9 +454,7 @@ const PodiumCardsItem = memo(({ rank, entry, settings, highlightKey, animateEntr
   const cs = useCardSettings(rank, settings, keys);
   const isHighlight = useHighlight(highlightKey, keys.highlightKeys);
   const rankDef = RANK_DEFAULTS[rank];
-  const boxShadow = cs.glowBlur > 0 ? `0 0 ${cs.glowBlur}px ${cs.glowColor}` : 'none';
-  const badgeColW = 64;
-  const cardBackground = cs.backgroundColor || cs.pedestalColor;
+  const cardBackground = cs.backgroundColor || cs.pedestalColor || 'rgba(15,23,42,0.74)';
 
   return (
     <motion.div layout layoutId={`podium-cards-${rank}`}
@@ -460,28 +462,28 @@ const PodiumCardsItem = memo(({ rank, entry, settings, highlightKey, animateEntr
       animate={animateEntries ? { opacity: 1, x: 0 } : undefined}
       transition={{ type: 'spring', stiffness: 300, damping: 26, delay: (rank - 1) * 0.07 }}
       style={{
-        display: 'flex', alignItems: 'stretch', position: 'relative',
-        borderRadius: cs.cardBorderRadius || 10, overflow: 'hidden',
+        display: 'grid', gridTemplateColumns: '76px 1fr', alignItems: 'stretch', position: 'relative',
+        borderRadius: cs.cardBorderRadius || 12, overflow: 'hidden',
         border: `${cs.cardBorderWidth}px ${cs.cardBorderStyle} ${cs.cardBorderColor}`,
-        boxShadow, outline: isHighlight ? '2px solid rgba(245,158,11,0.6)' : 'none',
-        background: cardBackground,
+        background: `linear-gradient(135deg, ${withAlpha(rankDef.accentColor, 0.12)} 0%, ${cardBackground} 45%, ${cardBackground} 100%)`,
+        outline: isHighlight ? '2px solid rgba(245,158,11,0.6)' : 'none',
+        boxShadow: `0 14px 30px ${withAlpha(rankDef.accentColor, 0.12)}`,
       }}
     >
       <PodiumBgLayers cs={cs} />
       <div style={{
-        width: badgeColW, flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'center',
-        position: 'relative', zIndex: 2,
-        borderRight: `${cs.cardBorderWidth}px ${cs.cardBorderStyle} ${cs.cardBorderColor}`,
+        display: 'flex', alignItems: 'center', justifyContent: 'center',
+        position: 'relative', zIndex: 2, borderRight: `1px solid ${withAlpha(rankDef.accentColor, 0.18)}`,
+        background: withAlpha(rankDef.accentColor, 0.08),
       }}>
         {cs.showBadge
-          ? <PodiumBadge rank={rank} settings={settings} keys={keys} sizeOverride={52} />
-          : <span style={{ fontSize: 36, fontWeight: '900', fontFamily: "'Teko','Rajdhani',sans-serif", color: rankDef.accentColor, lineHeight: 1 }}>{rank}</span>
+          ? <PodiumBadge rank={rank} settings={settings} keys={keys} sizeOverride={48} />
+          : <span style={{ fontSize: 28, fontWeight: '900', fontFamily: "'Teko','Rajdhani',sans-serif", color: rankDef.accentColor, lineHeight: 1 }}>{rank}</span>
         }
       </div>
-      <div style={{ flex: 1, padding: `14px ${cs.cardPaddingX}px 14px 16px`, display: 'flex', alignItems: 'center', position: 'relative', zIndex: 2 }}>
+      <div style={{ padding: '14px 16px', display: 'flex', alignItems: 'center', position: 'relative', zIndex: 2 }}>
         <PodiumTextBlock name={entry.name} amount={entry.amount} showAmount={settings?.showAmount} cs={cs} alignOverride="left" />
       </div>
-      <div style={{ width: 4, background: rankDef.accentColor, opacity: 0.85, flexShrink: 0, zIndex: 2 }} />
     </motion.div>
   );
 });
@@ -515,10 +517,9 @@ const PodiumFloatingItem = memo(({ rank, entry, settings, highlightKey, animateE
   const cs = useCardSettings(rank, settings, keys);
   const isHighlight = useHighlight(highlightKey, keys.highlightKeys);
   const rankDef = RANK_DEFAULTS[rank];
-  const barH = rank === 1 ? 120 : rank === 2 ? 80 : 60;
-  const boxShadow = cs.glowBlur > 0 ? `0 0 ${cs.glowBlur}px ${cs.glowColor}` : 'none';
-  const floatBadgeSize = rank === 1 ? 80 : 66;
-  const cardBackground = cs.backgroundColor || cs.pedestalColor;
+  const barH = rank === 1 ? 112 : rank === 2 ? 82 : 70;
+  const floatBadgeSize = rank === 1 ? 76 : 62;
+  const cardBackground = cs.backgroundColor || cs.pedestalColor || 'rgba(15,23,42,0.70)';
 
   return (
     <motion.div layout layoutId={`podium-floating-${rank}`}
@@ -527,21 +528,20 @@ const PodiumFloatingItem = memo(({ rank, entry, settings, highlightKey, animateE
       transition={{ type: 'spring', stiffness: 300, damping: 26 }}
       style={{
         display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 0,
-        outline: isHighlight ? '2px solid rgba(245,158,11,0.6)' : 'none',
-        position: 'relative',
+        outline: isHighlight ? '2px solid rgba(245,158,11,0.6)' : 'none', position: 'relative',
       }}
     >
       {cs.showBadge && (
         <motion.div
-          initial={animateEntries ? { scale: 0.6, opacity: 0 } : false}
+          initial={animateEntries ? { scale: 0.7, opacity: 0 } : false}
           animate={animateEntries ? { scale: 1, opacity: 1 } : undefined}
           transition={{ type: 'spring', stiffness: 260, damping: 20, delay: 0.1 }}
-          style={{ marginBottom: -10, zIndex: 3 }}
+          style={{ marginBottom: -12, zIndex: 3 }}
         >
           <PodiumBadge rank={rank} settings={settings} keys={keys} sizeOverride={floatBadgeSize} />
         </motion.div>
       )}
-      <div style={{ width: '100%', textAlign: 'center', padding: '8px 4px 6px', zIndex: 2, position: 'relative' }}>
+      <div style={{ width: '100%', textAlign: 'center', padding: '10px 6px 8px', zIndex: 2, position: 'relative' }}>
         <div style={{
           fontSize: cs.usernameFontSize, fontWeight: cs.fontWeight, fontFamily: cs.fontFamily,
           color: cs.usernameColor, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
@@ -552,29 +552,24 @@ const PodiumFloatingItem = memo(({ rank, entry, settings, highlightKey, animateE
         {settings?.showAmount && (
           <div style={{
             fontSize: cs.amountFontSize, fontWeight: cs.fontWeight, fontFamily: cs.fontFamily,
-            color: cs.amountColor, marginTop: 2, ...cs.strokeStyle,
+            color: cs.amountColor, marginTop: 3, ...cs.strokeStyle,
           }}>
             {cs.amountPrefix}{entry.amount.toLocaleString()}
-          </div>
-        )}
-        {cs.showExtraLabel && cs.extraLabelText && (
-          <div style={{ fontSize: cs.extraLabelFontSize, color: cs.extraLabelColor, marginTop: 2, fontFamily: cs.fontFamily }}>
-            {cs.extraLabelText}
           </div>
         )}
       </div>
       <div style={{
         width: '100%', height: barH, position: 'relative', overflow: 'hidden',
-        background: cardBackground,
+        background: `linear-gradient(180deg, ${withAlpha(rankDef.accentColor, 0.14)} 0%, ${cardBackground} 100%)`,
+        border: `1px solid ${withAlpha(rankDef.accentColor, 0.22)}`,
         borderTop: `3px solid ${rankDef.accentColor}`,
-        borderRadius: cs.cardBorderRadius ? `${cs.cardBorderRadius}px ${cs.cardBorderRadius}px 0 0` : '4px 4px 0 0',
-        boxShadow,
+        borderRadius: '12px 12px 4px 4px',
+        boxShadow: `0 16px 34px ${withAlpha(rankDef.accentColor, 0.12)}`,
       }}>
         <PodiumBgLayers cs={cs} />
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3, background: rankDef.accentColor, zIndex: 2 }} />
       </div>
       {cs.showPedestalBase && cs.pedestalBaseHeight > 0 && (
-        <div style={{ height: cs.pedestalBaseHeight, width: '100%', background: cs.pedestalBaseColor }} />
+        <div style={{ height: Math.max(cs.pedestalBaseHeight, 8), width: '100%', background: cs.pedestalBaseColor || 'rgba(255,255,255,0.05)' }} />
       )}
     </motion.div>
   );
@@ -607,40 +602,34 @@ const PodiumSpotlightHero = memo(({ entry, settings, highlightKey, animateEntrie
   const cs = useCardSettings(rank, settings, keys);
   const isHighlight = useHighlight(highlightKey, keys.highlightKeys);
   const rankDef = RANK_DEFAULTS[rank];
-  const cardBackground = cs.backgroundColor || cs.pedestalColor || 'rgba(15,23,42,0.72)';
+  const cardBackground = cs.backgroundColor || cs.pedestalColor || 'rgba(15,23,42,0.76)';
 
   return (
     <motion.div
       layout
       layoutId="podium-spotlight-1"
-      initial={animateEntries ? { opacity: 0, scale: 0.96, y: 18 } : false}
+      initial={animateEntries ? { opacity: 0, scale: 0.97, y: 18 } : false}
       animate={animateEntries ? { opacity: 1, scale: 1, y: 0 } : undefined}
       transition={{ type: 'spring', stiffness: 280, damping: 24 }}
       style={{
-        position: 'relative', overflow: 'hidden', borderRadius: 8,
-        minHeight: 150, padding: '22px 20px',
-        display: 'grid', gridTemplateColumns: '108px 1fr', gap: 16, alignItems: 'center',
-        background: `radial-gradient(circle at 18% 18%, ${withAlpha(rankDef.accentColor, 0.35)}, transparent 38%), linear-gradient(135deg, ${cardBackground}, rgba(15,23,42,0.72))`,
-        border: `1px solid ${cs.cardBorderColor || withAlpha(rankDef.accentColor, 0.45)}`,
-        boxShadow: `0 24px 60px ${withAlpha(rankDef.accentColor, 0.25)}`,
+        position: 'relative', overflow: 'hidden', borderRadius: 16,
+        minHeight: 148, padding: '22px 22px',
+        display: 'grid', gridTemplateColumns: '96px 1fr', gap: 18, alignItems: 'center',
+        background: `linear-gradient(135deg, ${withAlpha(rankDef.accentColor, 0.10)} 0%, ${cardBackground} 34%, ${cardBackground} 100%)`,
+        border: `1px solid ${withAlpha(rankDef.accentColor, 0.26)}`,
+        boxShadow: `0 22px 48px ${withAlpha(rankDef.accentColor, 0.14)}`,
         outline: isHighlight ? '2px solid rgba(245,158,11,0.65)' : 'none',
       }}
     >
-      {cs.showShine && (
-        <div style={{
-          position: 'absolute', inset: '-45% 20% auto -10%', height: '85%',
-          background: `radial-gradient(circle, ${withAlpha(rankDef.accentColor, 0.34)}, transparent 65%)`,
-          filter: 'blur(18px)', pointerEvents: 'none',
-        }} />
-      )}
+      <div style={{ position: 'absolute', inset: 0, background: `linear-gradient(90deg, ${withAlpha(rankDef.accentColor, 0.08)} 0%, transparent 48%)`, pointerEvents: 'none' }} />
       <div style={{ position: 'relative', zIndex: 2, display: 'flex', justifyContent: 'center' }}>
-        <PodiumBadge rank={rank} settings={settings} keys={keys} sizeOverride={96} />
+        <PodiumBadge rank={rank} settings={settings} keys={keys} sizeOverride={88} />
       </div>
       <div style={{ position: 'relative', zIndex: 2 }}>
         <div style={{
-          display: 'inline-flex', marginBottom: 7, padding: '3px 9px', borderRadius: 999,
-          background: withAlpha(rankDef.accentColor, 0.18),
-          color: rankDef.accentColor, fontSize: 11, fontWeight: 900, letterSpacing: 1,
+          display: 'inline-flex', marginBottom: 8, padding: '4px 10px', borderRadius: 999,
+          background: withAlpha(rankDef.accentColor, 0.14),
+          color: rankDef.accentColor, fontSize: 11, fontWeight: 900, letterSpacing: 0.8,
         }}>
           TOP SUPPORTER
         </div>
@@ -681,8 +670,8 @@ const PodiumNeonStepsItem = memo(({ rank, entry, settings, highlightKey, animate
   const cs = useCardSettings(rank, settings, keys);
   const isHighlight = useHighlight(highlightKey, keys.highlightKeys);
   const rankDef = RANK_DEFAULTS[rank];
-  const stepHeight = rank === 1 ? 170 : rank === 2 ? 126 : 104;
-  const cardBackground = cs.backgroundColor || cs.pedestalColor || 'rgba(15,23,42,0.62)';
+  const stepHeight = rank === 1 ? 164 : rank === 2 ? 126 : 104;
+  const cardBackground = cs.backgroundColor || cs.pedestalColor || 'rgba(15,23,42,0.74)';
 
   return (
     <motion.div
@@ -691,26 +680,22 @@ const PodiumNeonStepsItem = memo(({ rank, entry, settings, highlightKey, animate
       initial={animateEntries ? { opacity: 0, y: 24 } : false}
       animate={animateEntries ? { opacity: 1, y: 0 } : undefined}
       transition={{ type: 'spring', stiffness: 290, damping: 24, delay: rank * 0.04 }}
-      style={{
-        alignSelf: 'end', position: 'relative', minWidth: 0,
-        outline: isHighlight ? '2px solid rgba(245,158,11,0.65)' : 'none',
-      }}
+      style={{ alignSelf: 'end', position: 'relative', minWidth: 0, outline: isHighlight ? '2px solid rgba(245,158,11,0.65)' : 'none' }}
     >
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: -14, position: 'relative', zIndex: 3 }}>
-        <PodiumBadge rank={rank} settings={settings} keys={keys} sizeOverride={rank === 1 ? 76 : 62} />
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: -12, position: 'relative', zIndex: 3 }}>
+        <PodiumBadge rank={rank} settings={settings} keys={keys} sizeOverride={rank === 1 ? 72 : 58} />
       </div>
       <div style={{
-        height: stepHeight, borderRadius: '8px 8px 3px 3px', padding: '32px 10px 14px',
+        height: stepHeight, borderRadius: '14px 14px 4px 4px', padding: '30px 12px 14px',
         display: 'flex', flexDirection: 'column', justifyContent: 'flex-end',
         position: 'relative', overflow: 'hidden',
-        background: `linear-gradient(180deg, ${withAlpha(rankDef.accentColor, 0.24)}, ${cardBackground})`,
-        border: `1px solid ${withAlpha(rankDef.accentColor, 0.46)}`,
-        boxShadow: `0 0 28px ${withAlpha(rankDef.accentColor, 0.25)}, inset 0 1px 0 rgba(255,255,255,0.18)`,
+        background: `linear-gradient(180deg, ${withAlpha(rankDef.accentColor, 0.18)} 0%, ${cardBackground} 38%, ${cardBackground} 100%)`,
+        border: `1px solid ${withAlpha(rankDef.accentColor, 0.26)}`,
+        boxShadow: `0 18px 42px ${withAlpha(rankDef.accentColor, 0.12)}`,
       }}>
         <div style={{
-          position: 'absolute', left: 8, right: 8, top: 9, height: 2,
-          background: rankDef.accentColor,
-          boxShadow: `0 0 16px ${rankDef.accentColor}`,
+          position: 'absolute', left: 12, right: 12, top: 10, height: 2,
+          borderRadius: 999, background: rankDef.accentColor, opacity: 0.85,
         }} />
         <PodiumTextBlock name={entry.name} amount={entry.amount} showAmount={settings?.showAmount} cs={cs} />
       </div>
@@ -753,14 +738,15 @@ const PodiumCompactBadgeItem = memo(({ rank, entry, settings, highlightKey, anim
       animate={animateEntries ? { opacity: 1, y: 0 } : undefined}
       transition={{ type: 'spring', stiffness: 320, damping: 24 }}
       style={{
-        minWidth: 0, padding: '12px 8px', borderRadius: 8, textAlign: 'center',
-        background: `linear-gradient(180deg, ${withAlpha(rankDef.accentColor, 0.18)}, rgba(15,23,42,0.12))`,
-        border: `1px solid ${withAlpha(rankDef.accentColor, 0.28)}`,
+        minWidth: 0, padding: '14px 10px', borderRadius: 14, textAlign: 'center',
+        background: `linear-gradient(180deg, ${withAlpha(rankDef.accentColor, 0.12)} 0%, rgba(15,23,42,0.52) 100%)`,
+        border: `1px solid ${withAlpha(rankDef.accentColor, 0.22)}`,
         outline: isHighlight ? '2px solid rgba(245,158,11,0.65)' : 'none',
+        boxShadow: `0 12px 26px ${withAlpha(rankDef.accentColor, 0.10)}`,
       }}
     >
-      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 8 }}>
-        <PodiumBadge rank={rank} settings={settings} keys={keys} sizeOverride={rank === 1 ? 72 : 58} />
+      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 10 }}>
+        <PodiumBadge rank={rank} settings={settings} keys={keys} sizeOverride={rank === 1 ? 68 : 56} />
       </div>
       <PodiumTextBlock name={entry.name} amount={entry.amount} showAmount={settings?.showAmount} cs={cs} />
     </motion.div>
@@ -1192,3 +1178,9 @@ const MemoizedLeaderboardPreview = memo(LeaderboardPreview);
 MemoizedLeaderboardPreview.displayName = 'LeaderboardPreview';
 
 export default MemoizedLeaderboardPreview;
+
+
+
+
+
+

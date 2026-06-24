@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { memo, useDeferredValue, useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Palette,
@@ -46,6 +46,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import DonatePageRenderer from "@/components/donation/shared/DonatePageRenderer";
 import { donationDecorationPresets } from "@/components/donation/shared/donatePageConfig";
+import {
+  loadDonatePageSettings,
+  saveDonatePageSettings,
+} from "@/components/donation/shared/donatePageStorage";
 
 const defaultDecorationPreset =
   donationDecorationPresets.find((preset) => preset.id === "ice-default") ||
@@ -464,6 +468,10 @@ function SectionCard({ id, title, description, icon: Icon, children }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.25 }}
       className="relative overflow-hidden rounded-2xl border border-slate-700/60 bg-slate-900/60 p-5 shadow-2xl shadow-black/20 backdrop-blur-xl"
+      style={{
+        contentVisibility: "auto",
+        containIntrinsicSize: "480px",
+      }}
     >
       <div className="pointer-events-none absolute right-0 top-0 h-20 w-44 rounded-bl-full bg-cyan-300/10 blur-2xl" />
 
@@ -547,6 +555,12 @@ function ToggleRow({ icon: Icon, title, description, checked, onChange }) {
 export default function DonatePageSettings() {
   const [activeTab, setActiveTab] = useState("theme");
   const [settings, setSettings] = useState(defaultSettings);
+  const [saveMessage, setSaveMessage] = useState("");
+  const deferredSettings = useDeferredValue(settings);
+
+  useEffect(() => {
+    setSettings(loadDonatePageSettings(defaultSettings));
+  }, []);
 
   const selectedTheme = useMemo(() => {
     return themes.find((theme) => theme.id === settings.theme) || themes[0];
@@ -634,6 +648,23 @@ export default function DonatePageSettings() {
         [key]: value,
       },
     }));
+  };
+
+  const handleRestoreSaved = () => {
+    setSettings(loadDonatePageSettings(defaultSettings));
+    setSaveMessage("โหลดค่าที่บันทึกล่าสุดกลับมาแล้ว");
+  };
+
+  const handleSaveSettings = (mode = "publish") => {
+    const saved = saveDonatePageSettings(settings);
+
+    setSaveMessage(
+      saved
+        ? mode === "draft"
+          ? "บันทึกร่างแล้ว และหน้าโปรไฟล์จริงจะใช้ค่านี้ชั่วคราว"
+          : "บันทึกและอัปเดตหน้าโปรไฟล์จริงแล้ว"
+        : "บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง"
+    );
   };
 
   const updateSocial = (id, key, value) => {
@@ -810,7 +841,7 @@ export default function DonatePageSettings() {
         </aside>
 
         <main className="min-w-0">
-          <header className="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/60 px-4 py-3 backdrop-blur-xl lg:px-6">
+          <header className="sticky top-0 z-30 border-b border-slate-800/80 bg-slate-950/95 px-4 py-3 lg:px-6">
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-700 bg-slate-900/60 text-cyan-300">
@@ -828,6 +859,7 @@ export default function DonatePageSettings() {
                 <Button
                   variant="outline"
                   className="hidden border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white md:inline-flex"
+                  onClick={() => handleSaveSettings("draft")}
                 >
                   <Eye className="mr-2 h-4 w-4" />
                   ดูตัวอย่างเต็มจอ
@@ -841,7 +873,10 @@ export default function DonatePageSettings() {
                   บันทึกร่าง
                 </Button>
 
-                <Button className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/20 hover:from-cyan-400 hover:to-purple-400">
+                <Button
+                  className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/20 hover:from-cyan-400 hover:to-purple-400"
+                  onClick={() => handleSaveSettings("publish")}
+                >
                   <Check className="mr-2 h-4 w-4" />
                   บันทึก & เผยแพร่
                 </Button>
@@ -1834,22 +1869,32 @@ export default function DonatePageSettings() {
                 </div>
               </SectionCard>
 
-              <div className="sticky bottom-0 z-20 -mx-4 border-t border-slate-800 bg-slate-950/80 px-4 py-4 backdrop-blur-xl lg:-mx-6 lg:px-6">
+              <div className="sticky bottom-0 z-20 -mx-4 border-t border-slate-800 bg-slate-950/95 px-4 py-4 lg:-mx-6 lg:px-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
+                  {saveMessage ? (
+                    <div className="flex items-center text-sm text-emerald-300 sm:mr-auto">
+                      {saveMessage}
+                    </div>
+                  ) : null}
                   <Button
                     variant="outline"
                     className="border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white"
+                    onClick={handleRestoreSaved}
                   >
                     ยกเลิก
                   </Button>
                   <Button
                     variant="outline"
                     className="border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white"
+                    onClick={() => handleSaveSettings("draft")}
                   >
                     <Save className="mr-2 h-4 w-4" />
                     บันทึกร่าง
                   </Button>
-                  <Button className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/20 hover:from-cyan-400 hover:to-purple-400">
+                  <Button
+                    className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/20 hover:from-cyan-400 hover:to-purple-400"
+                    onClick={() => handleSaveSettings("publish")}
+                  >
                     <Check className="mr-2 h-4 w-4" />
                     บันทึก & เผยแพร่
                   </Button>
@@ -1858,7 +1903,7 @@ export default function DonatePageSettings() {
             </div>
 
             <aside className="hidden xl:block">
-              <div className="sticky top-[88px] rounded-2xl border border-slate-700/70 bg-slate-950/70 p-4 shadow-2xl shadow-black/30 backdrop-blur-xl">
+              <div className="sticky top-[88px] rounded-2xl border border-slate-700/70 bg-slate-950/92 p-4 shadow-2xl shadow-black/30">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">
@@ -1891,7 +1936,7 @@ export default function DonatePageSettings() {
                   </div>
                 </div>
 
-                <LivePreview settings={settings} selectedTheme={selectedTheme} />
+                <LivePreview settings={deferredSettings} optimizeForEditor />
               </div>
             </aside>
           </div>
@@ -2242,12 +2287,12 @@ function LegacyLivePreview({ settings, selectedTheme }) {
   );
 }
 
-function LivePreview({ settings, selectedTheme }) {
+const LivePreview = memo(function LivePreview({ settings, optimizeForEditor = false }) {
   return (
     <DonatePageRenderer
       settings={settings}
-      selectedTheme={selectedTheme}
       preview
+      optimizeForEditor={optimizeForEditor}
     />
   );
-}
+});

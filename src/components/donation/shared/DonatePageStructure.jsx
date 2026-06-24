@@ -14,6 +14,33 @@ import DonationForm from "@/components/donation/view/DonationForm";
 import ProfileHeader2 from "@/components/donation/view/ProfileHeader2";
 import MusicUploadPanel from "@/components/donation/edit/MusicUploadPanel";
 
+const SNOW_PARTICLES = [
+  { className: "left-[4%] top-[3%] h-1.5 w-1.5", duration: 5.2, delay: 0.1 },
+  { className: "left-[8%] top-[12%] h-2 w-2", duration: 6.4, delay: 0.4 },
+  { className: "left-[12%] top-[22%] h-1.5 w-1.5", duration: 5.8, delay: 0.8 },
+  { className: "left-[16%] top-[33%] h-2 w-2", duration: 6.8, delay: 0.2 },
+  { className: "left-[20%] top-[44%] h-1.5 w-1.5", duration: 5.6, delay: 0.6 },
+  { className: "left-[24%] top-[56%] h-2 w-2", duration: 7.1, delay: 0.9 },
+  { className: "left-[28%] top-[68%] h-1.5 w-1.5", duration: 5.9, delay: 0.3 },
+  { className: "left-[32%] top-[80%] h-2 w-2", duration: 6.6, delay: 1.1 },
+  { className: "left-[36%] top-[10%] h-1.5 w-1.5", duration: 5.4, delay: 0.5 },
+  { className: "left-[40%] top-[20%] h-2 w-2", duration: 6.9, delay: 0.7 },
+  { className: "left-[44%] top-[30%] h-1.5 w-1.5", duration: 5.7, delay: 0.2 },
+  { className: "left-[48%] top-[40%] h-2 w-2", duration: 6.7, delay: 1.0 },
+  { className: "left-[52%] top-[50%] h-1.5 w-1.5", duration: 5.5, delay: 0.4 },
+  { className: "left-[56%] top-[60%] h-2 w-2", duration: 6.5, delay: 0.8 },
+  { className: "left-[60%] top-[70%] h-1.5 w-1.5", duration: 5.8, delay: 0.3 },
+  { className: "left-[64%] top-[82%] h-2 w-2", duration: 7.2, delay: 1.2 },
+  { className: "left-[68%] top-[8%] h-1.5 w-1.5", duration: 5.3, delay: 0.2 },
+  { className: "left-[72%] top-[18%] h-2 w-2", duration: 6.3, delay: 0.9 },
+  { className: "left-[76%] top-[28%] h-1.5 w-1.5", duration: 5.6, delay: 0.4 },
+  { className: "left-[80%] top-[38%] h-2 w-2", duration: 6.8, delay: 0.6 },
+  { className: "left-[84%] top-[48%] h-1.5 w-1.5", duration: 5.7, delay: 1.0 },
+  { className: "left-[88%] top-[58%] h-2 w-2", duration: 6.6, delay: 0.5 },
+  { className: "left-[92%] top-[68%] h-1.5 w-1.5", duration: 5.9, delay: 0.7 },
+  { className: "left-[96%] top-[78%] h-2 w-2", duration: 6.4, delay: 1.1 },
+];
+
 function Snowfall() {
   const canvasRef = useRef(null);
 
@@ -90,36 +117,9 @@ function Snowfall() {
 }
 
 function SnowOverlay() {
-  const particles = [
-    { className: "left-[4%] top-[3%] h-1.5 w-1.5", duration: 5.2, delay: 0.1 },
-    { className: "left-[8%] top-[12%] h-2 w-2", duration: 6.4, delay: 0.4 },
-    { className: "left-[12%] top-[22%] h-1.5 w-1.5", duration: 5.8, delay: 0.8 },
-    { className: "left-[16%] top-[33%] h-2 w-2", duration: 6.8, delay: 0.2 },
-    { className: "left-[20%] top-[44%] h-1.5 w-1.5", duration: 5.6, delay: 0.6 },
-    { className: "left-[24%] top-[56%] h-2 w-2", duration: 7.1, delay: 0.9 },
-    { className: "left-[28%] top-[68%] h-1.5 w-1.5", duration: 5.9, delay: 0.3 },
-    { className: "left-[32%] top-[80%] h-2 w-2", duration: 6.6, delay: 1.1 },
-    { className: "left-[36%] top-[10%] h-1.5 w-1.5", duration: 5.4, delay: 0.5 },
-    { className: "left-[40%] top-[20%] h-2 w-2", duration: 6.9, delay: 0.7 },
-    { className: "left-[44%] top-[30%] h-1.5 w-1.5", duration: 5.7, delay: 0.2 },
-    { className: "left-[48%] top-[40%] h-2 w-2", duration: 6.7, delay: 1.0 },
-    { className: "left-[52%] top-[50%] h-1.5 w-1.5", duration: 5.5, delay: 0.4 },
-    { className: "left-[56%] top-[60%] h-2 w-2", duration: 6.5, delay: 0.8 },
-    { className: "left-[60%] top-[70%] h-1.5 w-1.5", duration: 5.8, delay: 0.3 },
-    { className: "left-[64%] top-[82%] h-2 w-2", duration: 7.2, delay: 1.2 },
-    { className: "left-[68%] top-[8%] h-1.5 w-1.5", duration: 5.3, delay: 0.2 },
-    { className: "left-[72%] top-[18%] h-2 w-2", duration: 6.3, delay: 0.9 },
-    { className: "left-[76%] top-[28%] h-1.5 w-1.5", duration: 5.6, delay: 0.4 },
-    { className: "left-[80%] top-[38%] h-2 w-2", duration: 6.8, delay: 0.6 },
-    { className: "left-[84%] top-[48%] h-1.5 w-1.5", duration: 5.7, delay: 1.0 },
-    { className: "left-[88%] top-[58%] h-2 w-2", duration: 6.6, delay: 0.5 },
-    { className: "left-[92%] top-[68%] h-1.5 w-1.5", duration: 5.9, delay: 0.7 },
-    { className: "left-[96%] top-[78%] h-2 w-2", duration: 6.4, delay: 1.1 },
-  ];
-
   return (
     <div className="pointer-events-none absolute inset-0 z-20 opacity-95 mix-blend-screen">
-      {particles.map((particle, index) => (
+      {SNOW_PARTICLES.map((particle, index) => (
         <motion.div
           key={index}
           className={`absolute rounded-full bg-white shadow-[0_0_14px_rgba(255,255,255,0.75)] ${particle.className}`}
@@ -190,6 +190,7 @@ function mapRecentDonations(donations) {
 export default function DonatePageStructure({
   settings,
   preview = false,
+  optimizeForEditor = false,
   className = "",
 }) {
   const [selectedSticker, setSelectedSticker] = useState(null);
@@ -286,19 +287,34 @@ export default function DonatePageStructure({
     () => settings.design?.sectionDecorations || {},
     [settings.design]
   );
+  const headerThemeColors = useMemo(
+    () => ({
+      primary: `rgb(${sectionTheme.primary || "186, 230, 253"})`,
+      glow: `rgb(${sectionTheme.secondary || sectionTheme.primary || "147, 197, 253"})`,
+    }),
+    [sectionTheme]
+  );
+
+  const shouldUseFixedBackground = !preview && !optimizeForEditor;
+  const shouldUseBackdropBlur = !optimizeForEditor;
+  const shouldShowSnowEffect =
+    settings.design.snowEffect && !(preview && optimizeForEditor);
 
   return (
     <div
       ref={preview ? previewRef : null}
-      className={`relative min-h-screen bg-cover bg-center bg-fixed ${className}`.trim()}
+      className={`relative min-h-screen bg-cover bg-center ${shouldUseFixedBackground ? "bg-fixed" : ""} ${className}`.trim()}
       style={{
         backgroundImage:
           "url('https://images.unsplash.com/photo-1542751371-adc38448a05e')",
+        contain: preview ? "paint" : undefined,
       }}
     >
-      <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+      <div
+        className={`absolute inset-0 bg-black/30 ${shouldUseBackdropBlur ? "backdrop-blur-sm" : ""}`}
+      />
 
-      {settings.design.snowEffect && (preview ? <SnowOverlay /> : <Snowfall />)}
+      {shouldShowSnowEffect && (preview ? <SnowOverlay /> : <Snowfall />)}
 
       <div className="relative z-10">
         <div className={preview ? "flex justify-center pt-4" : "flex justify-center pt-6"}>
@@ -323,7 +339,10 @@ export default function DonatePageStructure({
           {settings.display.showProfileHeader && (
             <div className="mb-5">
               {template === 1 ? (
-                <ProfileHeader profile={profile} />
+                <ProfileHeader
+                  profile={profile}
+                  themeColors={headerThemeColors}
+                />
               ) : (
                 <ProfileHeader2 profile={profile} />
               )}
@@ -378,7 +397,7 @@ export default function DonatePageStructure({
                   : "order-1 space-y-5 lg:order-2 lg:col-span-4"
               }
             >
-              {settings.display.showMusicPanel && (
+              {!preview && settings.display.showMusicPanel && (
                 <MusicUploadPanel visualTheme={sectionTheme} />
               )}
               {settings.display.showMusicPanel && (

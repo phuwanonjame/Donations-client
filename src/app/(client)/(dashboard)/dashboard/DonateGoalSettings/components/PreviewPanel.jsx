@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+﻿import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Slider } from '@/components/ui/slider';
@@ -8,7 +8,7 @@ import { getDashboardCopy } from '../../i18n';
 
 import GoalPreview from './GoalPreview';
 import SectionWrapper from './SectionWrapper';
-import { toMetadata } from '../utils/donate-goal';
+import { resolveFontLoadFamily, toMetadata } from '../utils/donate-goal';
 import { useDonateGoalSettings } from './context/DonateGoalSettingsProvider';
 
 const PreviewPanel = React.memo(({ settings: settingsProp, update: updateProp, onSave }) => {
@@ -27,6 +27,37 @@ const PreviewPanel = React.memo(({ settings: settingsProp, update: updateProp, o
   useEffect(() => {
     console.log('PreviewPanel received new settings:', settings);
   }, [settings]);
+
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+
+    const families = [
+      resolveFontLoadFamily(settings.goalFontFamily),
+      resolveFontLoadFamily(settings.progressFontFamily),
+      resolveFontLoadFamily(settings.descriptionFontFamily),
+    ];
+
+    families.forEach((family) => {
+      if (!family) return;
+
+      const normalized = String(family).trim().replace(/^['"]|['"]$/g, '');
+      const lowered = normalized.toLowerCase();
+
+      if (['sans-serif', 'serif', 'monospace', 'cursive', 'fantasy', 'system-ui', 'impact'].includes(lowered)) {
+        return;
+      }
+
+      if (document.querySelector(`link[data-gf="${normalized}"]`)) {
+        return;
+      }
+
+      const link = document.createElement('link');
+      link.rel = 'stylesheet';
+      link.href = `https://fonts.googleapis.com/css2?family=${encodeURIComponent(normalized).replace(/%20/g, '+')}:wght@300;400;500;600;700;800;900&display=swap`;
+      link.setAttribute('data-gf', normalized);
+      document.head.appendChild(link);
+    });
+  }, [settings.descriptionFontFamily, settings.goalFontFamily, settings.progressFontFamily]);
 
   const handleSliderChange = useCallback(([value]) => {
     update('currentAmount', value);
@@ -118,3 +149,4 @@ const PreviewPanel = React.memo(({ settings: settingsProp, update: updateProp, o
 PreviewPanel.displayName = 'PreviewPanel';
 
 export default PreviewPanel;
+

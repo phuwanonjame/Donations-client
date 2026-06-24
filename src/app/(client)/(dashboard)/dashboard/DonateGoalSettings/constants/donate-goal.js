@@ -1,4 +1,4 @@
-import {
+﻿import {
   thaiGoogleFonts,
   fontWeights as alertFontWeights,
 } from '../../DonateAlertSettings/components/utils/fontUtils';
@@ -55,7 +55,7 @@ export const progressShineEffects = [
 
 export const defaultSettings = {
   type: 'main',
-  goalName: 'ค่าอาหารหมา',
+  goalName: 'à¸„à¹ˆà¸²à¸­à¸²à¸«à¸²à¸£à¸«à¸¡à¸²',
   goalAmount: 100,
   goalFontFamily: 'kanit',
   goalFontWeight: 'bold',
@@ -64,7 +64,7 @@ export const defaultSettings = {
   goalStrokeWidth: '0px',
   goalStrokeColor: '#000000',
   showGoalAmount: true,
-  progressText: '{{amount}}฿ ({{percentage}}%)',
+  progressText: '{{amount}}à¸¿ ({{percentage}}%)',
   progressColor: '#0EA5E9',
   progressFontFamily: 'kanit',
   progressShine: true,
@@ -76,11 +76,11 @@ export const defaultSettings = {
   progressBarHeight: 32,
   largeTopFontSize: '30px',
   largeBottomFontSize: '20px',
-  largeTopRightText: '{{amount}}฿/{{goal}}฿',
-  largeBottomLeftText: 'สิ้นสุดใน {{days}} วัน',
+  largeTopRightText: '{{amount}}à¸¿/{{goal}}à¸¿',
+  largeBottomLeftText: 'à¸ªà¸´à¹‰à¸™à¸ªà¸¸à¸”à¹ƒà¸™ {{days}} à¸§à¸±à¸™',
   largeBottomRightText: '{{percentage}}%',
-  descriptionLeftText: 'จากเป้าหมาย {{amount}}฿',
-  descriptionRightText: 'สิ้นสุดใน {{days}} วัน',
+  descriptionLeftText: 'à¸ˆà¸²à¸à¹€à¸›à¹‰à¸²à¸«à¸¡à¸²à¸¢ {{amount}}à¸¿',
+  descriptionRightText: 'à¸ªà¸´à¹‰à¸™à¸ªà¸¸à¸”à¹ƒà¸™ {{days}} à¸§à¸±à¸™',
   descriptionFontFamily: 'sarabun',
   descriptionFontWeight: 'medium',
   descriptionFontSize: '24px',
@@ -93,3 +93,4 @@ export const defaultSettings = {
   endAt: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().slice(0, 16),
   currentAmount: 35,
 };
+

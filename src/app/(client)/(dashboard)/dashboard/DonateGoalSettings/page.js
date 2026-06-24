@@ -1,6 +1,6 @@
-"use client";
+﻿"use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { Target } from "lucide-react";
 
@@ -47,6 +47,7 @@ function DonateGoalSettingsContent() {
   const { loading } = useDonateGoalSettings();
   const { language } = useLanguage();
   const text = getDashboardCopy(language).settings.goal;
+  const [previewFocus, setPreviewFocus] = useState("settings");
 
   return (
     <div className="space-y-6 px-4 py-4 sm:space-y-8 sm:px-6 sm:py-6 lg:px-8 lg:py-8">
@@ -57,15 +58,13 @@ function DonateGoalSettingsContent() {
           {text.loading}
         </div>
       ) : (
-        <div className="flex flex-col gap-6 lg:flex-row">
-          <div className="min-w-0 flex-[2]">
-            <div className="md:sticky md:top-6 md:self-start">
-              <PreviewPanel />
-            </div>
+        <div className="flex flex-col gap-6 md:flex-row md:items-start md:overflow-visible">
+          <div className="min-w-0 md:max-w-[520px] md:flex-[0.9]">
+            <GoalSettingsForm setPreviewFocus={setPreviewFocus} />
           </div>
 
-          <div className="min-w-0 flex-[1] md:max-w-xl">
-            <GoalSettingsForm />
+          <div className="min-w-0 md:min-w-[360px] md:flex-[1.1] md:self-start md:sticky md:top-6 md:h-fit lg:min-w-[420px]">
+            <PreviewPanel focusArea={previewFocus} />
           </div>
         </div>
       )}

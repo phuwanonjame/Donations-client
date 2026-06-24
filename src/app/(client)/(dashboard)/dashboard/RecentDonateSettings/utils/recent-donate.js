@@ -1,4 +1,19 @@
+﻿import { thaiGoogleFonts } from '../../DonateAlertSettings/components/utils/fontUtils';
 import { getDefaultRecentDonations, getDefaultSettings } from '../constants/recentDonateOptions';
+
+const FONT_WEIGHT_TO_API = {
+  normal: '400',
+  medium: '500',
+  bold: '700',
+  extrabold: '800',
+};
+
+const FONT_WEIGHT_FROM_API = {
+  '400': 'normal',
+  '500': 'medium',
+  '700': 'bold',
+  '800': 'extrabold',
+};
 
 const normalizeSliderValue = (value, fallback) => {
   if (Array.isArray(value)) return value;
@@ -12,14 +27,42 @@ const getSliderNumber = (value, fallback = 0) => {
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
+const resolveFontName = (fontValue, fallback = 'IBM Plex Sans Thai') => {
+  if (!fontValue) return fallback;
+  const normalized = String(fontValue).trim().toLowerCase();
+  const matched = thaiGoogleFonts.find((font) =>
+    font.id.toLowerCase() === normalized || font.name.toLowerCase() === normalized,
+  );
+  return matched?.name || fontValue;
+};
+
+const resolveFontId = (fontValue, fallback = 'ibmplex') => {
+  if (!fontValue) return fallback;
+  const normalized = String(fontValue).trim().toLowerCase();
+  const matched = thaiGoogleFonts.find((font) =>
+    font.id.toLowerCase() === normalized || font.name.toLowerCase() === normalized,
+  );
+  return matched?.id || fallback;
+};
+
+const resolveWeightForApi = (weight, fallback = '700') => {
+  if (!weight) return fallback;
+  return FONT_WEIGHT_TO_API[weight] || String(weight);
+};
+
+const resolveWeightForSettings = (weight, fallback = 'bold') => {
+  if (!weight) return fallback;
+  return FONT_WEIGHT_FROM_API[String(weight)] || String(weight);
+};
+
 const DEFAULT_TEXT_STYLE = {
   color: '#FFFFFF',
-  fontSize: 36,
+  fontSize: 18,
   alignment: 'center',
-  fontFamily: 'IBM Plex Sans Thai',
-  fontWeight: '700',
+  fontFamily: 'ibmplex',
+  fontWeight: 'bold',
   strokeColor: '#000000',
-  strokeWidth: 2.5,
+  strokeWidth: 0,
 };
 
 const toTimestampOrNull = (value) => {
@@ -56,8 +99,9 @@ export const toMetadata = (settings) => {
       enabled: settings.enabled ?? defaults.enabled,
       endAt: settings.isUseEndAt ? toTimestampOrNull(settings.endAt) : null,
       title: settings.title ?? defaults.title,
+      titleFontFamily: resolveFontName(settings.titleFontFamily ?? defaults.titleFontFamily),
+      titleFontWeight: resolveWeightForApi(settings.titleFontWeight ?? defaults.titleFontWeight),
       layoutStyle: settings.layoutStyle ?? defaults.layoutStyle,
-      themePreset: settings.themePreset ?? defaults.themePreset,
       cardStyle: settings.cardStyle ?? defaults.cardStyle,
       borderRadius: getSliderNumber(settings.borderRadius, getSliderNumber(defaults.borderRadius, 16)),
       messagePlaceholder: settings.messagePlaceholder ?? defaults.messagePlaceholder,
@@ -65,7 +109,7 @@ export const toMetadata = (settings) => {
       animationSpeed: getSliderNumber(settings.animationSpeed, getSliderNumber(defaults.animationSpeed, 50)),
       animationDuration: getSliderNumber(settings.animationDuration, getSliderNumber(defaults.animationDuration, 700)),
       itemSpacing: getSliderNumber(settings.itemSpacing, getSliderNumber(defaults.itemSpacing, 12)),
-      widgetWidth: getSliderNumber(settings.widgetWidth, getSliderNumber(defaults.widgetWidth, 320)),
+      widgetWidth: getSliderNumber(settings.widgetWidth, getSliderNumber(defaults.widgetWidth, 520)),
       widgetHeight: getSliderNumber(settings.widgetHeight, getSliderNumber(defaults.widgetHeight, 420)),
       padding: getSliderNumber(settings.padding, getSliderNumber(defaults.padding, 16)),
       position: settings.position ?? defaults.position,
@@ -73,12 +117,7 @@ export const toMetadata = (settings) => {
       borderColor: settings.borderColor ?? defaults.borderColor,
       borderWidth: getSliderNumber(settings.borderWidth, getSliderNumber(defaults.borderWidth, 1)),
       shadowEnabled: settings.shadowEnabled ?? defaults.shadowEnabled,
-      shadowBlur: getSliderNumber(settings.shadowBlur, getSliderNumber(defaults.shadowBlur, 20)),
-      backgroundBlur: settings.backgroundBlur ?? defaults.backgroundBlur,
-      backgroundBlurAmount: getSliderNumber(settings.backgroundBlurAmount, getSliderNumber(defaults.backgroundBlurAmount, 10)),
-      alertSoundEnabled: settings.alertSoundEnabled ?? defaults.alertSoundEnabled,
-      alertSound: settings.alertSound ?? defaults.alertSound,
-      customCss: settings.customCss ?? defaults.customCss,
+      shadowBlur: getSliderNumber(settings.shadowBlur, getSliderNumber(defaults.shadowBlur, 12)),      customCss: settings.customCss ?? defaults.customCss,
       maxEntries: getSliderNumber(settings.maxEntries, getSliderNumber(defaults.maxEntries, 5)),
       showName: settings.showName ?? defaults.showName,
       showAmount: settings.showAmount ?? defaults.showAmount,
@@ -89,12 +128,20 @@ export const toMetadata = (settings) => {
       accentColor: settings.accentColor ?? defaults.accentColor,
       backgroundColor: settings.backgroundColor ?? defaults.backgroundColor,
       textColor: settings.textColor ?? defaults.textColor,
-      fontSize: getSliderNumber(settings.fontSize, getSliderNumber(defaults.fontSize, 14)),
-      amount: createTextStyle(settings, 'amount', amountFallback),
+      fontSize: getSliderNumber(settings.fontSize, getSliderNumber(defaults.fontSize, 16)),
+      amount: {
+        ...createTextStyle(settings, 'amount', amountFallback),
+        fontFamily: resolveFontName(settings.amountFontFamily ?? amountFallback.fontFamily),
+        fontWeight: resolveWeightForApi(settings.amountFontWeight ?? amountFallback.fontWeight),
+      },
       startAt: settings.isUseStartAt ? toTimestampOrNull(settings.startAt) : null,
       alignment: settings.alignment ?? 'flex-row',
       isUseEndAt: settings.isUseEndAt ?? false,
-      lastDonator: createTextStyle(settings, 'lastDonator', lastDonatorFallback),
+      lastDonator: {
+        ...createTextStyle(settings, 'lastDonator', lastDonatorFallback),
+        fontFamily: resolveFontName(settings.lastDonatorFontFamily ?? lastDonatorFallback.fontFamily),
+        fontWeight: resolveWeightForApi(settings.lastDonatorFontWeight ?? lastDonatorFallback.fontWeight),
+      },
       isUseStartAt: settings.isUseStartAt ?? false,
     },
   };
@@ -119,8 +166,9 @@ export const fromMetadata = (
       ...fallbackSettings,
       enabled: source.enabled ?? fallbackSettings.enabled,
       title: source.title ?? fallbackSettings.title,
+      titleFontFamily: resolveFontId(source.titleFontFamily, fallbackSettings.titleFontFamily || 'ibmplex'),
+      titleFontWeight: resolveWeightForSettings(source.titleFontWeight, fallbackSettings.titleFontWeight || 'bold'),
       layoutStyle: source.layoutStyle ?? fallbackSettings.layoutStyle,
-      themePreset: source.themePreset ?? fallbackSettings.themePreset,
       cardStyle: source.cardStyle ?? fallbackSettings.cardStyle,
       borderRadius: normalizeSliderValue(source.borderRadius, fallbackSettings.borderRadius),
       messagePlaceholder: source.messagePlaceholder ?? fallbackSettings.messagePlaceholder,
@@ -136,12 +184,7 @@ export const fromMetadata = (
       borderColor: source.borderColor ?? fallbackSettings.borderColor,
       borderWidth: normalizeSliderValue(source.borderWidth, fallbackSettings.borderWidth),
       shadowEnabled: source.shadowEnabled ?? fallbackSettings.shadowEnabled,
-      shadowBlur: normalizeSliderValue(source.shadowBlur, fallbackSettings.shadowBlur),
-      backgroundBlur: source.backgroundBlur ?? fallbackSettings.backgroundBlur,
-      backgroundBlurAmount: normalizeSliderValue(source.backgroundBlurAmount, fallbackSettings.backgroundBlurAmount),
-      alertSoundEnabled: source.alertSoundEnabled ?? fallbackSettings.alertSoundEnabled,
-      alertSound: source.alertSound ?? fallbackSettings.alertSound,
-      customCss: source.customCss ?? fallbackSettings.customCss,
+      shadowBlur: normalizeSliderValue(source.shadowBlur, fallbackSettings.shadowBlur),      customCss: source.customCss ?? fallbackSettings.customCss,
       maxEntries: normalizeSliderValue(source.maxEntries, fallbackSettings.maxEntries),
       showName: source.showName ?? fallbackSettings.showName,
       showAmount: source.showAmount ?? fallbackSettings.showAmount,
@@ -162,19 +205,20 @@ export const fromMetadata = (
       amountColor: amount.color ?? DEFAULT_TEXT_STYLE.color,
       amountFontSize: normalizeSliderValue(amount.fontSize, [DEFAULT_TEXT_STYLE.fontSize]),
       amountAlignment: amount.alignment ?? DEFAULT_TEXT_STYLE.alignment,
-      amountFontFamily: amount.fontFamily ?? DEFAULT_TEXT_STYLE.fontFamily,
-      amountFontWeight: amount.fontWeight ?? DEFAULT_TEXT_STYLE.fontWeight,
+      amountFontFamily: resolveFontId(amount.fontFamily, fallbackSettings.amountFontFamily || DEFAULT_TEXT_STYLE.fontFamily),
+      amountFontWeight: resolveWeightForSettings(amount.fontWeight, fallbackSettings.amountFontWeight || DEFAULT_TEXT_STYLE.fontWeight),
       amountStrokeColor: amount.strokeColor ?? DEFAULT_TEXT_STYLE.strokeColor,
       amountStrokeWidth: normalizeSliderValue(amount.strokeWidth, [DEFAULT_TEXT_STYLE.strokeWidth]),
       lastDonatorFallback: lastDonator,
       lastDonatorColor: lastDonator.color ?? DEFAULT_TEXT_STYLE.color,
       lastDonatorFontSize: normalizeSliderValue(lastDonator.fontSize, [DEFAULT_TEXT_STYLE.fontSize]),
       lastDonatorAlignment: lastDonator.alignment ?? DEFAULT_TEXT_STYLE.alignment,
-      lastDonatorFontFamily: lastDonator.fontFamily ?? DEFAULT_TEXT_STYLE.fontFamily,
-      lastDonatorFontWeight: lastDonator.fontWeight ?? DEFAULT_TEXT_STYLE.fontWeight,
+      lastDonatorFontFamily: resolveFontId(lastDonator.fontFamily, fallbackSettings.lastDonatorFontFamily || DEFAULT_TEXT_STYLE.fontFamily),
+      lastDonatorFontWeight: resolveWeightForSettings(lastDonator.fontWeight, fallbackSettings.lastDonatorFontWeight || DEFAULT_TEXT_STYLE.fontWeight),
       lastDonatorStrokeColor: lastDonator.strokeColor ?? DEFAULT_TEXT_STYLE.strokeColor,
       lastDonatorStrokeWidth: normalizeSliderValue(lastDonator.strokeWidth, [DEFAULT_TEXT_STYLE.strokeWidth]),
     },
     donations,
   };
 };
+

@@ -153,7 +153,13 @@ export default function ProfileHeader({ profile, themeColors, festival }) {
               href={s.href}
               target="_blank"
               rel="noreferrer"
-              className="text-white/80 flex items-center gap-2 text-xs px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-primary/50 transition"
+              className="flex items-center gap-2 rounded-full border px-3 py-1.5 text-xs transition"
+              style={{
+                color: "rgba(255,255,255,0.82)",
+                background: `${primaryColor}14`,
+                borderColor: `${primaryColor}33`,
+                boxShadow: `0 0 0 1px ${glowColor}10 inset`,
+              }}
             >
               <Icon className="w-4 h-4" />
               {s.label}
