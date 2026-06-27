@@ -124,7 +124,7 @@ export default function LoginPage() {
       const expirationDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
       document.cookie = `token=${token}; path=/; SameSite=Strict; Expires=${expirationDate.toUTCString()}; ${secureFlag}`;
-      window.location.href = "/dashboard/Dashboard";
+      window.location.href = "/dashboard/";
     } catch (error) {
       alert(error.message || "Login failed due to API error or network issue.");
     } finally {
@@ -245,3 +245,4 @@ export default function LoginPage() {
     </section>
   );
 }
+

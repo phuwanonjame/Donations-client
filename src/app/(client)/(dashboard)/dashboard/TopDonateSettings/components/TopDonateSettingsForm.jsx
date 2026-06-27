@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import {
   Settings, Palette, Sparkles,
   Crown, Star, Heart, Zap, Trophy, Flame, Diamond,
-  Upload, X, Link, ImageIcon, ChevronDown,
+  Upload, X, Link, ImageIcon, ChevronDown, SlidersHorizontal,
 } from 'lucide-react';
 import { Input }    from '@/components/ui/input';
 import { Label }    from '@/components/ui/label';
@@ -79,15 +79,19 @@ const TOP_DONATE_TABS = [
   { id: 'settings', label: 'Settings', icon: Settings, color: 'from-purple-500 to-pink-500' },
   { id: 'icon', label: 'Icon', icon: Sparkles, color: 'from-fuchsia-500 to-violet-500' },
   { id: 'appearance', label: 'Appearance', icon: Palette, color: 'from-cyan-500 to-blue-500' },
+  { id: 'advanced', label: 'Advanced', icon: SlidersHorizontal, color: 'from-violet-500 to-indigo-500' },
 ];
 
-function TopDonateTabNav({ activeTab, onSelect }) {
+function TopDonateTabNav({ activeTab, onSelect, tabs }) {
   return (
     <div className="relative">
       <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-slate-800/50 to-slate-900/50 blur" />
       <div className="relative overflow-x-auto rounded-xl border border-slate-700/50 bg-slate-800/40 p-1 backdrop-blur-sm">
-        <div className="grid min-w-max grid-flow-col auto-cols-[96px] gap-1 sm:auto-cols-[118px] lg:min-w-0 lg:grid-cols-3">
-          {TOP_DONATE_TABS.map((tab) => {
+        <div
+          className="grid min-w-max grid-flow-col auto-cols-[96px] gap-1 sm:auto-cols-[118px] lg:min-w-0"
+          style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}
+        >
+          {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
@@ -130,6 +134,7 @@ export default function TopDonateSettingsForm({
   const topDonateContext = useTopDonateSettings();
   const settings = settingsProp ?? topDonateContext.settings;
   const updateSetting = updateSettingProp ?? topDonateContext.updateSetting;
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const donorData = donorDataProp ?? topDonateContext.donorData;
   const updateDonor = updateDonorProp ?? topDonateContext.updateDonor;
   const fileInputRef = useRef(null);
@@ -199,10 +204,33 @@ export default function TopDonateSettingsForm({
     visible: { opacity: 1, x: 0, transition: { duration: 0.22 } },
     exit: { opacity: 0, x: 16, transition: { duration: 0.18 } },
   };
+  const visibleTabs = showAdvanced ? TOP_DONATE_TABS : TOP_DONATE_TABS.slice(0, 3);
+
+  useEffect(() => {
+    if (!showAdvanced && activeTab === 'advanced') {
+      setActiveTab('settings');
+    }
+  }, [activeTab, showAdvanced]);
 
   return (
     <div className="space-y-5 px-4 sm:space-y-6 sm:px-0">
-      <TopDonateTabNav activeTab={activeTab} onSelect={setActiveTab} />
+      <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-700/60 bg-slate-900/60 px-3 py-3">
+        <div className="flex min-w-0 items-start gap-2">
+          <div className="rounded-lg bg-violet-500/10 p-2 text-violet-300">
+            <SlidersHorizontal className="h-4 w-4" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-white">Advanced controls</p>
+            <p className="text-xs text-slate-400">Show extra layout, date, and typography settings only when needed.</p>
+          </div>
+        </div>
+        <Switch
+          checked={showAdvanced}
+          onCheckedChange={setShowAdvanced}
+          className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-violet-500 data-[state=checked]:to-blue-500"
+        />
+      </div>
+      <TopDonateTabNav activeTab={activeTab} onSelect={setActiveTab} tabs={visibleTabs} />
 
       <AnimatePresence mode="wait">
         <motion.div
@@ -214,7 +242,7 @@ export default function TopDonateSettingsForm({
           className="min-w-0 space-y-5 sm:space-y-6"
         >
 
-      {/* â”€â”€ Configuration â”€â”€ */}
+{/* â”€â”€ Configuration â”€â”€ */}
       {activeTab === 'settings' && (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -538,6 +566,7 @@ export default function TopDonateSettingsForm({
       )}
 
       {/* â”€â”€ Appearance â”€â”€ */}
+      {/* Appearance */}
       {activeTab === 'appearance' && (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -549,10 +578,10 @@ export default function TopDonateSettingsForm({
           <Palette className="w-5 h-5 text-purple-400" />
           Appearance
         </h3>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <ColorInput label="Accent Color" value={settings.accentColor}     onChange={(v) => updateSetting('accentColor', v)} />
-          <ColorInput label="Background"   value={settings.backgroundColor} onChange={(v) => updateSetting('backgroundColor', v)} />
-          <ColorInput label="Text Color"   value={settings.textColor}       onChange={(v) => updateSetting('textColor', v)} />
+        <div className="mb-6 grid gap-4" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))' }}>
+          <ColorInput label="Accent Color" value={settings.accentColor} onChange={(v) => updateSetting('accentColor', v)} />
+          <ColorInput label="Background" value={settings.backgroundColor} onChange={(v) => updateSetting('backgroundColor', v)} />
+          <ColorInput label="Text Color" value={settings.textColor} onChange={(v) => updateSetting('textColor', v)} />
         </div>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <SliderControl
@@ -574,8 +603,24 @@ export default function TopDonateSettingsForm({
             unit="px"
           />
         </div>
+      </motion.div>
+      )}
 
-        <div className="mt-6 border-t border-slate-700/60 pt-5 space-y-5">
+      {/* Advanced */}
+      {activeTab === 'advanced' && (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.18 }}
+        className="rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl p-6"
+      >
+        <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+          <SlidersHorizontal className="w-5 h-5 text-violet-300" />
+          Advanced controls
+        </h3>
+        <p className="mb-5 text-xs text-slate-400">Adjust layout, schedule, and detailed typography only when needed.</p>
+
+        <div className="space-y-5 rounded-xl border border-slate-700/60 bg-slate-900/30 p-4">
           <DropdownSelect
             label="Widget Alignment"
             value={settings.alignment}
@@ -649,6 +694,7 @@ export default function TopDonateSettingsForm({
     </div>
   );
 }
+
 const COLOR_SWATCHES = [
   '#FFFFFF', '#000000', '#FF0000', '#00FF00', '#0000FF',
   '#FFFF00', '#00FFFF', '#FF00FF', '#FFA500', '#800080',
@@ -729,9 +775,8 @@ function ColorInput({ label, value, onChange }) {
           </div>
           <ChevronDown className={isOpen ? 'h-5 w-5 rotate-180 transition-transform duration-300' : 'h-5 w-5 transition-transform duration-300'} />
         </button>
-
         {isOpen && (
-          <div className="mt-2 w-full rounded-3xl border border-white/10 bg-black/40 p-4 backdrop-blur-sm">
+          <div className="absolute right-0 top-full z-50 mt-2 min-w-full w-[320px] max-w-[calc(100vw-2rem)] rounded-3xl border border-white/10 bg-black/40 p-4 backdrop-blur-sm shadow-2xl shadow-black/30">
             <div className="mb-3 grid grid-cols-5 gap-2">
               {COLOR_SWATCHES.map((swatch) => (
                 <button
@@ -851,4 +896,7 @@ function SliderControl({ label, value, onChange, min, max, step, unit }) {
     </div>
   );
 }
+
+
+
 

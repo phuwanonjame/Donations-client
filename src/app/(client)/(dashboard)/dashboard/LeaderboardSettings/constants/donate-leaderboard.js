@@ -724,9 +724,18 @@ const API_SAFE_PODIUM_FIELDS = [
 
 const API_LAYOUT_TYPE = 'main';
 
-const normalizeApiLayoutStyle = (type, fallback) => (
-  type === API_LAYOUT_TYPE ? 'podium' : type ?? fallback
-);
+const toApiLayoutType = (layoutStyle, fallback = 'podium') => {
+  const normalized = layoutStyle || fallback;
+  if (normalized === 'podium') return API_LAYOUT_TYPE;
+  if (normalized === 'vertical' || normalized === 'horizontal') return normalized;
+  return fallback === 'podium' ? API_LAYOUT_TYPE : fallback;
+};
+
+const normalizeApiLayoutStyle = (type, fallback) => {
+  if (type === API_LAYOUT_TYPE) return 'podium';
+  if (type === 'vertical' || type === 'horizontal' || type === 'podium') return type;
+  return fallback;
+};
 
 export const toApiMetadata = (settings) => {
   const fullMetadata = toMetadata(settings).metadata;
@@ -735,7 +744,7 @@ export const toApiMetadata = (settings) => {
     type: 'LEADERBOARD',
     metadata: {
       list: fullMetadata.list,
-      type: API_LAYOUT_TYPE,
+      type: toApiLayoutType(fullMetadata.type, 'podium'),
       endAt: fullMetadata.endAt,
       title: fullMetadata.title,
       podium: pickFields(fullMetadata.podium, API_SAFE_PODIUM_FIELDS),

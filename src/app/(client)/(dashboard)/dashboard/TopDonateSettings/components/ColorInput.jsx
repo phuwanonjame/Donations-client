@@ -86,7 +86,7 @@ export default function ColorInput({ label, value, onChange }) {
         </button>
 
         {isOpen && (
-          <div className="mt-2 w-full rounded-3xl border border-white/10 bg-black/40 p-4 backdrop-blur-sm">
+          <div className="absolute right-0 top-full z-50 mt-2 min-w-full w-[320px] max-w-[calc(100vw-2rem)] rounded-3xl border border-white/10 bg-black/40 p-4 backdrop-blur-sm shadow-2xl shadow-black/30">
             <div className="mb-3 grid grid-cols-5 gap-2">
               {COLOR_SWATCHES.map((swatch) => (
                 <button
@@ -133,3 +133,4 @@ export default function ColorInput({ label, value, onChange }) {
     </div>
   );
 }
+

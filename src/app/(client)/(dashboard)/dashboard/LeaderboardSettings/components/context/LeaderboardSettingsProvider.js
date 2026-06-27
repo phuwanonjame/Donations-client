@@ -1,10 +1,11 @@
-import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+﻿import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 
 import {
   fetchLeaderboardSettings,
   saveLeaderboardSettings,
 } from '@/actions/Leaderboardapi/leaderboardSettingsApi';
 import { useAuth } from '@/contexts/AuthContext';
+import { useWidgetPreviews } from '../../../../components/context/WidgetPreviewsProvider';
 import { createWidgetSettingsNotifier } from '@/lib/notifications/widget-settings-toast';
 
 import {
@@ -25,6 +26,7 @@ const logLeaderboardProvider = (label, payload) => {
 export function LeaderboardSettingsProvider({ children }) {
   const { user, isLoading: isAuthLoading } = useAuth();
   const userId = user?.id;
+  const { invalidateWidgetPreviews } = useWidgetPreviews();
   const [settings, setSettings] = useState(defaultSettings);
   const [widgetId, setWidgetId] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -143,6 +145,7 @@ export function LeaderboardSettingsProvider({ children }) {
         return;
       }
 
+      invalidateWidgetPreviews(userId);
       setHasChanges(false);
       setSaveSuccess(true);
       leaderboardNotifier.saveSuccess(loadingToastId);
@@ -153,7 +156,7 @@ export function LeaderboardSettingsProvider({ children }) {
     } finally {
       setSaving(false);
     }
-  }, [settings, userId, widgetId]);
+  }, [invalidateWidgetPreviews, settings, userId, widgetId]);
 
   const metadata = useMemo(() => toMetadata(settings), [settings]);
 
@@ -210,3 +213,5 @@ export function useLeaderboardSettings() {
 export function useOptionalLeaderboardSettings() {
   return useContext(LeaderboardSettingsContext);
 }
+
+

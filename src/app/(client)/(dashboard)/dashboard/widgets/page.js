@@ -1,7 +1,8 @@
-"use client";
+﻿"use client";
 import React from 'react';
 import Link from 'next/link';
 import { createPageUrl } from '@/lib/utils';
+import { createWidgetUrl } from '@/utils/widgetUrls';
 import { motion } from 'framer-motion';
 import { 
   Bell, 
@@ -12,12 +13,20 @@ import {
   Gift,
   Settings,
   ExternalLink,
-  Sparkles
+  Sparkles,
+  Copy,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Switch } from '@/components/ui/switch';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
+import { useWidgetPreviews } from '../../components/context/WidgetPreviewsProvider';
+import TopDonatePreview from '../TopDonateSettings/components/TopDonatePreview';
+import { getDefaultSettings as getDefaultTopDonateSettings } from '../TopDonateSettings/constants/topDonateOptions';
+import LeaderboardPreview from '../LeaderboardSettings/components/LeaderboardPreview';
+import GoalPreview from '../DonateGoalSettings/components/GoalPreview';
+import AlertPreview from '../DonateAlertSettings/components/AlertPreview';
 
 const copy = {
   en: {
@@ -74,54 +83,54 @@ const copy = {
     },
   },
   th: {
-    languageLabel: 'ภาษา',
-    previewAll: 'ดูตัวอย่างทั้งหมด',
-    settings: 'ตั้งค่า',
-    pro: 'โปร',
+    languageLabel: '\u0e20\u0e32\u0e29\u0e32',
+    previewAll: '\u0e14\u0e39\u0e15\u0e31\u0e27\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e17\u0e31\u0e49\u0e07\u0e2b\u0e21\u0e14',
+    settings: '\u0e15\u0e31\u0e49\u0e07\u0e04\u0e48\u0e32',
+    pro: '\u0e42\u0e1b\u0e23',
     header: {
-      title: 'วิดเจ็ตสตรีม',
-      description: 'ปรับแต่งวิดเจ็ตสำหรับไลฟ์สตรีมและหน้ารับโดเนทของคุณ',
+      title: '\u0e27\u0e34\u0e14\u0e40\u0e08\u0e47\u0e15\u0e2a\u0e15\u0e23\u0e35\u0e21',
+      description: '\u0e1b\u0e23\u0e31\u0e1a\u0e41\u0e15\u0e48\u0e07\u0e27\u0e34\u0e14\u0e40\u0e08\u0e47\u0e15\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e44\u0e25\u0e1f\u0e4c\u0e2a\u0e15\u0e23\u0e35\u0e21\u0e41\u0e25\u0e30\u0e2b\u0e19\u0e49\u0e32\u0e23\u0e31\u0e1a\u0e42\u0e14\u0e40\u0e19\u0e17\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13',
     },
     widgets: {
       'donate-alert': {
-        name: 'แจ้งเตือนโดเนท',
-        description: 'แสดงแจ้งเตือนแบบเคลื่อนไหวเมื่อได้รับโดเนท',
+        name: '\u0e41\u0e08\u0e49\u0e07\u0e40\u0e15\u0e37\u0e2d\u0e19\u0e42\u0e14\u0e40\u0e19\u0e17',
+        description: '\u0e41\u0e2a\u0e14\u0e07\u0e41\u0e08\u0e49\u0e07\u0e40\u0e15\u0e37\u0e2d\u0e19\u0e41\u0e1a\u0e1a\u0e40\u0e04\u0e25\u0e37\u0e48\u0e2d\u0e19\u0e44\u0e2b\u0e27\u0e40\u0e21\u0e37\u0e48\u0e2d\u0e44\u0e14\u0e49\u0e23\u0e31\u0e1a\u0e42\u0e14\u0e40\u0e19\u0e17',
       },
       'donate-goal': {
-        name: 'เป้าหมายโดเนท',
-        description: 'แสดงความคืบหน้าของเป้าหมายการรับโดเนท',
+        name: '\u0e40\u0e1b\u0e49\u0e32\u0e2b\u0e21\u0e32\u0e22\u0e42\u0e14\u0e40\u0e19\u0e17',
+        description: '\u0e41\u0e2a\u0e14\u0e07\u0e04\u0e27\u0e32\u0e21\u0e04\u0e37\u0e1a\u0e2b\u0e19\u0e49\u0e32\u0e02\u0e2d\u0e07\u0e40\u0e1b\u0e49\u0e32\u0e2b\u0e21\u0e32\u0e22\u0e01\u0e32\u0e23\u0e23\u0e31\u0e1a\u0e42\u0e14\u0e40\u0e19\u0e17',
       },
       leaderboard: {
-        name: 'อันดับผู้สนับสนุน',
-        description: 'แสดงรายชื่อผู้สนับสนุนสูงสุด',
+        name: '\u0e2d\u0e31\u0e19\u0e14\u0e31\u0e1a\u0e1c\u0e39\u0e49\u0e2a\u0e19\u0e31\u0e1a\u0e2a\u0e19\u0e38\u0e19',
+        description: '\u0e41\u0e2a\u0e14\u0e07\u0e23\u0e32\u0e22\u0e0a\u0e37\u0e48\u0e2d\u0e1c\u0e39\u0e49\u0e2a\u0e19\u0e31\u0e1a\u0e2a\u0e19\u0e38\u0e19\u0e2a\u0e39\u0e07\u0e2a\u0e38\u0e14',
       },
       'top-donate': {
-        name: 'โดเนทสูงสุด',
-        description: 'แสดงยอดโดเนทสูงสุดของคุณ',
+        name: '\u0e42\u0e14\u0e40\u0e19\u0e17\u0e2a\u0e39\u0e07\u0e2a\u0e38\u0e14',
+        description: '\u0e41\u0e2a\u0e14\u0e07\u0e22\u0e2d\u0e14\u0e42\u0e14\u0e40\u0e19\u0e17\u0e2a\u0e39\u0e07\u0e2a\u0e38\u0e14\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13',
       },
       'recent-donate': {
-        name: 'โดเนทล่าสุด',
-        description: 'แสดงรายการโดเนทล่าสุด',
+        name: '\u0e42\u0e14\u0e40\u0e19\u0e17\u0e25\u0e48\u0e32\u0e2a\u0e38\u0e14',
+        description: '\u0e41\u0e2a\u0e14\u0e07\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23\u0e42\u0e14\u0e40\u0e19\u0e17\u0e25\u0e48\u0e32\u0e2a\u0e38\u0e14',
       },
       'gift-alert': {
-        name: 'แจ้งเตือนของขวัญ',
-        description: 'แจ้งเตือนพิเศษสำหรับการโดเนทของขวัญ',
+        name: '\u0e41\u0e08\u0e49\u0e07\u0e40\u0e15\u0e37\u0e2d\u0e19\u0e02\u0e2d\u0e07\u0e02\u0e27\u0e31\u0e0d',
+        description: '\u0e41\u0e08\u0e49\u0e07\u0e40\u0e15\u0e37\u0e2d\u0e19\u0e1e\u0e34\u0e40\u0e28\u0e29\u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e01\u0e32\u0e23\u0e42\u0e14\u0e40\u0e19\u0e17\u0e02\u0e2d\u0e07\u0e02\u0e27\u0e31\u0e0d',
       },
     },
     howTo: {
-      title: 'วิธีใช้งานวิดเจ็ต',
+      title: '\u0e27\u0e34\u0e18\u0e35\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19\u0e27\u0e34\u0e14\u0e40\u0e08\u0e47\u0e15',
       steps: [
         {
-          title: 'เปิดใช้งานวิดเจ็ต',
-          description: 'เปิดวิดเจ็ตที่ต้องการใช้งาน',
+          title: '\u0e40\u0e1b\u0e34\u0e14\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19\u0e27\u0e34\u0e14\u0e40\u0e08\u0e47\u0e15',
+          description: '\u0e40\u0e1b\u0e34\u0e14\u0e27\u0e34\u0e14\u0e40\u0e08\u0e47\u0e15\u0e17\u0e35\u0e48\u0e15\u0e49\u0e2d\u0e07\u0e01\u0e32\u0e23\u0e43\u0e0a\u0e49\u0e07\u0e32\u0e19',
         },
         {
-          title: 'คัดลอก URL วิดเจ็ต',
-          description: 'นำ URL ไปใช้เป็น Browser Source ใน OBS',
+          title: '\u0e04\u0e31\u0e14\u0e25\u0e2d\u0e01 URL \u0e27\u0e34\u0e14\u0e40\u0e08\u0e47\u0e15',
+          description: '\u0e19\u0e33 URL \u0e44\u0e1b\u0e43\u0e0a\u0e49\u0e40\u0e1b\u0e47\u0e19 Browser Source \u0e43\u0e19 OBS',
         },
         {
-          title: 'เพิ่มเข้า OBS',
-          description: 'วาง URL ใน Browser Source ของโปรแกรมสตรีม',
+          title: '\u0e40\u0e1e\u0e34\u0e48\u0e21\u0e40\u0e02\u0e49\u0e32 OBS',
+          description: '\u0e27\u0e32\u0e07 URL \u0e43\u0e19 Browser Source \u0e02\u0e2d\u0e07\u0e42\u0e1b\u0e23\u0e41\u0e01\u0e23\u0e21\u0e2a\u0e15\u0e23\u0e35\u0e21',
         },
       ],
     },
@@ -135,7 +144,7 @@ const widgets = [
     gradient: 'from-cyan-500 to-blue-500',
     enabled: true,
     hasSettings: true,
-    settingsPage: 'DonateAlertSettings',
+    settingsPage: 'widgets/donate-alert-settings',
   },
   {
     id: 'donate-goal',
@@ -143,7 +152,7 @@ const widgets = [
     gradient: 'from-emerald-500 to-teal-500',
     enabled: false,
     hasSettings: true,
-    settingsPage: 'DonateGoalSettings',
+    settingsPage: 'widgets/donate-goal-settings',
   },
   {
     id: 'leaderboard',
@@ -151,7 +160,7 @@ const widgets = [
     gradient: 'from-amber-500 to-orange-500',
     enabled: false,
     hasSettings: true,
-    settingsPage: 'LeaderboardSettings',
+    settingsPage: 'widgets/leaderboard-settings',
   },
   {
     id: 'top-donate',
@@ -159,7 +168,7 @@ const widgets = [
     gradient: 'from-purple-500 to-pink-500',
     enabled: true,
     hasSettings: true,
-    settingsPage: 'TopDonateSettings',
+    settingsPage: 'widgets/top-donate-settings',
   },
   {
     id: 'recent-donate',
@@ -167,7 +176,7 @@ const widgets = [
     gradient: 'from-blue-500 to-indigo-500',
     enabled: true,
     hasSettings: true,
-    settingsPage: 'RecentDonateSettings',
+    settingsPage: 'widgets/recent-donate-settings',
   },
   {
     id: 'gift-alert',
@@ -180,15 +189,344 @@ const widgets = [
   },
 ];
 
+const PREVIEW_CARD_HEIGHT = 220;
+const WIDGET_URL_TYPES = {
+  'donate-alert': 'alert',
+  'donate-goal': 'goal',
+  leaderboard: 'leaderboard',
+  'top-donate': 'top',
+  'recent-donate': 'recent',
+  'gift-alert': 'gift',
+};
+
+function getPreviewNumber(value, fallback = 0) {
+  const raw = Array.isArray(value) ? value[0] : value;
+  const parsed = Number(raw);
+  return Number.isFinite(parsed) ? parsed : fallback;
+}
+
+function getGoalPreviewCurrentAmount(settings) {
+  const goalAmount = Number(settings?.goalAmount || 100);
+  return Math.max(1, Math.round(goalAmount * 0.62));
+}
+
+
+function WidgetPreviewFrame({ children }) {
+  return (
+    <div
+      className="relative mb-4 overflow-hidden rounded-xl border border-slate-700/60 bg-slate-950/70"
+      style={{ height: PREVIEW_CARD_HEIGHT }}
+    >
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.12),transparent_42%),linear-gradient(180deg,rgba(15,23,42,0.78),rgba(2,6,23,0.92))]" />
+      <div className="relative h-full w-full">{children}</div>
+    </div>
+  );
+}
+
+function ScaledWidgetViewport({
+  naturalWidth,
+  naturalHeight,
+  children,
+  className = '',
+  contentClassName = '',
+}) {
+  const containerRef = React.useRef(null);
+  const [viewport, setViewport] = React.useState({ width: naturalWidth, height: naturalHeight });
+
+  React.useEffect(() => {
+    const element = containerRef.current;
+    if (!element || typeof ResizeObserver === 'undefined') return undefined;
+
+    const updateViewport = () => {
+      setViewport({
+        width: element.clientWidth || naturalWidth,
+        height: element.clientHeight || naturalHeight,
+      });
+    };
+
+    updateViewport();
+    const observer = new ResizeObserver(updateViewport);
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [naturalHeight, naturalWidth]);
+
+  const scale = Math.min(
+    viewport.width / naturalWidth,
+    viewport.height / naturalHeight,
+    1,
+  );
+
+  return (
+    <div ref={containerRef} className={`relative h-full w-full overflow-hidden ${className}`}>
+      <div
+        className={`absolute left-1/2 top-1/2 ${contentClassName}`}
+        style={{
+          width: naturalWidth,
+          height: naturalHeight,
+          transform: `translate(-50%, -50%) scale(${scale})`,
+          transformOrigin: 'center center',
+        }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+function CompactRecentDonateCard({ settings, donations = [] }) {
+  const maxEntries = Math.min(3, getPreviewNumber(settings?.maxEntries, 3));
+  const visibleDonations = donations.slice(0, maxEntries);
+  const titleSize = getPreviewNumber(settings?.fontSize, 16);
+  const nameSize = getPreviewNumber(settings?.lastDonatorFontSize, 18);
+  const amountSize = getPreviewNumber(settings?.amountFontSize, 20);
+  const borderRadius = getPreviewNumber(settings?.borderRadius, 18);
+  const borderWidth = settings?.borderEnabled ? getPreviewNumber(settings?.borderWidth, 1) : 0;
+  const shadowBlur = settings?.shadowEnabled ? getPreviewNumber(settings?.shadowBlur, 12) : 0;
+  const cardStyle = settings?.cardStyle || 'minimal';
+  const isPlain = cardStyle === 'plain';
+  const styleMap = {
+    minimal: 'border-slate-800 bg-slate-900/55',
+    soft: 'border-slate-800/70 bg-slate-900/40',
+    outline: 'border-slate-700/70 bg-transparent',
+    plain: 'border-transparent bg-transparent',
+  };
+
+  return (
+    <div className="flex h-full items-start justify-center overflow-hidden p-3">
+      <div className="w-full max-w-[360px] overflow-hidden px-3 py-2">
+        <div className="mb-3 flex items-center justify-between border-b border-white/10 pb-2">
+          <span className="text-[10px] font-semibold uppercase tracking-[0.18em] text-cyan-300">Recent</span>
+          <span
+            className="truncate text-right"
+            style={{
+              color: settings?.textColor || '#F8FAFC',
+              fontSize: `${titleSize}px`,
+              fontWeight: settings?.titleFontWeight || '700',
+              fontFamily: settings?.titleFontFamily || 'inherit',
+            }}
+          >
+            {settings?.title || 'Recent Donations'}
+          </span>
+        </div>
+        <div className="space-y-2">
+          {visibleDonations.map((donation, index) => (
+            <div
+              key={donation.id || `${donation.name}-${index}`}
+              className={isPlain ? 'py-1.5' : `rounded-lg border px-3 py-2 ${styleMap[cardStyle] || styleMap.minimal}`}
+              style={isPlain ? undefined : {
+                borderRadius,
+                borderColor: settings?.borderEnabled ? settings?.borderColor : 'transparent',
+                borderWidth,
+                boxShadow: shadowBlur ? `0 8px ${shadowBlur}px rgba(15,23,42,.12)` : 'none',
+              }}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 flex-1">
+                  {settings?.showName && (
+                    <p
+                      className="truncate"
+                      style={{
+                        color: settings?.lastDonatorColor || '#FFFFFF',
+                        fontSize: `${nameSize}px`,
+                        fontWeight: settings?.lastDonatorFontWeight || '700',
+                        fontFamily: settings?.lastDonatorFontFamily || 'inherit',
+                      }}
+                    >
+                      {donation.name}
+                    </p>
+                  )}
+                  {settings?.showMessage && (
+                    <p className="mt-1 truncate text-[11px] text-slate-400">{donation.message || settings?.messagePlaceholder}</p>
+                  )}
+                </div>
+                <div className="shrink-0 text-right">
+                  {settings?.showAmount && (
+                    <p
+                      style={{
+                        color: settings?.amountColor || '#38BDF8',
+                        fontSize: `${amountSize}px`,
+                        fontWeight: settings?.amountFontWeight || '700',
+                        fontFamily: settings?.amountFontFamily || 'inherit',
+                      }}
+                    >
+                      {donation.amount}
+                    </p>
+                  )}
+                  {settings?.showTime && <p className="mt-1 text-[11px] text-slate-500">{donation.time}</p>}
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function WidgetCardPreview({ widgetId, preview }) {
+  if (!preview) {
+    return (
+      <WidgetPreviewFrame>
+        <div className="flex h-full items-center justify-center px-6 text-center text-sm text-slate-500">
+          Preview will appear here after widget data loads.
+        </div>
+      </WidgetPreviewFrame>
+    );
+  }
+
+  if (widgetId === 'leaderboard') {
+    return (
+      <WidgetPreviewFrame>
+        <ScaledWidgetViewport naturalWidth={820} naturalHeight={500} className="px-3 py-4" contentClassName="pointer-events-none">
+          <div className="flex h-full w-full items-center justify-center">
+            <div className="w-[620px]">
+              <LeaderboardPreview settings={preview.settings} />
+            </div>
+          </div>
+        </ScaledWidgetViewport>
+      </WidgetPreviewFrame>
+    );
+  }
+
+  if (widgetId === 'top-donate') {
+    return (
+      <WidgetPreviewFrame>
+        <ScaledWidgetViewport naturalWidth={820} naturalHeight={500} className="px-3 py-4" contentClassName="pointer-events-none">
+          <div className="flex h-full w-full items-center justify-center">
+            <div className="w-[420px]">
+              <TopDonatePreview settings={preview.settings} donorData={preview.donorData} />
+            </div>
+          </div>
+        </ScaledWidgetViewport>
+      </WidgetPreviewFrame>
+    );
+  }
+
+  if (widgetId === 'recent-donate') {
+    return (
+      <WidgetPreviewFrame>
+        <ScaledWidgetViewport naturalWidth={820} naturalHeight={500} className="px-3 py-4" contentClassName="pointer-events-none">
+          <div className="flex h-full w-full items-center justify-center">
+            <div className="w-[360px]">
+              <CompactRecentDonateCard settings={preview.settings} donations={preview.donations} />
+            </div>
+          </div>
+        </ScaledWidgetViewport>
+      </WidgetPreviewFrame>
+    );
+  }
+
+  if (widgetId === 'donate-goal') {
+    return (
+      <WidgetPreviewFrame>
+        <ScaledWidgetViewport naturalWidth={820} naturalHeight={500} className="px-3 py-4" contentClassName="pointer-events-none">
+          <div className="flex h-full w-full items-center justify-center">
+            <div className="w-[620px] rounded-xl border border-white/8 bg-slate-950/60 p-6">
+              <GoalPreview settings={preview.settings} currentAmount={preview.currentAmount} />
+            </div>
+          </div>
+        </ScaledWidgetViewport>
+      </WidgetPreviewFrame>
+    );
+  }
+
+  if (widgetId === 'donate-alert') {
+    return (
+      <WidgetPreviewFrame>
+        <ScaledWidgetViewport naturalWidth={820} naturalHeight={500} className="px-3 py-4" contentClassName="pointer-events-none">
+          <AlertPreview
+            settings={preview.settings}
+            isPlaying={false}
+            externalAnimationStep="display"
+            externalIsVisible={true}
+          />
+        </ScaledWidgetViewport>
+      </WidgetPreviewFrame>
+    );
+  }
+
+  return (
+    <WidgetPreviewFrame>
+      <div className="flex h-full items-center justify-center px-6 text-center text-sm text-slate-500">
+        This widget does not have a reusable preview component yet.
+      </div>
+    </WidgetPreviewFrame>
+  );
+}
+
+function WidgetUrlCardField({ widgetId, preview }) {
+  const type = WIDGET_URL_TYPES[widgetId];
+  const resolvedWidgetId = preview?.widgetId || null;
+  const widgetUrl = type ? createWidgetUrl(type, resolvedWidgetId || 'preview') : '';
+  const hasRealWidget = Boolean(type && resolvedWidgetId);
+
+  const handleCopy = async () => {
+    if (!widgetUrl) return;
+    await navigator.clipboard?.writeText(widgetUrl);
+  };
+
+  const handleOpen = () => {
+    if (!widgetUrl) return;
+    window.open(widgetUrl, '_blank', 'noopener,noreferrer');
+  };
+
+  if (!type) return null;
+
+  return (
+    <div className="mb-4 rounded-xl border border-slate-700/60 bg-slate-950/70 p-3">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
+          Widget URL
+        </span>
+        {!hasRealWidget && (
+          <span className="text-[10px] text-slate-500">Preview URL</span>
+        )}
+      </div>
+      <div className="flex gap-2">
+        <div className="min-w-0 flex-1 rounded-lg border border-slate-700/70 bg-slate-900/80 px-3 py-2 font-mono text-[11px] text-cyan-200 sm:text-xs">
+          <span className="block truncate">{widgetUrl}</span>
+        </div>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="shrink-0 border-slate-700/80 bg-slate-900/70 text-slate-200 shadow-none hover:border-cyan-400/40 hover:bg-cyan-500/10 hover:text-cyan-100"
+          onClick={handleCopy}
+        >
+          <Copy className="h-4 w-4" />
+        </Button>
+        <Button
+          type="button"
+          variant="outline"
+          size="icon"
+          className="shrink-0 border-slate-700/80 bg-slate-900/70 text-slate-200 shadow-none hover:border-cyan-400/40 hover:bg-cyan-500/10 hover:text-cyan-100"
+          onClick={handleOpen}
+        >
+          <ExternalLink className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 export default function Widgets() {
   const { language } = useLanguage();
-  const [widgetStates, setWidgetStates] = React.useState(
-    widgets.reduce((acc, w) => ({ ...acc, [w.id]: w.enabled }), {})
-  );
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const {
+    widgetPreviews,
+    widgetStates,
+    ensureWidgetPreviewsLoaded,
+    setWidgetState,
+  } = useWidgetPreviews();
   const text = copy[language] || copy.en;
 
+  React.useEffect(() => {
+    if (isAuthLoading) return;
+    ensureWidgetPreviewsLoaded(user?.id ?? null);
+  }, [ensureWidgetPreviewsLoaded, isAuthLoading, user?.id]);
+
   const toggleWidget = (id) => {
-    setWidgetStates(prev => ({ ...prev, [id]: !prev[id] }));
+    setWidgetState(id, (previous) => !previous);
   };
 
   const outlineButtonClass =
@@ -196,7 +534,6 @@ export default function Widgets() {
 
   return (
     <div className="w-full space-y-8">
-      {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -221,7 +558,6 @@ export default function Widgets() {
         </div>
       </motion.div>
 
-      {/* Widgets Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {widgets.map((widget, index) => (
           <motion.div
@@ -235,11 +571,10 @@ export default function Widgets() {
                 : 'border-slate-700/50'
             }`}
           >
-            {/* Gradient Accent */}
             <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${widget.gradient} ${widgetStates[widget.id] ? 'opacity-100' : 'opacity-30'}`} />
-            
+
             {widget.isPro && (
-              <div className="absolute top-4 right-4">
+              <div className="absolute top-4 right-4 z-10">
                 <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0">
                   {text.pro}
                 </Badge>
@@ -263,6 +598,9 @@ export default function Widgets() {
                 {text.widgets[widget.id].name}
               </h3>
               <p className="text-slate-500 text-sm mb-4">{text.widgets[widget.id].description}</p>
+
+              <WidgetCardPreview widgetId={widget.id} preview={widgetPreviews[widget.id]} />
+              <WidgetUrlCardField widgetId={widget.id} preview={widgetPreviews[widget.id]} />
 
               <div className="flex gap-2">
                 {widget.hasSettings && widget.settingsPage && (
@@ -289,6 +627,14 @@ export default function Widgets() {
                   variant="outline"
                   size="icon"
                   className={outlineButtonClass}
+                  onClick={() => {
+                    const preview = widgetPreviews[widget.id];
+                    const type = WIDGET_URL_TYPES[widget.id];
+                    const widgetUrl = type ? createWidgetUrl(type, preview?.widgetId || 'preview') : '';
+                    if (widgetUrl) {
+                      window.open(widgetUrl, '_blank', 'noopener,noreferrer');
+                    }
+                  }}
                 >
                   <ExternalLink className="w-4 h-4" />
                 </Button>
@@ -298,7 +644,6 @@ export default function Widgets() {
         ))}
       </div>
 
-      {/* Widget URL Section */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -321,3 +666,10 @@ export default function Widgets() {
     </div>
   );
 }
+
+
+
+
+
+
+

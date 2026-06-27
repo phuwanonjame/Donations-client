@@ -48,7 +48,7 @@ const menuSections = [
     title: 'Customization',
     items: [
       { name: 'Page Design', icon: Palette, page: 'DonatePageSettings' },
-      { name: 'Donate Alert', icon: Bell, page: 'DonateAlertSettings' },
+      { name: 'Donate Alert', icon: Bell, page: 'widgets/donate-alert-settings' },
       { name: 'Developer Zone', icon: Code, page: 'DeveloperZone' },
     ]
   }
@@ -72,7 +72,7 @@ export default function Sidebar({ currentPage, isOpen, onClose }) {
         className="fixed left-0 top-0 h-full w-72 bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border-r border-slate-800/50 z-50 lg:hidden"
       >
         <div className="p-6 border-b border-slate-800/50">
-         <Link href={createPageUrl('Dashboard')} className="flex items-center gap-3">
+         <Link href={createPageUrl('')} className="flex items-center gap-3">
             <div className="relative group">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 group-hover:shadow-cyan-500/50 transition-shadow">
                 <Zap className="w-5 h-5 text-white" />
@@ -127,7 +127,7 @@ export default function Sidebar({ currentPage, isOpen, onClose }) {
         className="hidden lg:flex lg:flex-col w-72 h-screen bg-gradient-to-b from-slate-900 via-slate-900 to-slate-950 border-r border-slate-800/50 flex-shrink-0 overflow-hidden"
       >
         <div className="p-6 border-b border-slate-800/50">
-          <Link href={createPageUrl('Dashboard')} className="flex items-center gap-3">
+          <Link href={createPageUrl('')} className="flex items-center gap-3">
             <div className="relative group">
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 group-hover:shadow-cyan-500/50 transition-shadow">
                 <Zap className="w-5 h-5 text-white" />
@@ -178,3 +178,4 @@ export default function Sidebar({ currentPage, isOpen, onClose }) {
     </>
   );
 }
+

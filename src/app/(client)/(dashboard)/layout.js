@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from './components/navigation/Sidebar';
 import Header from './components/navigation/Header';
+import { WidgetPreviewsProvider } from './components/context/WidgetPreviewsProvider';
 
 export default function Layout({ children }) {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -19,33 +20,35 @@ export default function Layout({ children }) {
   };
 
   return (
-    <div className="h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      <div className="flex h-full overflow-hidden">
-        {/* Sidebar */}
-        <Sidebar 
-          isOpen={sidebarOpen}
-          onClose={() => setSidebarOpen(false)}
-          collapsed={sidebarCollapsed}
-          onToggle={handleSidebarToggle}
-        />
-        
-        {/* Main Content Area */}
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          <Header 
-            onMenuClick={() => setSidebarOpen(true)} 
-            sidebarCollapsed={sidebarCollapsed}
-            onSidebarToggle={handleSidebarToggle}
+    <WidgetPreviewsProvider>
+      <div className="h-screen overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
+        <div className="flex h-full overflow-hidden">
+          {/* Sidebar */}
+          <Sidebar 
+            isOpen={sidebarOpen}
+            onClose={() => setSidebarOpen(false)}
+            collapsed={sidebarCollapsed}
+            onToggle={handleSidebarToggle}
           />
           
-          {/* Main Content */}
-          <main className="flex-1 overflow-y-auto overflow-x-hidden">
-            <div className="min-h-full w-full p-4 sm:p-6 lg:p-8">
-              {children}
-            </div>
-          </main>
+          {/* Main Content Area */}
+          <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
+            <Header 
+              onMenuClick={() => setSidebarOpen(true)} 
+              sidebarCollapsed={sidebarCollapsed}
+              onSidebarToggle={handleSidebarToggle}
+            />
+            
+            {/* Main Content */}
+            <main className="flex-1 overflow-y-auto overflow-x-hidden">
+              <div className="min-h-full w-full p-4 sm:p-6 lg:p-8">
+                {children}
+              </div>
+            </main>
+          </div>
         </div>
       </div>
-    </div>
+    </WidgetPreviewsProvider>
     
   );
 }

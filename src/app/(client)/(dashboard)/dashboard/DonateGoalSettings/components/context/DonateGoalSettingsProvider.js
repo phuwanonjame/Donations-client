@@ -5,6 +5,7 @@ import {
   saveDonateGoalSettings,
 } from "@/actions/DonateGoalapi/donateGoalSettingsApi";
 import { useAuth } from "@/contexts/AuthContext";
+import { useWidgetPreviews } from "../../../../components/context/WidgetPreviewsProvider";
 import { createWidgetSettingsNotifier } from "@/lib/notifications/widget-settings-toast";
 
 import { defaultSettings } from "../../constants/donate-goal";
@@ -20,6 +21,7 @@ const logGoalProvider = (label, payload) => {
 export function DonateGoalSettingsProvider({ children }) {
   const { user, isLoading: isAuthLoading } = useAuth();
   const userId = user?.id;
+  const { invalidateWidgetPreviews } = useWidgetPreviews();
   const [settings, setSettings] = useState(defaultSettings);
   const [widgetId, setWidgetId] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -138,6 +140,7 @@ export function DonateGoalSettingsProvider({ children }) {
         return;
       }
 
+      invalidateWidgetPreviews(userId);
       setHasChanges(false);
       setSaveSuccess(true);
       goalNotifier.saveSuccess(loadingToastId);
@@ -148,7 +151,7 @@ export function DonateGoalSettingsProvider({ children }) {
     } finally {
       setSaving(false);
     }
-  }, [settings, userId, widgetId]);
+  }, [invalidateWidgetPreviews, settings, userId, widgetId]);
 
   const metadata = useMemo(() => toMetadata(settings), [settings]);
 

@@ -23,6 +23,7 @@ export default function Header() {
   }, []);
 
   const navLinks = [
+    { name: "About Me", href: "/about" },
     { name: t.nav.features, href: "#features" },
     { name: t.nav.pricing, href: "#pricing" },
     { name: t.nav.support, href: "#support" },
@@ -88,22 +89,32 @@ export default function Header() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-8">
-            {navLinks.map((link) => (
-              <a
-                key={link.name}
-                href={link.href}
-                className="text-gray-300 hover:text-cyan-400 transition-colors font-medium text-sm tracking-wide"
-              >
-                {link.name}
-              </a>
-            ))}
+            {navLinks.map((link) =>
+              link.href.startsWith("/") ? (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  className="text-gray-300 hover:text-cyan-400 transition-colors font-medium text-sm tracking-wide"
+                >
+                  {link.name}
+                </Link>
+              ) : (
+                <a
+                  key={link.name}
+                  href={link.href}
+                  className="text-gray-300 hover:text-cyan-400 transition-colors font-medium text-sm tracking-wide"
+                >
+                  {link.name}
+                </a>
+              )
+            )}
           </nav>
 
           {/* Desktop CTA */}
           <div className="hidden md:flex items-center gap-4">
             <LanguageSwitcher />
             {UserProfileOrLogin} {/* Use the new conditional component */}
-            <Link href="/dashboard/Dashboard">
+            <Link href="/dashboard/">
               <Button className="bg-gradient-to-r cursor-pointer from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-[#0A1628] font-semibold shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all">
                 {t.nav.getStarted}
               </Button>
@@ -134,16 +145,27 @@ export default function Header() {
             className="md:hidden bg-[#0A1628]/95 backdrop-blur-xl border-t border-cyan-500/10"
           >
             <div className="px-6 py-6 space-y-4">
-              {navLinks.map((link) => (
-                <a
-                  key={link.name}
-                  href={link.href}
-                  className="block text-gray-300 hover:text-cyan-400 transition-colors font-medium py-2"
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  {link.name}
-                </a>
-              ))}
+              {navLinks.map((link) =>
+                link.href.startsWith("/") ? (
+                  <Link
+                    key={link.name}
+                    href={link.href}
+                    className="block py-2 font-medium text-gray-300 transition-colors hover:text-cyan-400"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {link.name}
+                  </Link>
+                ) : (
+                  <a
+                    key={link.name}
+                    href={link.href}
+                    className="block py-2 font-medium text-gray-300 transition-colors hover:text-cyan-400"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    {link.name}
+                  </a>
+                )
+              )}
               <div className="pt-4 space-y-3 border-t border-gray-700/50">
                 <div className="flex justify-center">
                   <LanguageSwitcher />
@@ -166,7 +188,7 @@ export default function Header() {
                   </Button>
                 </Link>
 
-                <Link href="/dashboard/Dashboard">
+                <Link href="/dashboard/">
                     <Button className="w-full bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-[#0A1628] font-semibold">
                         {t.nav.getStarted}
                     </Button>
@@ -179,3 +201,6 @@ export default function Header() {
     </motion.header>
   );
 }
+
+
+

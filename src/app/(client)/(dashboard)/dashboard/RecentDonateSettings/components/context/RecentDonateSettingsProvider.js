@@ -5,6 +5,7 @@ import {
   saveRecentDonateSettings,
 } from "@/actions/RecentDonateapi/recentDonateSettingsApi";
 import { useAuth } from "@/contexts/AuthContext";
+import { useWidgetPreviews } from "../../../../components/context/WidgetPreviewsProvider";
 import { createWidgetSettingsNotifier } from "@/lib/notifications/widget-settings-toast";
 
 import { getDefaultRecentDonations, getDefaultSettings } from "../../constants/recentDonateOptions";
@@ -21,6 +22,7 @@ const logRecentDonateProvider = (label, payload) => {
 export function RecentDonateSettingsProvider({ children }) {
   const { user, isLoading: isAuthLoading } = useAuth();
   const userId = user?.id;
+  const { invalidateWidgetPreviews } = useWidgetPreviews();
   const [settings, setSettings] = useState(getDefaultSettings());
   const [donations, setDonations] = useState(getDefaultRecentDonations());
   const [widgetId, setWidgetId] = useState(null);
@@ -161,6 +163,7 @@ export function RecentDonateSettingsProvider({ children }) {
       }
 
       setWidgetId(resolvedWidgetId);
+      invalidateWidgetPreviews(userId);
       setHasChanges(false);
       setSaveSuccess(true);
       recentDonateNotifier.saveSuccess(loadingToastId);
@@ -171,7 +174,7 @@ export function RecentDonateSettingsProvider({ children }) {
     } finally {
       setSaving(false);
     }
-  }, [settings, userId, widgetId]);
+  }, [invalidateWidgetPreviews, settings, userId, widgetId]);
 
   const metadata = useMemo(() => toMetadata(settings), [settings]);
 

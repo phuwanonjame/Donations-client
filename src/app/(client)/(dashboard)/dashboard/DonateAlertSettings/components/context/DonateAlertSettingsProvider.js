@@ -11,6 +11,7 @@ import {
   saveDonateSettings,
 } from "@/actions/DonateAlertapi/donateSettingsApi";
 import { useAuth } from "@/contexts/AuthContext";
+import { useWidgetPreviews } from "../../../../components/context/WidgetPreviewsProvider";
 import { createWidgetSettingsNotifier } from "@/lib/notifications/widget-settings-toast";
 
 const DonateAlertSettingsContext = createContext(null);
@@ -39,6 +40,7 @@ export function DonateAlertSettingsProvider({
 }) {
   const { user, isLoading: isAuthLoading } = useAuth();
   const userId = user?.id;
+  const { invalidateWidgetPreviews } = useWidgetPreviews();
   const [settings, setSettings] = useState(() => transformToFlatStructure(defaultSettings));
   const [widgetId, setWidgetId] = useState(null);
   const [activeRangeId, setActiveRangeId] = useState(null);
@@ -289,7 +291,7 @@ export function DonateAlertSettingsProvider({
     } finally {
       setSaving(false);
     }
-  }, [settings, userId, widgetId]);
+  }, [invalidateWidgetPreviews, settings, userId, widgetId]);
 
   const openFullscreenEditor = useCallback((editorSettings, updateFn) => {
     setFullscreenEditorContext({
