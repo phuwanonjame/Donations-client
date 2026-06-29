@@ -338,6 +338,7 @@ export const defaultDonatePageSettings = {
     bio: "สตรีมเมอร์สาย Competitive 🎮 | เล่น Valorant & LoL | สตรีมทุกวัน 20:00+",
     avatarUrl: "",
     bannerUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e",
+    backgroundUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e",
     isOnline: true,
     verified: true,
   },

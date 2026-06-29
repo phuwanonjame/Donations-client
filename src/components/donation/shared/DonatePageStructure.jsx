@@ -305,8 +305,7 @@ export default function DonatePageStructure({
       ref={preview ? previewRef : null}
       className={`relative min-h-screen bg-cover bg-center ${shouldUseFixedBackground ? "bg-fixed" : ""} ${className}`.trim()}
       style={{
-        backgroundImage:
-          "url('https://images.unsplash.com/photo-1542751371-adc38448a05e')",
+        backgroundImage: `url(${settings.profile.backgroundUrl || settings.profile.bannerUrl})`,
         contain: preview ? "paint" : undefined,
       }}
     >

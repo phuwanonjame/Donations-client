@@ -1,7 +1,8 @@
-"use client";
+﻿"use client";
 
-import React, { memo, useDeferredValue, useEffect, useMemo, useState } from "react";
+import React, { memo, useDeferredValue, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import Image from "next/image";
 import {
   Palette,
   User,
@@ -36,12 +37,20 @@ import {
   Headphones,
   Camera,
   Settings2,
+  ChevronDown,
 } from "lucide-react";
 
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Slider } from "@/components/ui/slider";
 import DonatePageRenderer from "@/components/donation/shared/DonatePageRenderer";
@@ -112,6 +121,114 @@ const themes = [
   },
 ];
 
+const MAX_PROFILE_CATEGORIES = 5;
+
+const profileCategoryOptions = [
+  {
+    id: "valorant",
+    name: "VALORANT",
+    image:
+      "https://cdn.aona.co.th/u/nicenathapong/files/5be1c4094156fbe74d7049d417818b6c245291b569cd0dc5cfe80dd9e24d1336.png",
+  },
+  {
+    id: "rov",
+    name: "RoV",
+    image:
+      "https://play-lh.googleusercontent.com/2RrzGOcirTAU4vPzLiZ3Us4k-E-RtPVBbWB-RkU5FAT9gVrTlUJL0nYVN6VlpSbGq_uHHaLsvwvtxm1Mjirxpg",
+  },
+  {
+    id: "minecraft",
+    name: "Minecraft",
+    image: "https://i.imgur.com/nKsYRdJ.png",
+  },
+  { id: "music", name: "Music & Singing" },
+  { id: "vtuber", name: "VTuber" },
+  { id: "irl", name: "IRL" },
+];
+
+const fixedSocials = [
+  {
+    id: "facebook",
+    label: "Facebook",
+    href: "https://facebook.com/test",
+    enabled: true,
+  },
+  {
+    id: "youtube",
+    label: "YouTube",
+    href: "https://youtube.com/test",
+    enabled: true,
+  },
+  {
+    id: "tiktok",
+    label: "TikTok",
+    href: "https://tiktok.com/test",
+    enabled: true,
+  },
+  {
+    id: "x",
+    label: "X",
+    href: "https://x.com/test",
+    enabled: true,
+  },
+  {
+    id: "instagram",
+    label: "IG",
+    href: "https://instagram.com/test",
+    enabled: true,
+  },
+  {
+    id: "website",
+    label: "Website",
+    href: "https://example.com",
+    enabled: true,
+  },
+];
+
+const STREAM_SCHEDULE_DAYS = [
+  "จันทร์",
+  "อังคาร",
+  "พุธ",
+  "พฤหัสบดี",
+  "ศุกร์",
+  "เสาร์",
+  "อาทิตย์",
+];
+
+const TIME_SELECT_OPTIONS = Array.from({ length: 48 }, (_, index) => {
+  const hours = String(Math.floor(index / 2)).padStart(2, "0");
+  const minutes = index % 2 === 0 ? "00" : "30";
+
+  return `${hours}:${minutes}`;
+});
+
+const DEFAULT_PROFANITY_WORDS = [
+  "เงี่ยน",
+  "เย็ด",
+  "ควย",
+  "เหี้ย",
+  "หี",
+  "ชิบหาย",
+  "กะหรี่",
+  "หำ",
+  "เชี่ย",
+  "เหยด",
+  "เวร",
+  "ตาย",
+  "เจี๊ยว",
+  "แม่ง",
+  "ควาย",
+  "สัส",
+  "ดอกทอง",
+  "ส้นตีน",
+  "มึง",
+  "กู",
+  "กุ",
+  "ไอ",
+  "แตด",
+  "กวนตีน",
+];
+
 const navItems = [
   {
     id: "theme",
@@ -127,8 +244,8 @@ const navItems = [
   },
   {
     id: "donation",
-    title: "โดเนท",
-    desc: "ตั้งค่าฟอร์มรับโดเนท",
+    title: "ช่องทางรับเงิน",
+    desc: "ตั้งค่าช่องทางรับเงินและฟอร์มโดเนท",
     icon: Heart,
   },
   {
@@ -200,35 +317,13 @@ const defaultSettings = {
     bio: "สตรีมเมอร์สาย Competitive 🎮 | เล่น Valorant & LoL | สตรีมทุกวัน 20:00+",
     avatarUrl: "",
     bannerUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e",
+    backgroundUrl: "https://images.unsplash.com/photo-1542751371-adc38448a05e",
     isOnline: true,
     verified: true,
   },
 
   socials: [
-    {
-      id: "facebook",
-      label: "Facebook",
-      href: "https://facebook.com/test",
-      enabled: true,
-    },
-    {
-      id: "instagram",
-      label: "Instagram",
-      href: "https://instagram.com/test",
-      enabled: true,
-    },
-    {
-      id: "youtube",
-      label: "YouTube",
-      href: "https://youtube.com/test",
-      enabled: true,
-    },
-    {
-      id: "tiktok",
-      label: "TikTok",
-      href: "https://tiktok.com/test",
-      enabled: true,
-    },
+    ...fixedSocials,
   ],
 
   donation: {
@@ -243,6 +338,21 @@ const defaultSettings = {
     showMessage: true,
     welcomeMessage: "ขอบคุณที่สนับสนุนกันนะครับ ทุกโดเนทช่วยให้ทำคอนเทนต์ได้ดีขึ้น 💜",
     buttonText: "โดเนทเลย",
+    channels: {
+      promptpay: {
+        enabled: true,
+        expanded: false,
+        type: "phone",
+        value: "0825568960",
+      },
+      bank: {
+        enabled: false,
+        expanded: false,
+        bankName: "SCB",
+        accountName: "Creator Studio",
+        accountNumber: "123-4-56789-0",
+      },
+    },
   },
 
   filters: [
@@ -252,25 +362,11 @@ const defaultSettings = {
       description: "บล็อกคำหยาบและภาษาที่ไม่เหมาะสม",
       enabled: true,
     },
-    {
-      id: "links",
-      name: "Block Links",
-      description: "ป้องกันการส่งลิงก์ในข้อความ",
-      enabled: true,
-    },
-    {
-      id: "spam",
-      name: "Spam Detection",
-      description: "ตรวจจับและกรองข้อความสแปมอัตโนมัติ",
-      enabled: false,
-    },
-    {
-      id: "anonymous",
-      name: "Allow Anonymous",
-      description: "อนุญาตให้ผู้โดเนทซ่อนชื่อได้",
-      enabled: true,
-    },
   ],
+  profanityWords: DEFAULT_PROFANITY_WORDS,
+  customProfanityWords: [],
+
+  profileCategories: ["valorant", "rov", "music"],
 
   music: {
     enabled: true,
@@ -386,16 +482,30 @@ const defaultSettings = {
     },
     {
       id: 4,
+      day: "พฤหัสบดี",
+      time: "",
+      title: "",
+      enabled: true,
+    },
+    {
+      id: 5,
       day: "ศุกร์",
       time: "19:00 - 01:00",
       title: "Game Night",
       enabled: true,
     },
     {
-      id: 5,
+      id: 6,
       day: "เสาร์",
       time: "15:00 - 20:00",
       title: "Special Event",
+      enabled: true,
+    },
+    {
+      id: 7,
+      day: "อาทิตย์",
+      time: "",
+      title: "",
       enabled: true,
     },
   ],
@@ -552,19 +662,203 @@ function ToggleRow({ icon: Icon, title, description, checked, onChange }) {
   );
 }
 
+function DonationChannelCard({
+  title,
+  subtitle,
+  badge,
+  enabled,
+  expanded,
+  onToggleEnabled,
+  onToggleExpanded,
+  children,
+}) {
+  return (
+    <div
+      className={cx(
+        "overflow-hidden rounded-2xl border bg-slate-950/40 backdrop-blur-sm transition-all duration-300",
+        expanded ? "border-slate-600/80" : "border-slate-800"
+      )}
+    >
+      <div className="flex items-center justify-between gap-3 px-5 py-4">
+        <div className="flex min-w-0 items-center gap-3">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 text-white shadow-lg shadow-emerald-500/20">
+            <span className="text-sm font-bold">{badge}</span>
+          </div>
+          <div className="min-w-0">
+            <p className="truncate text-sm font-medium leading-tight text-white sm:text-base">
+              {title}
+            </p>
+            <p className="truncate text-xs text-slate-500 sm:text-sm">
+              {subtitle}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex shrink-0 flex-col items-center gap-1">
+          <button
+            type="button"
+            onClick={onToggleEnabled}
+            className={cx(
+              "relative h-6 w-11 rounded-full border transition-all duration-300",
+              enabled
+                ? "border-emerald-700 bg-emerald-600"
+                : "border-slate-700 bg-slate-800"
+            )}
+          >
+            <span
+              className={cx(
+                "absolute left-[3px] top-[3px] h-[18px] w-[18px] rounded-full bg-white shadow-sm transition-transform duration-300",
+                enabled ? "translate-x-5" : "translate-x-0"
+              )}
+            />
+          </button>
+          <span className="text-[10px] text-slate-500">
+            {enabled ? "Enabled" : "Disabled"}
+          </span>
+        </div>
+      </div>
+
+      <div className="px-5 pb-4">
+        <button
+          type="button"
+          onClick={onToggleExpanded}
+          className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-800 py-2 text-xs text-slate-400 transition-all duration-200 hover:bg-slate-900/70 hover:text-slate-200 sm:text-sm"
+        >
+          <ChevronDown
+            size={14}
+            className={cx("transition-transform duration-300", expanded && "rotate-180")}
+          />
+          {expanded ? "Hide settings" : "Configure"}
+        </button>
+      </div>
+
+      <div
+        className={cx(
+          "overflow-hidden transition-all duration-300 ease-in-out",
+          expanded ? "max-h-[520px] opacity-100" : "max-h-0 opacity-0"
+        )}
+      >
+        <div className="space-y-4 border-t border-slate-800 px-5 pb-5 pt-4">
+          {children}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function normalizeSocials(socials) {
+  const mapped = new Map((socials || []).map((item) => [item.id, item]));
+
+  return fixedSocials.map((item) => ({
+    ...item,
+    href: mapped.get(item.id)?.href || item.href,
+    enabled: true,
+  }));
+}
+
+function normalizeSchedule(schedule) {
+  const mapped = new Map((schedule || []).map((item) => [item.day, item]));
+
+  return STREAM_SCHEDULE_DAYS.map((day, index) => {
+    const existingItem = mapped.get(day);
+
+    return {
+      id: index + 1,
+      day,
+      time: existingItem?.time || "",
+      title: existingItem?.title || "",
+      enabled: true,
+    };
+  });
+}
+
+function normalizeFilters(filters, fallbackCustomWords = []) {
+  const profanityFilter = (filters || []).find((item) => item.id === "profanity");
+
+  return [
+    {
+      id: "profanity",
+      name: "Block Profanity",
+      description: "บล็อกคำหยาบและภาษาที่ไม่เหมาะสม",
+      enabled: profanityFilter?.enabled ?? true,
+    },
+  ];
+}
+
+function normalizeProfanityWords(words) {
+  const mergedWords = (Array.isArray(words) && words.length ? words : DEFAULT_PROFANITY_WORDS)
+    .map((word) => String(word || "").trim())
+    .filter(Boolean);
+
+  return Array.from(new Set(mergedWords));
+}
+
+function normalizeCustomProfanityWords(words) {
+  return Array.from(
+    new Set(
+      (Array.isArray(words) ? words : [])
+        .map((word) => String(word || "").trim())
+        .filter(Boolean)
+    )
+  );
+}
+
+function parseScheduleTimeRange(timeRange = "") {
+  const [startTime = "", endTime = ""] = timeRange.split(" - ").map((value) => value.trim());
+
+  return {
+    startTime: TIME_SELECT_OPTIONS.includes(startTime) ? startTime : "",
+    endTime: TIME_SELECT_OPTIONS.includes(endTime) ? endTime : "",
+  };
+}
+
+function buildScheduleTimeRange(startTime, endTime) {
+  if (!startTime && !endTime) {
+    return "";
+  }
+
+  if (!startTime) {
+    return endTime;
+  }
+
+  if (!endTime) {
+    return startTime;
+  }
+
+  return `${startTime} - ${endTime}`;
+}
+
+function buildInitialSettings() {
+  const loadedSettings = loadDonatePageSettings(defaultSettings);
+
+  return {
+    ...loadedSettings,
+    socials: normalizeSocials(loadedSettings.socials),
+    filters: normalizeFilters(loadedSettings.filters),
+    profanityWords: normalizeProfanityWords(loadedSettings.profanityWords),
+    customProfanityWords: normalizeCustomProfanityWords(
+      loadedSettings.customProfanityWords
+    ),
+    schedule: normalizeSchedule(loadedSettings.schedule),
+  };
+}
+
 export default function DonatePageSettings() {
   const [activeTab, setActiveTab] = useState("theme");
-  const [settings, setSettings] = useState(defaultSettings);
+  const [settings, setSettings] = useState(buildInitialSettings);
   const [saveMessage, setSaveMessage] = useState("");
+  const [customProfanityInput, setCustomProfanityInput] = useState("");
   const deferredSettings = useDeferredValue(settings);
-
-  useEffect(() => {
-    setSettings(loadDonatePageSettings(defaultSettings));
-  }, []);
+  const avatarFileInputRef = useRef(null);
+  const bannerFileInputRef = useRef(null);
+  const backgroundFileInputRef = useRef(null);
 
   const selectedTheme = useMemo(() => {
     return themes.find((theme) => theme.id === settings.theme) || themes[0];
   }, [settings.theme]);
+  const activeNavItem = useMemo(() => {
+    return navItems.find((item) => item.id === activeTab) || navItems[0];
+  }, [activeTab]);
   const selectedDecorationPreset = useMemo(() => {
     return (
       donationDecorationPresets.find(
@@ -572,6 +866,16 @@ export default function DonatePageSettings() {
       ) || donationDecorationPresets[0]
     );
   }, [settings.design.decorationPreset]);
+  const selectedProfileCategories = useMemo(() => {
+    return profileCategoryOptions.filter((item) =>
+      (settings.profileCategories || []).includes(item.id)
+    );
+  }, [settings.profileCategories]);
+  const donationChannels =
+    settings.donation?.channels || defaultSettings.donation.channels;
+  const profanityFilter =
+    settings.filters.find((item) => item.id === "profanity") ||
+    defaultSettings.filters[0];
 
   const cloneDecorations = (decorations) =>
     Object.fromEntries(
@@ -583,6 +887,7 @@ export default function DonatePageSettings() {
     Object.fromEntries(
       Object.entries(decorations || {}).map(([key, value]) => [key, { ...value }])
     );
+  const ActiveTabIcon = activeTab === "music" ? Users : activeNavItem.icon;
 
   const applyDecorationPreset = (preset) => {
     setSettings((prev) => ({
@@ -620,6 +925,18 @@ export default function DonatePageSettings() {
     }));
   };
 
+  const handleProfileImageUpload = (key, file) => {
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === "string") {
+        updateProfile(key, reader.result);
+      }
+    };
+    reader.readAsDataURL(file);
+  };
+
   const updateDonation = (key, value) => {
     setSettings((prev) => ({
       ...prev,
@@ -650,8 +967,57 @@ export default function DonatePageSettings() {
     }));
   };
 
+  const updateDonationChannel = (channel, key, value) => {
+    setSettings((prev) => ({
+      ...prev,
+      donation: {
+        ...prev.donation,
+        channels: {
+          ...(prev.donation.channels || defaultSettings.donation.channels),
+          [channel]: {
+            ...(prev.donation.channels?.[channel] ||
+              defaultSettings.donation.channels[channel]),
+            [key]: value,
+          },
+        },
+      },
+    }));
+  };
+
+  const toggleProfileCategory = (categoryId) => {
+    setSettings((prev) => {
+      const selected = prev.profileCategories || [];
+      const exists = selected.includes(categoryId);
+
+      if (exists) {
+        return {
+          ...prev,
+          profileCategories: selected.filter((id) => id !== categoryId),
+        };
+      }
+
+      if (selected.length >= MAX_PROFILE_CATEGORIES) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        profileCategories: [...selected, categoryId],
+      };
+    });
+  };
+
+  const removeProfileCategory = (categoryId) => {
+    setSettings((prev) => ({
+      ...prev,
+      profileCategories: (prev.profileCategories || []).filter(
+        (id) => id !== categoryId
+      ),
+    }));
+  };
+
   const handleRestoreSaved = () => {
-    setSettings(loadDonatePageSettings(defaultSettings));
+    setSettings(buildInitialSettings());
     setSaveMessage("โหลดค่าที่บันทึกล่าสุดกลับมาแล้ว");
   };
 
@@ -681,6 +1047,41 @@ export default function DonatePageSettings() {
       ...prev,
       filters: prev.filters.map((item) =>
         item.id === id ? { ...item, enabled: !item.enabled } : item
+      ),
+    }));
+  };
+
+  const addCustomProfanityWord = () => {
+    const nextWord = customProfanityInput.trim();
+
+    if (!nextWord) {
+      return;
+    }
+
+    setSettings((prev) => {
+      const existingWords = [
+        ...(prev.profanityWords || []),
+        ...(prev.customProfanityWords || []),
+      ].map((word) => word.toLowerCase());
+
+      if (existingWords.includes(nextWord.toLowerCase())) {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        customProfanityWords: [...(prev.customProfanityWords || []), nextWord],
+      };
+    });
+
+    setCustomProfanityInput("");
+  };
+
+  const removeCustomProfanityWord = (wordToRemove) => {
+    setSettings((prev) => ({
+      ...prev,
+      customProfanityWords: (prev.customProfanityWords || []).filter(
+        (word) => word !== wordToRemove
       ),
     }));
   };
@@ -730,10 +1131,6 @@ export default function DonatePageSettings() {
 
   const scrollToSection = (id) => {
     setActiveTab(id);
-    document.getElementById(id)?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
   };
 
   return (
@@ -741,8 +1138,7 @@ export default function DonatePageSettings() {
       <div
         className="absolute inset-0 bg-cover bg-center opacity-20"
         style={{
-          backgroundImage:
-            "url('https://images.unsplash.com/photo-1542751371-adc38448a05e')",
+          backgroundImage: `url(${settings.profile.backgroundUrl || settings.profile.bannerUrl})`,
         }}
       />
       <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(56,189,248,0.18),transparent_30%),radial-gradient(circle_at_top_right,rgba(168,85,247,0.18),transparent_30%),linear-gradient(to_bottom,rgba(2,6,23,0.88),rgba(2,6,23,0.98))]" />
@@ -774,8 +1170,14 @@ export default function DonatePageSettings() {
 
           <nav className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
             {navItems.map((item, index) => {
-              const Icon = item.icon;
+              const Icon = item.id === "music" ? Users : item.icon;
               const isActive = activeTab === item.id;
+              const itemTitle =
+                item.id === "music" ? "Profile Categories" : item.title;
+              const itemDesc =
+                item.id === "music"
+                  ? "Select categories for this profile"
+                  : item.desc;
 
               return (
                 <button
@@ -805,9 +1207,9 @@ export default function DonatePageSettings() {
                         isActive ? "text-white" : "text-slate-300"
                       )}
                     >
-                      {index + 1}. {item.title}
+                      {index + 1}. {itemTitle}
                     </p>
-                    <p className="truncate text-xs text-slate-500">{item.desc}</p>
+                    <p className="truncate text-xs text-slate-500">{itemDesc}</p>
                   </div>
                 </button>
               );
@@ -845,7 +1247,7 @@ export default function DonatePageSettings() {
             <div className="flex items-center justify-between gap-4">
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-700 bg-slate-900/60 text-cyan-300">
-                  <Palette className="h-5 w-5" />
+                  <ActiveTabIcon className="h-5 w-5" />
                 </div>
                 <div>
                   <p className="text-xs text-slate-500">ตั้งค่า / ปรับแต่งหน้าโดเนท</p>
@@ -884,8 +1286,9 @@ export default function DonatePageSettings() {
             </div>
           </header>
 
-          <div className="grid grid-cols-1 gap-5 p-4 lg:p-6 xl:grid-cols-[minmax(0,1fr)_420px] 2xl:grid-cols-[minmax(0,1fr)_500px]">
+          <div className="grid grid-cols-1 gap-5 p-4 lg:p-6 xl:grid-cols-[minmax(0,7fr)_minmax(380px,3fr)] 2xl:grid-cols-[minmax(0,6.5fr)_minmax(440px,3.5fr)]">
             <div className="space-y-5">
+              {activeTab === "theme" && (
               <SectionCard
                 id="theme"
                 title="ธีม & ดีไซน์"
@@ -1093,7 +1496,9 @@ export default function DonatePageSettings() {
                   </Field>
                 </div>
               </SectionCard>
+              )}
 
+              {activeTab === "profile" && (
               <SectionCard
                 id="profile"
                 title="โปรไฟล์"
@@ -1106,16 +1511,36 @@ export default function DonatePageSettings() {
                       <p className="mb-3 text-sm font-medium text-slate-300">
                         รูปโปรไฟล์
                       </p>
-                      <div className="mx-auto flex h-24 w-24 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-500 to-blue-500 text-3xl font-bold text-white shadow-lg shadow-purple-500/20">
-                        {settings.profile.name.slice(0, 1).toUpperCase()}
+                      <div className="mx-auto h-24 w-24 overflow-hidden rounded-2xl shadow-lg shadow-purple-500/20">
+                        {settings.profile.avatarUrl ? (
+                          <img
+                            src={settings.profile.avatarUrl}
+                            alt={settings.profile.name}
+                            className="h-full w-full object-cover"
+                          />
+                        ) : (
+                          <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple-500 to-blue-500 text-3xl font-bold text-white">
+                            {settings.profile.name.slice(0, 1).toUpperCase()}
+                          </div>
+                        )}
                       </div>
                       <Button
                         variant="outline"
                         className="mt-4 w-full border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white"
+                        onClick={() => avatarFileInputRef.current?.click()}
                       >
                         <Upload className="mr-2 h-4 w-4" />
                         เปลี่ยนรูป
                       </Button>
+                      <input
+                        ref={avatarFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) =>
+                          handleProfileImageUpload("avatarUrl", e.target.files?.[0])
+                        }
+                      />
                     </div>
 
                     <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-4">
@@ -1129,10 +1554,65 @@ export default function DonatePageSettings() {
                       <Button
                         variant="outline"
                         className="mt-4 w-full border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white"
+                        onClick={() => bannerFileInputRef.current?.click()}
                       >
                         <Upload className="mr-2 h-4 w-4" />
                         เปลี่ยนรูปปก
                       </Button>
+                      <input
+                        ref={bannerFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) =>
+                          handleProfileImageUpload("bannerUrl", e.target.files?.[0])
+                        }
+                      />
+                      <div className="mt-4">
+                        <GlassInput
+                          value={settings.profile.bannerUrl}
+                          placeholder="Paste cover image URL"
+                          onChange={(e) => updateProfile("bannerUrl", e.target.value)}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="rounded-xl border border-slate-800 bg-slate-950/40 p-4">
+                      <p className="mb-3 text-sm font-medium text-slate-300">
+                        รูปพื้นหลัง
+                      </p>
+                      <div
+                        className="h-24 rounded-xl bg-cover bg-center"
+                        style={{
+                          backgroundImage: `url(${settings.profile.backgroundUrl || settings.profile.bannerUrl})`,
+                        }}
+                      />
+                      <Button
+                        variant="outline"
+                        className="mt-4 w-full border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white"
+                        onClick={() => backgroundFileInputRef.current?.click()}
+                      >
+                        <Upload className="mr-2 h-4 w-4" />
+                        อัปรูปพื้นหลัง
+                      </Button>
+                      <input
+                        ref={backgroundFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={(e) =>
+                          handleProfileImageUpload("backgroundUrl", e.target.files?.[0])
+                        }
+                      />
+                      <div className="mt-4">
+                        <GlassInput
+                          value={settings.profile.backgroundUrl || ""}
+                          placeholder="Paste background image URL"
+                          onChange={(e) =>
+                            updateProfile("backgroundUrl", e.target.value)
+                          }
+                        />
+                      </div>
                     </div>
                   </div>
 
@@ -1163,7 +1643,8 @@ export default function DonatePageSettings() {
                       </p>
                     </Field>
 
-                    <div className="grid gap-3 md:grid-cols-2">
+                    {false && (
+                      <div className="grid gap-3 md:grid-cols-2">
                       <ToggleRow
                         icon={Bell}
                         title="สถานะออนไลน์"
@@ -1178,7 +1659,8 @@ export default function DonatePageSettings() {
                         checked={settings.profile.verified}
                         onChange={(value) => updateProfile("verified", value)}
                       />
-                    </div>
+                      </div>
+                    )}
 
                     <div>
                       <div className="mb-3 flex items-center justify-between">
@@ -1188,29 +1670,23 @@ export default function DonatePageSettings() {
                             เปิด/ปิด และแก้ไขลิงก์โซเชียลที่แสดงบนหน้าโดเนท
                           </p>
                         </div>
-                        <Button
+                        {false && <Button
                           variant="outline"
                           size="sm"
                           className="border-slate-700 bg-slate-900/60 text-slate-300"
                         >
                           <Plus className="mr-2 h-4 w-4" />
                           เพิ่มช่องทาง
-                        </Button>
+                        </Button>}
                       </div>
 
                       <div className="space-y-3">
                         {settings.socials.map((social) => (
                           <div
                             key={social.id}
-                            className="grid gap-3 rounded-xl border border-slate-800 bg-slate-950/40 p-3 md:grid-cols-[130px_1fr_auto]"
+                            className="grid gap-3 rounded-xl border border-slate-800 bg-slate-950/40 p-3 md:grid-cols-[160px_1fr]"
                           >
                             <div className="flex items-center gap-2">
-                              <MiniSwitch
-                                checked={social.enabled}
-                                onCheckedChange={(value) =>
-                                  updateSocial(social.id, "enabled", value)
-                                }
-                              />
                               <span className="text-sm text-white">{social.label}</span>
                             </div>
                             <GlassInput
@@ -1219,13 +1695,6 @@ export default function DonatePageSettings() {
                                 updateSocial(social.id, "href", e.target.value)
                               }
                             />
-                            <Button
-                              variant="outline"
-                              size="icon"
-                              className="border-slate-700 bg-slate-900/60 text-slate-400"
-                            >
-                              <X className="h-4 w-4" />
-                            </Button>
                           </div>
                         ))}
                       </div>
@@ -1233,8 +1702,142 @@ export default function DonatePageSettings() {
                   </div>
                 </div>
               </SectionCard>
+              )}
 
+              {activeTab === "donation" && (
+              <>
               <SectionCard
+                id="donation-channels-top"
+                title="ช่องทางรับเงิน"
+                description="ตั้งค่าช่องทางรับเงินที่ใช้รับการสนับสนุน"
+                icon={Gift}
+              >
+                <div>
+                  <div className="mb-3">
+                    <p className="font-semibold text-white">ช่องทางรับเงิน</p>
+                    <p className="text-xs text-slate-500">
+                      ตั้งค่าช่องทางที่ผู้สนับสนุนใช้โอนเงินหรือส่งโดเนท
+                    </p>
+                  </div>
+
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <DonationChannelCard
+                      title="PromptPay"
+                      subtitle="Receive donations via PromptPay instantly"
+                      badge="PP"
+                      enabled={donationChannels.promptpay.enabled}
+                      expanded={donationChannels.promptpay.expanded}
+                      onToggleEnabled={() =>
+                        updateDonationChannel(
+                          "promptpay",
+                          "enabled",
+                          !donationChannels.promptpay.enabled
+                        )
+                      }
+                      onToggleExpanded={() =>
+                        updateDonationChannel(
+                          "promptpay",
+                          "expanded",
+                          !donationChannels.promptpay.expanded
+                        )
+                      }
+                    >
+                      <Field label="PromptPay Type">
+                        <select
+                          value={donationChannels.promptpay.type}
+                          onChange={(e) =>
+                            updateDonationChannel(
+                              "promptpay",
+                              "type",
+                              e.target.value
+                            )
+                          }
+                          className="w-full rounded-lg border border-slate-700/80 bg-slate-950/50 px-3 py-2.5 text-sm text-white outline-none transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15"
+                        >
+                          <option value="phone">Phone Number</option>
+                          <option value="national_id">National ID</option>
+                          <option value="account">Account Number</option>
+                        </select>
+                      </Field>
+
+                      <Field label="PromptPay Value">
+                        <GlassInput
+                          value={donationChannels.promptpay.value}
+                          placeholder="Enter PromptPay value"
+                          onChange={(e) =>
+                            updateDonationChannel(
+                              "promptpay",
+                              "value",
+                              e.target.value
+                            )
+                          }
+                        />
+                      </Field>
+                    </DonationChannelCard>
+
+                    <DonationChannelCard
+                      title="Bank Account"
+                      subtitle="Receive donations via direct bank transfer"
+                      badge="BK"
+                      enabled={donationChannels.bank.enabled}
+                      expanded={donationChannels.bank.expanded}
+                      onToggleEnabled={() =>
+                        updateDonationChannel(
+                          "bank",
+                          "enabled",
+                          !donationChannels.bank.enabled
+                        )
+                      }
+                      onToggleExpanded={() =>
+                        updateDonationChannel(
+                          "bank",
+                          "expanded",
+                          !donationChannels.bank.expanded
+                        )
+                      }
+                    >
+                      <Field label="Bank Name">
+                        <GlassInput
+                          value={donationChannels.bank.bankName}
+                          placeholder="Enter bank name"
+                          onChange={(e) =>
+                            updateDonationChannel("bank", "bankName", e.target.value)
+                          }
+                        />
+                      </Field>
+
+                      <Field label="Account Name">
+                        <GlassInput
+                          value={donationChannels.bank.accountName}
+                          placeholder="Enter account name"
+                          onChange={(e) =>
+                            updateDonationChannel(
+                              "bank",
+                              "accountName",
+                              e.target.value
+                            )
+                          }
+                        />
+                      </Field>
+
+                      <Field label="Account Number">
+                        <GlassInput
+                          value={donationChannels.bank.accountNumber}
+                          placeholder="Enter account number"
+                          onChange={(e) =>
+                            updateDonationChannel(
+                              "bank",
+                              "accountNumber",
+                              e.target.value
+                            )
+                          }
+                        />
+                      </Field>
+                    </DonationChannelCard>
+                  </div>
+                </div>
+              </SectionCard>
+              {false && <SectionCard
                 id="donation"
                 title="โดเนท"
                 description="ตั้งค่าฟอร์มโดเนท จำนวนเงิน QR Code และข้อความ"
@@ -1295,7 +1898,141 @@ export default function DonatePageSettings() {
                   </Field>
                 </div>
 
-                <div className="mt-5">
+              </SectionCard>}
+
+              {false && <SectionCard
+                id="donation-channels"
+                title="Donation Channels"
+                description="Configure how supporters can send donations"
+                icon={Gift}
+              >
+                <div>
+                  <div className="mb-3">
+                    <p className="font-semibold text-white">Donation Channels</p>
+                    <p className="text-xs text-slate-500">
+                      Configure how supporters can send donations
+                    </p>
+                  </div>
+
+                  <div className="grid gap-4 lg:grid-cols-2">
+                    <DonationChannelCard
+                      title="PromptPay"
+                      subtitle="Receive donations via PromptPay instantly"
+                      badge="PP"
+                      enabled={donationChannels.promptpay.enabled}
+                      expanded={donationChannels.promptpay.expanded}
+                      onToggleEnabled={() =>
+                        updateDonationChannel(
+                          "promptpay",
+                          "enabled",
+                          !donationChannels.promptpay.enabled
+                        )
+                      }
+                      onToggleExpanded={() =>
+                        updateDonationChannel(
+                          "promptpay",
+                          "expanded",
+                          !donationChannels.promptpay.expanded
+                        )
+                      }
+                    >
+                      <Field label="PromptPay Type">
+                        <select
+                          value={donationChannels.promptpay.type}
+                          onChange={(e) =>
+                            updateDonationChannel(
+                              "promptpay",
+                              "type",
+                              e.target.value
+                            )
+                          }
+                          className="w-full rounded-lg border border-slate-700/80 bg-slate-950/50 px-3 py-2.5 text-sm text-white outline-none transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15"
+                        >
+                          <option value="phone">Phone Number</option>
+                          <option value="national_id">National ID</option>
+                          <option value="account">Account Number</option>
+                        </select>
+                      </Field>
+
+                      <Field label="PromptPay Value">
+                        <GlassInput
+                          value={donationChannels.promptpay.value}
+                          placeholder="Enter PromptPay value"
+                          onChange={(e) =>
+                            updateDonationChannel(
+                              "promptpay",
+                              "value",
+                              e.target.value
+                            )
+                          }
+                        />
+                      </Field>
+                    </DonationChannelCard>
+
+                    <DonationChannelCard
+                      title="Bank Account"
+                      subtitle="Receive donations via direct bank transfer"
+                      badge="BK"
+                      enabled={donationChannels.bank.enabled}
+                      expanded={donationChannels.bank.expanded}
+                      onToggleEnabled={() =>
+                        updateDonationChannel(
+                          "bank",
+                          "enabled",
+                          !donationChannels.bank.enabled
+                        )
+                      }
+                      onToggleExpanded={() =>
+                        updateDonationChannel(
+                          "bank",
+                          "expanded",
+                          !donationChannels.bank.expanded
+                        )
+                      }
+                    >
+                      <Field label="Bank Name">
+                        <GlassInput
+                          value={donationChannels.bank.bankName}
+                          placeholder="Enter bank name"
+                          onChange={(e) =>
+                            updateDonationChannel("bank", "bankName", e.target.value)
+                          }
+                        />
+                      </Field>
+
+                      <Field label="Account Name">
+                        <GlassInput
+                          value={donationChannels.bank.accountName}
+                          placeholder="Enter account name"
+                          onChange={(e) =>
+                            updateDonationChannel(
+                              "bank",
+                              "accountName",
+                              e.target.value
+                            )
+                          }
+                        />
+                      </Field>
+
+                      <Field label="Account Number">
+                        <GlassInput
+                          value={donationChannels.bank.accountNumber}
+                          placeholder="Enter account number"
+                          onChange={(e) =>
+                            updateDonationChannel(
+                              "bank",
+                              "accountNumber",
+                              e.target.value
+                            )
+                          }
+                        />
+                      </Field>
+                    </DonationChannelCard>
+                  </div>
+                </div>
+              </SectionCard>}
+
+                {false && <div className="mt-5">
                   <div className="mb-3 flex items-center justify-between">
                     <div>
                       <p className="font-semibold text-white">จำนวนเงินแนะนำ</p>
@@ -1337,9 +2074,9 @@ export default function DonatePageSettings() {
                       </div>
                     ))}
                   </div>
-                </div>
+                </div>}
 
-                <div className="mt-5 grid gap-3 md:grid-cols-2">
+                {false && <div className="mt-5 grid gap-3 md:grid-cols-2">
                   <ToggleRow
                     icon={ImageIcon}
                     title="แสดง QR Code"
@@ -1368,8 +2105,74 @@ export default function DonatePageSettings() {
                     checked={settings.donation.showMessage}
                     onChange={(value) => updateDonation("showMessage", value)}
                   />
-                </div>
-              </SectionCard>
+                </div>}
+              </>
+              )}
+
+              {activeTab === "filter" && (
+
+              <>
+                <SectionCard
+                  id="donation-filter"
+                  title="ช่องทางรับเงิน"
+                  description="ตั้งค่าฟอร์มโดเนท จำนวนเงิน QR Code และข้อความ"
+                  icon={Heart}
+                >
+                  <div className="grid gap-4 md:grid-cols-2">
+                    <Field label="หัวข้อฟอร์มโดเนท">
+                      <GlassInput
+                        value={settings.donation.pageTitle}
+                        onChange={(e) => updateDonation("pageTitle", e.target.value)}
+                      />
+                    </Field>
+
+                    <Field label={`ยอดโดเนทขั้นต่ำ ฿${settings.donation.minAmount}`}>
+                      <Slider
+                        value={[settings.donation.minAmount]}
+                        min={1}
+                        max={500}
+                        step={1}
+                        onValueChange={(value) => updateDonation("minAmount", value[0])}
+                      />
+                      <div className="flex justify-between text-xs text-slate-500">
+                        <span>฿1</span>
+                        <span>Max: ฿500</span>
+                      </div>
+                    </Field>
+
+                    <Field label="ข้อความต้อนรับ" className="md:col-span-2">
+                      <GlassTextarea
+                        value={settings.donation.welcomeMessage}
+                        onChange={(e) =>
+                          updateDonation("welcomeMessage", e.target.value)
+                        }
+                      />
+                    </Field>
+
+                    <Field label="ข้อความปุ่มโดเนท">
+                      <GlassInput
+                        value={settings.donation.buttonText}
+                        onChange={(e) => updateDonation("buttonText", e.target.value)}
+                      />
+                    </Field>
+
+                    <Field label="QR Code / PromptPay">
+                      <div className="flex gap-2">
+                        <GlassInput
+                          value={settings.donation.qrCodeUrl}
+                          placeholder="URL รูป QR Code หรือเว้นว่างไว้"
+                          onChange={(e) => updateDonation("qrCodeUrl", e.target.value)}
+                        />
+                        <Button
+                          variant="outline"
+                          className="border-slate-700 bg-slate-900/60 text-slate-300"
+                        >
+                          <Upload className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </Field>
+                  </div>
+                </SectionCard>
 
               <SectionCard
                 id="filter"
@@ -1377,45 +2180,238 @@ export default function DonatePageSettings() {
                 description="ควบคุมข้อความที่จะแสดงบนหน้ารับโดเนท"
                 icon={Filter}
               >
-                <div className="grid gap-3">
-                  {settings.filters.map((filterItem, index) => (
-                    <motion.div
-                      key={filterItem.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.03 }}
-                      className="flex items-center justify-between gap-4 rounded-xl border border-slate-800 bg-slate-950/40 p-4"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div
-                          className={cx(
-                            "h-2.5 w-2.5 rounded-full",
-                            filterItem.enabled ? "bg-cyan-400" : "bg-slate-600"
-                          )}
-                        />
-                        <div>
-                          <p className="font-medium text-white">{filterItem.name}</p>
-                          <p className="text-sm text-slate-500">
-                            {filterItem.description}
-                          </p>
-                        </div>
+                <div className="rounded-[28px] border border-white/15 bg-gradient-to-tl from-white/10 via-slate-900/30 to-transparent p-4 sm:p-6">
+                  <div className="mb-5">
+                    <h3 className="text-xl font-bold text-white sm:text-2xl">
+                      ตัวกรองข้อความ
+                    </h3>
+                    <p className="text-sm font-medium text-slate-400">
+                      Messages Filter
+                    </p>
+                  </div>
+
+                  <div className="mb-6 rounded-[28px] border border-white/15 bg-slate-950/30 p-3">
+                    <div className="flex items-center justify-between gap-3 rounded-full border border-white/10 bg-black/30 px-5 py-3">
+                      <div>
+                        <p className="text-base font-medium text-white sm:text-lg">
+                          คำที่กรองโดยระบบ
+                        </p>
+                        <p className="text-xs text-slate-400 sm:text-sm">
+                          รายการคำหยาบที่ระบบจะบล็อกอัตโนมัติ
+                        </p>
                       </div>
-                      <MiniSwitch
-                        checked={filterItem.enabled}
-                        onCheckedChange={() => toggleFilter(filterItem.id)}
+                      <div className="rounded-full border border-cyan-400/20 bg-cyan-400/10 px-3 py-1 text-xs font-medium text-cyan-300">
+                        {settings.profanityWords.length} คำ
+                      </div>
+                    </div>
+
+                    <div className="mt-3 flex flex-wrap gap-2 p-2 sm:p-3">
+                      {settings.profanityWords.map((word) => (
+                        <span
+                          key={word}
+                          className="rounded-full border border-white/20 px-3 py-1 text-sm text-white/90"
+                        >
+                          {word}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="mb-6 flex items-center justify-between gap-4 rounded-3xl border border-white/10 bg-black/25 px-4 py-4">
+                    <div>
+                      <p className="text-lg font-medium text-white">
+                        Block Profanity
+                      </p>
+                      <p className="text-xs text-slate-400 sm:text-sm">
+                        {profanityFilter.description}
+                      </p>
+                    </div>
+                    <MiniSwitch
+                      checked={profanityFilter.enabled}
+                      onCheckedChange={() => toggleFilter(profanityFilter.id)}
+                    />
+                  </div>
+
+                  <div className="mb-4">
+                    <p className="mb-2 text-base font-medium text-white">
+                      เพิ่มคำกรองของคุณเอง
+                    </p>
+                    <div className="flex flex-col gap-3 sm:flex-row">
+                      <GlassInput
+                        value={customProfanityInput}
+                        placeholder="พิมพ์คำที่ต้องการเพิ่ม"
+                        className="rounded-full border-white/10 bg-black/40"
+                        onChange={(e) => setCustomProfanityInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            addCustomProfanityWord();
+                          }
+                        }}
                       />
-                    </motion.div>
-                  ))}
+                      <Button
+                        type="button"
+                        className="rounded-full border border-white/10 bg-white/5 px-6 text-white hover:bg-white/10"
+                        onClick={addCustomProfanityWord}
+                      >
+                        <Plus className="mr-2 h-4 w-4" />
+                        เพิ่ม
+                      </Button>
+                    </div>
+                  </div>
+
+                  {(settings.customProfanityWords || []).length > 0 ? (
+                    <div className="mb-2">
+                      <p className="mb-3 text-sm font-medium text-slate-300">
+                        คำกรองที่คุณเพิ่ม
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        {settings.customProfanityWords.map((word) => (
+                          <button
+                            key={word}
+                            type="button"
+                            className="inline-flex items-center gap-2 rounded-full border border-emerald-400/20 bg-emerald-400/10 px-3 py-1 text-sm text-emerald-100 transition hover:bg-emerald-400/15"
+                            onClick={() => removeCustomProfanityWord(word)}
+                          >
+                            {word}
+                            <X className="h-3.5 w-3.5" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  ) : null}
                 </div>
               </SectionCard>
+              </>
+              )}
 
+              {activeTab === "music" && (
               <SectionCard
                 id="music"
                 title="เพลง"
                 description="ตั้งค่าเพลงประกอบ YouTube Request และ Playlist"
-                icon={Music}
+                icon={Users}
               >
-                <div className="grid gap-3 md:grid-cols-2">
+                <div className="mb-4 flex items-center justify-between rounded-xl border border-slate-800 bg-slate-950/40 px-4 py-3">
+                  <div>
+                    <p className="font-semibold text-white">Profile categories</p>
+                    <p className="text-xs text-slate-500">
+                      {selectedProfileCategories.length} / {MAX_PROFILE_CATEGORIES}
+                    </p>
+                  </div>
+                  <div className="rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-xs font-medium text-cyan-300">
+                    Pick up to {MAX_PROFILE_CATEGORIES}
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 gap-6 xl:grid-cols-2">
+                  <div className="rounded-3xl border border-slate-800 bg-slate-950/40 p-6">
+                    <div className="mb-4">
+                      <h3 className="text-xl font-semibold text-white">Selected</h3>
+                      <p className="text-sm text-slate-500">
+                        Categories currently attached to this profile
+                      </p>
+                    </div>
+
+                    {selectedProfileCategories.length === 0 ? (
+                      <div className="rounded-2xl border border-dashed border-slate-700 px-4 py-10 text-center text-sm text-slate-500">
+                        No profile categories selected yet
+                      </div>
+                    ) : (
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        {selectedProfileCategories.map((item) => (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => removeProfileCategory(item.id)}
+                            className="relative flex h-[90px] gap-3 rounded-2xl border border-emerald-500/50 bg-emerald-500/10 p-3 text-left transition hover:scale-[1.02]"
+                          >
+                            {item.image ? (
+                              <Image
+                                src={item.image}
+                                alt={item.name}
+                                width={72}
+                                height={72}
+                                className="aspect-square h-full rounded-xl object-cover"
+                              />
+                            ) : (
+                              <div className="flex aspect-square h-full items-center justify-center rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 font-bold text-white">
+                                {item.name[0]}
+                              </div>
+                            )}
+
+                            <div className="flex flex-col justify-center">
+                              <p className="font-bold text-white">{item.name}</p>
+                              <p className="text-xs text-slate-300">Selected category</p>
+                            </div>
+
+                            <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-red-500 text-white">
+                              <X className="h-3.5 w-3.5" />
+                            </span>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="rounded-3xl border border-slate-800 bg-slate-950/40 p-6">
+                    <div className="mb-4">
+                      <h3 className="text-xl font-semibold text-white">Available</h3>
+                      <p className="text-sm text-slate-500">
+                        Click to add or remove categories
+                      </p>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                      {profileCategoryOptions.map((item) => {
+                        const isSelected = (settings.profileCategories || []).includes(
+                          item.id
+                        );
+
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => toggleProfileCategory(item.id)}
+                            className={cx(
+                              "relative flex h-[90px] gap-3 rounded-2xl border p-3 text-left transition hover:scale-[1.02]",
+                              isSelected
+                                ? "border-emerald-500 bg-emerald-500/10"
+                                : "border-slate-700 bg-slate-900/60"
+                            )}
+                          >
+                            {item.image ? (
+                              <Image
+                                src={item.image}
+                                alt={item.name}
+                                width={72}
+                                height={72}
+                                className="aspect-square h-full rounded-xl object-cover"
+                              />
+                            ) : (
+                              <div className="flex aspect-square h-full items-center justify-center rounded-xl bg-gradient-to-br from-pink-500 to-rose-600 font-bold text-white">
+                                {item.name[0]}
+                              </div>
+                            )}
+
+                            <div className="flex flex-col justify-center">
+                              <p className="font-bold text-white">{item.name}</p>
+                              <p className="text-xs text-slate-400">Profile category</p>
+                            </div>
+
+                            {isSelected ? (
+                              <span className="absolute right-2 top-2 flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 text-white">
+                                <Check className="h-3.5 w-3.5" />
+                              </span>
+                            ) : null}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+
+                {false && <div className="grid gap-3 md:grid-cols-2">
                   <ToggleRow
                     icon={Music}
                     title="เปิด Music Player"
@@ -1446,9 +2442,9 @@ export default function DonatePageSettings() {
                     checked={settings.music.showPlaylist}
                     onChange={(value) => updateMusic("showPlaylist", value)}
                   />
-                </div>
+                </div>}
 
-                <div className="mt-5 grid gap-4 md:grid-cols-3">
+                {false && <div className="mt-5 grid gap-4 md:grid-cols-3">
                   <Field label="ชื่อเพลงปัจจุบัน">
                     <GlassInput
                       value={settings.music.currentSong.title}
@@ -1492,9 +2488,11 @@ export default function DonatePageSettings() {
                       onValueChange={(value) => updateMusic("volume", value[0])}
                     />
                   </Field>
-                </div>
+                </div>}
               </SectionCard>
+              )}
 
+              {activeTab === "content" && (
               <SectionCard
                 id="content"
                 title="วิดีโอ / คอนเทนต์"
@@ -1608,7 +2606,9 @@ export default function DonatePageSettings() {
                   ))}
                 </div>
               </SectionCard>
+              )}
 
+              {activeTab === "gallery" && (
               <SectionCard
                 id="gallery"
                 title="แกลเลอรี"
@@ -1652,67 +2652,119 @@ export default function DonatePageSettings() {
                   ))}
                 </div>
               </SectionCard>
+              )}
 
+              {activeTab === "schedule" && (
               <SectionCard
                 id="schedule"
                 title="ตารางสตรีม"
                 description="กำหนดวัน เวลา และกิจกรรมที่จะไลฟ์"
                 icon={CalendarDays}
               >
-                <div className="mb-4 flex items-center justify-between">
+                <div className="mb-4">
                   <p className="text-sm text-slate-400">
-                    ตารางนี้จะแสดงในกล่อง Stream Schedule ด้านขวาของหน้าโปรไฟล์
+                    ตารางนี้จะแสดงในกล่อง Stream Schedule ด้านขวาของหน้าโปรไฟล์ โดยกำหนดคงที่เป็นวันจันทร์ - อาทิตย์
                   </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-slate-700 bg-slate-900/60 text-slate-300"
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    เพิ่มวัน
-                  </Button>
                 </div>
 
                 <div className="space-y-3">
-                  {settings.schedule.map((item) => (
-                    <div
-                      key={item.id}
-                      className="grid gap-3 rounded-xl border border-slate-800 bg-slate-950/40 p-3 md:grid-cols-[120px_160px_1fr_auto]"
-                    >
-                      <GlassInput
-                        value={item.day}
-                        onChange={(e) =>
-                          updateArrayItem("schedule", item.id, "day", e.target.value)
-                        }
-                      />
-                      <GlassInput
-                        value={item.time}
-                        onChange={(e) =>
-                          updateArrayItem("schedule", item.id, "time", e.target.value)
-                        }
-                      />
-                      <GlassInput
-                        value={item.title}
-                        onChange={(e) =>
-                          updateArrayItem(
-                            "schedule",
-                            item.id,
-                            "title",
-                            e.target.value
-                          )
-                        }
-                      />
-                      <MiniSwitch
-                        checked={item.enabled}
-                        onCheckedChange={(value) =>
-                          updateArrayItem("schedule", item.id, "enabled", value)
-                        }
-                      />
-                    </div>
-                  ))}
+                  {settings.schedule.map((item) => {
+                    const { startTime, endTime } = parseScheduleTimeRange(item.time);
+
+                    return (
+                      <div
+                        key={item.id}
+                        className="grid gap-3 rounded-xl border border-slate-800 bg-slate-950/40 p-3 md:grid-cols-[120px_260px_1fr]"
+                      >
+                        <div className="flex items-center rounded-xl border border-slate-800 bg-slate-900/70 px-4 text-sm font-medium text-slate-200">
+                          {item.day}
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          <Select
+                            value={startTime || "none"}
+                            onValueChange={(value) =>
+                              updateArrayItem(
+                                "schedule",
+                                item.id,
+                                "time",
+                                buildScheduleTimeRange(
+                                  value === "none" ? "" : value,
+                                  endTime
+                                )
+                              )
+                            }
+                          >
+                            <SelectTrigger className="w-full border-slate-700 bg-slate-950/50 text-white">
+                              <SelectValue placeholder="เวลาเริ่ม" />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-60 border-slate-700 bg-slate-800">
+                              <SelectItem value="none" className="text-white hover:bg-slate-700">
+                                ไม่ระบุ
+                              </SelectItem>
+                              {TIME_SELECT_OPTIONS.map((timeOption) => (
+                                <SelectItem
+                                  key={`start-${timeOption}`}
+                                  value={timeOption}
+                                  className="text-white hover:bg-slate-700"
+                                >
+                                  {timeOption}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Select
+                            value={endTime || "none"}
+                            onValueChange={(value) =>
+                              updateArrayItem(
+                                "schedule",
+                                item.id,
+                                "time",
+                                buildScheduleTimeRange(
+                                  startTime,
+                                  value === "none" ? "" : value
+                                )
+                              )
+                            }
+                          >
+                            <SelectTrigger className="w-full border-slate-700 bg-slate-950/50 text-white">
+                              <SelectValue placeholder="เวลาจบ" />
+                            </SelectTrigger>
+                            <SelectContent className="max-h-60 border-slate-700 bg-slate-800">
+                              <SelectItem value="none" className="text-white hover:bg-slate-700">
+                                ไม่ระบุ
+                              </SelectItem>
+                              {TIME_SELECT_OPTIONS.map((timeOption) => (
+                                <SelectItem
+                                  key={`end-${timeOption}`}
+                                  value={timeOption}
+                                  className="text-white hover:bg-slate-700"
+                                >
+                                  {timeOption}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                        <GlassInput
+                          value={item.title}
+                          placeholder="เช่น Valorant"
+                          onChange={(e) =>
+                            updateArrayItem(
+                              "schedule",
+                              item.id,
+                              "title",
+                              e.target.value
+                            )
+                          }
+                        />
+                      </div>
+                    );
+                  })}
                 </div>
               </SectionCard>
+              )}
 
+              {activeTab === "products" && (
               <SectionCard
                 id="products"
                 title="สินค้า / โปรโมชัน"
@@ -1788,7 +2840,9 @@ export default function DonatePageSettings() {
                   ))}
                 </div>
               </SectionCard>
+              )}
 
+              {activeTab === "display" && (
               <SectionCard
                 id="display"
                 title="การแสดงผล"
@@ -1868,6 +2922,7 @@ export default function DonatePageSettings() {
                   />
                 </div>
               </SectionCard>
+              )}
 
               <div className="sticky bottom-0 z-20 -mx-4 border-t border-slate-800 bg-slate-950/95 px-4 py-4 lg:-mx-6 lg:px-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
@@ -1903,7 +2958,7 @@ export default function DonatePageSettings() {
             </div>
 
             <aside className="hidden xl:block">
-              <div className="sticky top-[88px] rounded-2xl border border-slate-700/70 bg-slate-950/92 p-4 shadow-2xl shadow-black/30">
+              <div className="sticky top-[88px] rounded-2xl border border-slate-700/70 bg-slate-950/92 p-4 shadow-2xl shadow-black/30 2xl:p-5">
                 <div className="mb-4 flex items-center justify-between">
                   <div>
                     <div className="flex items-center gap-2">
