@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import {
-  Trophy, Clock, Users, Palette, Type, Crown, Medal, RotateCcw, Image as ImageIcon,
+  Trophy, Clock, Users, Palette, Type, Crown, Medal, RotateCcw, Image as ImageIcon, SlidersHorizontal,
 } from 'lucide-react';
 import ColorInput from './ColorInput';
 import DropdownSelect from './DropdownSelect';
@@ -69,15 +69,16 @@ const LEADERBOARD_TABS = [
   { id: 'setup', label: 'Setup', icon: Trophy, color: 'from-amber-500 to-orange-500' },
   { id: 'typography', label: 'Typography', icon: Type, color: 'from-sky-500 to-cyan-500' },
   { id: 'podium', label: 'Podium', icon: Crown, color: 'from-yellow-500 to-amber-500' },
+  { id: 'advanced', label: 'Advanced', icon: SlidersHorizontal, color: 'from-violet-500 to-indigo-500' },
 ];
 
-function LeaderboardTabNav({ activeTab, onSelect }) {
+function LeaderboardTabNav({ activeTab, onSelect, tabs = LEADERBOARD_TABS }) {
   return (
     <div className="relative">
       <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-slate-800/50 to-slate-900/50 blur" />
       <div className="relative overflow-x-auto rounded-xl border border-slate-700/50 bg-slate-800/40 p-1 backdrop-blur-sm">
-        <div className="grid min-w-max grid-flow-col auto-cols-[96px] gap-1 sm:auto-cols-[118px] lg:min-w-0 lg:grid-cols-3">
-          {LEADERBOARD_TABS.map((tab) => {
+        <div className="grid w-full gap-1" style={{ gridTemplateColumns: `repeat(${tabs.length}, minmax(0, 1fr))` }}>
+          {tabs.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTab === tab.id;
             return (
@@ -113,6 +114,7 @@ function LeaderboardTabNav({ activeTab, onSelect }) {
 
 export default function LeaderboardSettingsForm({ settings: settingsProp, update: updateProp }) {
   const [activeTab, setActiveTab] = useState('setup');
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const leaderboardContext = useOptionalLeaderboardSettings();
   const contextSettings = leaderboardContext?.settings;
   const contextUpdate = leaderboardContext?.update;
@@ -138,6 +140,21 @@ export default function LeaderboardSettingsForm({ settings: settingsProp, update
   }, [update, updateSettings]);
 
   const isPodium = settings?.layoutStyle === 'podium';
+  const baseTabs = LEADERBOARD_TABS.filter((tab) => tab.id !== 'advanced' && (isPodium || tab.id !== 'podium'));
+  const visibleTabs = showAdvanced
+    ? [...baseTabs, LEADERBOARD_TABS.find((tab) => tab.id === 'advanced')].filter(Boolean)
+    : baseTabs;
+
+  useEffect(() => {
+    if (!showAdvanced && activeTab === 'advanced') {
+      setActiveTab('setup');
+      return;
+    }
+
+    if (!isPodium && activeTab === 'podium') {
+      setActiveTab('setup');
+    }
+  }, [activeTab, isPodium, showAdvanced]);
 
   const defaultFontFamily = fontFamilies?.[0]?.id || 'ibm-plex-sans-thai';
   const defaultFontWeight = fontWeights?.[0]?.id || 'medium';
@@ -149,7 +166,23 @@ export default function LeaderboardSettingsForm({ settings: settingsProp, update
 
   return (
     <div className="space-y-5 sm:space-y-6 px-4 sm:px-0">
-      <LeaderboardTabNav activeTab={activeTab} onSelect={setActiveTab} />
+      <div className="flex items-center justify-between gap-3 rounded-xl border border-slate-700/60 bg-slate-900/60 px-3 py-3">
+        <div className="flex min-w-0 items-start gap-2">
+          <div className="rounded-lg bg-violet-500/10 p-2 text-violet-300">
+            <SlidersHorizontal className="h-4 w-4" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-white">Advanced controls</p>
+            <p className="text-xs text-slate-400">Show extra date filters, row styling, and detailed podium controls only when needed.</p>
+          </div>
+        </div>
+        <Switch
+          checked={showAdvanced}
+          onCheckedChange={setShowAdvanced}
+          className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-violet-500 data-[state=checked]:to-blue-500"
+        />
+      </div>
+      <LeaderboardTabNav activeTab={activeTab} onSelect={setActiveTab} tabs={visibleTabs} />
 
       <AnimatePresence mode="wait">
         <motion.div
@@ -244,37 +277,13 @@ export default function LeaderboardSettingsForm({ settings: settingsProp, update
               value={settings?.accentColor || '#F59E0B'}
               onChange={v => update('accentColor', v)}
             />
-            <ColorInput
-              label="Background (Container)"
-              value={settings?.backgroundColor || '#1F2937'}
-              onChange={v => update('backgroundColor', v)}
-            />
-            <ColorInput
-              label="List Background Color"
-              value={settings?.listBackgroundColor || '#ffffff'}
-              onChange={v => update('listBackgroundColor', v)}
-            />
-            <ColorInput
-              label="List Border Color"
-              value={settings?.listBorderColor || 'rgba(0,0,0,0.12)'}
-              onChange={v => update('listBorderColor', v)}
-            />
-          </div>
-          <div className="mb-3">
-            <SwitchRow
-              label="Show Widget Background"
-              sublabel="เปิด/ปิดพื้นหลังหลักของวิดเจ็ต"
-              checked={settings?.showBackground !== false}
-              onCheckedChange={v => update('showBackground', v)}
-            />
-          </div>
-          <div className="mb-6">
-            <SwitchRow
-              label="Show List Background"
-              sublabel="แสดงพื้นหลังของแต่ละรายการ (ใช้สีจาก List Background Color)"
-              checked={settings?.listShowBackground === true}
-              onCheckedChange={v => update('listShowBackground', v)}
-            />
+            {settings?.showBackground !== false && (
+              <ColorInput
+                label="Background (Container)"
+                value={settings?.backgroundColor || '#1F2937'}
+                onChange={v => update('backgroundColor', v)}
+              />
+            )}
           </div>
           <div className="space-y-3">
             {[
@@ -291,52 +300,6 @@ export default function LeaderboardSettingsForm({ settings: settingsProp, update
               />
             ))}
           </div>
-        </div>
-      </SectionWrapper>
-
-      {/* Date Range (Filter) */}
-      <SectionWrapper delay={0.25}>
-        <div className="rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl p-4 sm:p-6">
-          <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
-            <Clock className="w-5 h-5 text-amber-400" /> Date Range (Filter)
-          </h3>
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <div className="space-y-3">
-              <SwitchRow
-                label="กำหนดวันที่เริ่มต้นเอง"
-                checked={settings?.isUseStartAt || false}
-                onCheckedChange={v => update('isUseStartAt', v)}
-              />
-              {settings?.isUseStartAt && (
-                <ThaiDateTimeInput
-                  label="วันที่เริ่มต้น (พ.ศ.)"
-                  value={settings?.startAt}
-                  onChange={v => update('startAt', v)}
-                />
-              )}
-            </div>
-            <div className="space-y-3">
-              <SwitchRow
-                label="กำหนดวันที่สิ้นสุดเอง"
-                checked={settings?.isUseEndAt || false}
-                onCheckedChange={v => update('isUseEndAt', v)}
-              />
-              {settings?.isUseEndAt && (
-                <ThaiDateTimeInput
-                  label="วันที่สิ้นสุด (พ.ศ.)"
-                  value={settings?.endAt}
-                  onChange={v => update('endAt', v)}
-                />
-              )}
-            </div>
-          </div>
-          <Button
-            variant="outline"
-            className="w-full border-slate-700 text-slate-300 hover:bg-slate-800 gap-2 mt-4"
-            onClick={handleResetDates}
-          >
-            <RotateCcw className="w-4 h-4" /> รีเซ็ตเป็น 30 วัน
-          </Button>
         </div>
       </SectionWrapper>
         </>
@@ -443,6 +406,107 @@ export default function LeaderboardSettingsForm({ settings: settingsProp, update
           </div>
         </div>
       </SectionWrapper>
+        </>
+      )}
+
+      {activeTab === 'advanced' && (
+        <>
+          <SectionWrapper delay={0.25}>
+            <div className="rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl p-4 sm:p-6">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <Palette className="w-5 h-5 text-violet-300" /> Extra Appearance
+              </h3>
+              <div className="mb-3">
+                <SwitchRow
+                  label="Show Widget Background"
+                  sublabel="Toggle the main leaderboard container background"
+                  checked={settings?.showBackground !== false}
+                  onCheckedChange={v => update('showBackground', v)}
+                />
+              </div>
+              <div className="mb-6">
+                <SwitchRow
+                  label="Show List Background"
+                  sublabel="Use the list background color and border on each row"
+                  checked={settings?.listShowBackground === true}
+                  onCheckedChange={v => update('listShowBackground', v)}
+                />
+              </div>
+              {settings?.listShowBackground === true && (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                  <ColorInput
+                    label="List Background Color"
+                    value={settings?.listBackgroundColor || '#FFFFFF'}
+                    onChange={v => update('listBackgroundColor', v)}
+                  />
+                  <ColorInput
+                    label="List Border Color"
+                    value={settings?.listBorderColor || '#CBD5E1'}
+                    onChange={v => update('listBorderColor', v)}
+                  />
+                </div>
+              )}
+            </div>
+          </SectionWrapper>
+
+          <SectionWrapper delay={0.3}>
+            <div className="rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl p-4 sm:p-6">
+              <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                <Clock className="w-5 h-5 text-violet-300" /> Date Range (Filter)
+              </h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <div className="space-y-3">
+                  <SwitchRow
+                    label="Use custom start date"
+                    checked={settings?.isUseStartAt || false}
+                    onCheckedChange={v => update('isUseStartAt', v)}
+                  />
+                  {settings?.isUseStartAt && (
+                    <ThaiDateTimeInput
+                      label="Start Date (B.E.)"
+                      value={settings?.startAt}
+                      onChange={v => update('startAt', v)}
+                    />
+                  )}
+                </div>
+                <div className="space-y-3">
+                  <SwitchRow
+                    label="Use custom end date"
+                    checked={settings?.isUseEndAt || false}
+                    onCheckedChange={v => update('isUseEndAt', v)}
+                  />
+                  {settings?.isUseEndAt && (
+                    <ThaiDateTimeInput
+                      label="End Date (B.E.)"
+                      value={settings?.endAt}
+                      onChange={v => update('endAt', v)}
+                    />
+                  )}
+                </div>
+              </div>
+              <Button
+                variant="outline"
+                className="w-full border-slate-700 text-slate-300 hover:bg-slate-800 gap-2 mt-4"
+                onClick={handleResetDates}
+              >
+                <RotateCcw className="w-4 h-4" /> Reset to 30 days
+              </Button>
+            </div>
+          </SectionWrapper>
+
+          {isPodium && (
+            <SectionWrapper delay={0.35}>
+              <div className="rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl p-4 sm:p-6">
+                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+                  <Crown className="w-5 h-5 text-violet-300" /> Detailed Podium Controls
+                </h3>
+                <p className="text-sm text-slate-400 mb-5">Use this section when you need extra image, badge, and pedestal customization.</p>
+                <div className="space-y-4 rounded-xl border border-slate-700/60 bg-slate-900/30 p-4 text-sm text-slate-300">
+                  <p>Detailed Rank 1, Rank 2, and Rank 3 controls are still available in the Podium tab. Turn on Advanced controls only when you need these extra options.</p>
+                </div>
+              </div>
+            </SectionWrapper>
+          )}
         </>
       )}
 

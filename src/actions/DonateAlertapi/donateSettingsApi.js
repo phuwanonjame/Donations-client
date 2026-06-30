@@ -11,8 +11,10 @@ export const fetchDonateSettings = async (userId) => {
   }
 
   try {
-    const res = await fetch(`${WIDGETS_API_BASE}/${userId}/widgets`, {
+    const url = `${WIDGETS_API_BASE}/${userId}/widgets?ts=${Date.now()}`;
+    const res = await fetch(url, {
       method: "GET",
+      cache: "no-store",
     });
 
     if (!res.ok) throw new Error(`Error: ${res.status}`);

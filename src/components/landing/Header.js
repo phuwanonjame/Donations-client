@@ -1,18 +1,18 @@
-"use client";
+﻿"use client";
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Menu, X, Zap, User } from "lucide-react"; // Import 'User' icon
+import { Menu, X, Zap, User } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useLanguage } from "../../contexts/LanguageContext";
 import LanguageSwitcher from "../../providers/LanguageProvider";
-import { useAuth } from "../../contexts/AuthContext"; // Import useAuth
+import { useAuth } from "../../contexts/AuthContext";
 
 export default function Header() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { t } = useLanguage();
-  const { user, isAuthenticated, isLoading } = useAuth(); // Use the auth context
+  const { user, isAuthenticated, isLoading } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -30,29 +30,24 @@ export default function Header() {
   ];
 
   const UserProfileOrLogin = (
-    // Show a loading state or nothing while checking auth
     isLoading ? (
-      <div className="w-20 h-8 rounded animate-pulse bg-gray-700"></div>
-    ) : 
-    // If logged in, show user name and a profile link
-    isAuthenticated ? (
-      <Link href="/profile" className="flex items-center gap-4 group">
-        {/* Separator line for desktop */}
-        <div className="hidden md:block h-6 w-px bg-cyan-500/30"></div> 
+      <div className="h-8 w-20 animate-pulse rounded bg-gray-700/70"></div>
+    ) : isAuthenticated ? (
+      <Link href="/profile" className="group flex items-center gap-4">
+        <div className="hidden h-6 w-px bg-cyan-500/25 md:block"></div>
         <Button
           variant="ghost"
-          className="text-white cursor-pointer hover:bg-white/5 flex items-center gap-2"
+          className="flex cursor-pointer items-center gap-2 text-white hover:bg-white/5"
         >
-          <User className="w-4 h-4 text-cyan-400" />
-          <span className="font-semibold">{user.name || "Profile"}</span> {/* Display user's name */}
+          <User className="h-4 w-4 text-cyan-400" />
+          <span className="font-semibold">{user.name || "Profile"}</span>
         </Button>
       </Link>
     ) : (
-      // If logged out, show the Login button
       <Link href="/login">
         <Button
           variant="ghost"
-          className="text-gray-300 cursor-pointer hover:text-white hover:bg-white/5"
+          className="cursor-pointer text-gray-300 hover:bg-white/5 hover:text-white"
         >
           {t.nav.login}
         </Button>
@@ -60,41 +55,38 @@ export default function Header() {
     )
   );
 
-
   return (
     <motion.header
       initial={{ y: -100 }}
       animate={{ y: 0 }}
       transition={{ duration: 0.6, ease: "easeOut" }}
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
+      className={`fixed left-0 right-0 top-0 z-50 transition-all duration-300 ${
         isScrolled
-          ? "bg-[#0A1628]/90 backdrop-blur-xl border-b border-cyan-500/10"
+          ? "bg-[#07111f]/72 backdrop-blur-xl border-b border-cyan-400/10"
           : "bg-transparent"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-6 lg:px-8">
-        <div className="flex items-center justify-between h-20">
-          {/* Logo */}
-          <Link href="#" className="flex items-center gap-2 group">
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
+        <div className={`flex items-center justify-between ${isScrolled ? "h-20" : "h-22"}`}>
+          <Link href="#" className="group flex items-center gap-2">
             <div className="relative">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-400 to-cyan-600 flex items-center justify-center shadow-lg shadow-cyan-500/30 group-hover:shadow-cyan-500/50 transition-shadow">
-                <Zap className="w-5 h-5 text-white" />
+              <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-400 to-cyan-600 shadow-lg shadow-cyan-500/30 transition-shadow group-hover:shadow-cyan-500/50">
+                <Zap className="h-5 w-5 text-white" />
               </div>
-              <div className="absolute -inset-1 bg-gradient-to-br from-cyan-400 to-cyan-600 rounded-xl blur opacity-30 group-hover:opacity-50 transition-opacity" />
+              <div className="absolute -inset-1 rounded-xl bg-gradient-to-br from-cyan-400 to-cyan-600 opacity-30 blur group-hover:opacity-50 transition-opacity" />
             </div>
-            <span className="text-2xl font-bold text-white tracking-tight">
+            <span className="text-2xl font-bold tracking-tight text-white drop-shadow-[0_6px_18px_rgba(0,0,0,0.45)]">
               Stream<span className="text-cyan-400">Flow</span>
             </span>
           </Link>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden md:flex items-center gap-8">
+          <nav className="hidden items-center gap-8 md:flex">
             {navLinks.map((link) =>
               link.href.startsWith("/") ? (
                 <Link
                   key={link.name}
                   href={link.href}
-                  className="text-gray-300 hover:text-cyan-400 transition-colors font-medium text-sm tracking-wide"
+                  className="text-sm font-medium tracking-wide text-gray-200 drop-shadow-[0_4px_14px_rgba(0,0,0,0.4)] transition-colors hover:text-cyan-300"
                 >
                   {link.name}
                 </Link>
@@ -102,7 +94,7 @@ export default function Header() {
                 <a
                   key={link.name}
                   href={link.href}
-                  className="text-gray-300 hover:text-cyan-400 transition-colors font-medium text-sm tracking-wide"
+                  className="text-sm font-medium tracking-wide text-gray-200 drop-shadow-[0_4px_14px_rgba(0,0,0,0.4)] transition-colors hover:text-cyan-300"
                 >
                   {link.name}
                 </a>
@@ -110,41 +102,34 @@ export default function Header() {
             )}
           </nav>
 
-          {/* Desktop CTA */}
-          <div className="hidden md:flex items-center gap-4">
+          <div className="hidden items-center gap-4 md:flex">
             <LanguageSwitcher />
-            {UserProfileOrLogin} {/* Use the new conditional component */}
+            {UserProfileOrLogin}
             <Link href="/dashboard/">
-              <Button className="bg-gradient-to-r cursor-pointer from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-[#0A1628] font-semibold shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 transition-all">
+              <Button className="cursor-pointer bg-gradient-to-r from-cyan-500 to-cyan-400 font-semibold text-[#0A1628] shadow-lg shadow-cyan-500/25 transition-all hover:from-cyan-400 hover:to-cyan-300 hover:shadow-cyan-500/40">
                 {t.nav.getStarted}
               </Button>
             </Link>
           </div>
 
-          {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="md:hidden p-2 text-gray-300 hover:text-white"
+            className="p-2 text-gray-200 drop-shadow-[0_4px_14px_rgba(0,0,0,0.45)] hover:text-white md:hidden"
           >
-            {mobileMenuOpen ? (
-              <X className="w-6 h-6" />
-            ) : (
-              <Menu className="w-6 h-6" />
-            )}
+            {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
         </div>
       </div>
 
-      {/* Mobile Menu (Updated Login/Profile Link) */}
       <AnimatePresence>
         {mobileMenuOpen && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="md:hidden bg-[#0A1628]/95 backdrop-blur-xl border-t border-cyan-500/10"
+            className="border-t border-cyan-500/10 bg-[#07111f]/92 backdrop-blur-xl md:hidden"
           >
-            <div className="px-6 py-6 space-y-4">
+            <div className="space-y-4 px-6 py-6">
               {navLinks.map((link) =>
                 link.href.startsWith("/") ? (
                   <Link
@@ -166,20 +151,18 @@ export default function Header() {
                   </a>
                 )
               )}
-              <div className="pt-4 space-y-3 border-t border-gray-700/50">
+              <div className="space-y-3 border-t border-gray-700/50 pt-4">
                 <div className="flex justify-center">
                   <LanguageSwitcher />
                 </div>
-                
-                {/* Mobile Login/Profile Link */}
                 <Link href={isAuthenticated ? "/profile" : "/login"}>
                   <Button
                     variant="ghost"
-                    className="w-full text-gray-300 hover:text-white hover:bg-white/5 flex items-center justify-center gap-2"
+                    className="flex w-full items-center justify-center gap-2 text-gray-300 hover:bg-white/5 hover:text-white"
                   >
                     {isAuthenticated ? (
-                       <>
-                        <User className="w-4 h-4 text-cyan-400" />
+                      <>
+                        <User className="h-4 w-4 text-cyan-400" />
                         <span className="font-semibold">{user.name || "Profile"}</span>
                       </>
                     ) : (
@@ -187,11 +170,10 @@ export default function Header() {
                     )}
                   </Button>
                 </Link>
-
                 <Link href="/dashboard/">
-                    <Button className="w-full bg-gradient-to-r from-cyan-500 to-cyan-400 hover:from-cyan-400 hover:to-cyan-300 text-[#0A1628] font-semibold">
-                        {t.nav.getStarted}
-                    </Button>
+                  <Button className="w-full bg-gradient-to-r from-cyan-500 to-cyan-400 font-semibold text-[#0A1628] hover:from-cyan-400 hover:to-cyan-300">
+                    {t.nav.getStarted}
+                  </Button>
                 </Link>
               </div>
             </div>
@@ -201,6 +183,3 @@ export default function Header() {
     </motion.header>
   );
 }
-
-
-

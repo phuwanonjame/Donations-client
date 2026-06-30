@@ -12,10 +12,10 @@ export const fetchTopDonateSettings = async (userId, widgetId) => {
   }
 
   try {
-    const url = `${USER_WIDGETS_API_BASE}/${userId}/widgets`;
+    const url = `${USER_WIDGETS_API_BASE}/${userId}/widgets?ts=${Date.now()}`;
     logTopDonateApi("fetch request", { url, userId, widgetId });
 
-    const res = await fetch(url, { method: "GET" });
+    const res = await fetch(url, { method: "GET", cache: "no-store" });
     if (!res.ok) throw new Error(`Error: ${res.status}`);
 
     const payload = await res.json();

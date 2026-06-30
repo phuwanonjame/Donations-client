@@ -62,7 +62,7 @@ function LeaderboardContent() {
             </div>
           </div>
 
-          <div className="flex-[1] min-w-0 md:max-w-xl">
+          <div className="w-full min-w-0 lg:max-w-xl lg:self-start">
             <LeaderboardSettingsForm />
           </div>
         </div>

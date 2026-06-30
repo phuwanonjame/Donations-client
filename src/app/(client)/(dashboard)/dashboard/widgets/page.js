@@ -4,12 +4,13 @@ import Link from 'next/link';
 import { createPageUrl } from '@/lib/utils';
 import { createWidgetUrl } from '@/utils/widgetUrls';
 import { motion } from 'framer-motion';
-import { 
-  Bell, 
-  Target, 
-  Trophy, 
-  Star, 
-  Clock, 
+import {
+  Bell,
+  Target,
+  Trophy,
+  Star,
+  Clock,
+  Monitor,
   Gift,
   Settings,
   ExternalLink,
@@ -23,10 +24,12 @@ import { useLanguage } from '@/contexts/LanguageContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useWidgetPreviews } from '../../components/context/WidgetPreviewsProvider';
 import TopDonatePreview from '../TopDonateSettings/components/TopDonatePreview';
-import { getDefaultSettings as getDefaultTopDonateSettings } from '../TopDonateSettings/constants/topDonateOptions';
 import LeaderboardPreview from '../LeaderboardSettings/components/LeaderboardPreview';
 import GoalPreview from '../DonateGoalSettings/components/GoalPreview';
 import AlertPreview from '../DonateAlertSettings/components/AlertPreview';
+import DonatePageRenderer from '@/components/donation/shared/DonatePageRenderer';
+import { defaultDonatePageSettings } from '@/components/donation/shared/donatePageConfig';
+import { loadDonatePageSettings } from '@/components/donation/shared/donatePageStorage';
 
 const copy = {
   en: {
@@ -58,6 +61,10 @@ const copy = {
       'recent-donate': {
         name: 'Recent Donate',
         description: 'Display recent donation activity',
+      },
+      'donate-page': {
+        name: 'Donate Page',
+        description: 'Preview your public donation page',
       },
       'gift-alert': {
         name: 'Gift Alert',
@@ -111,6 +118,10 @@ const copy = {
       'recent-donate': {
         name: '\u0e42\u0e14\u0e40\u0e19\u0e17\u0e25\u0e48\u0e32\u0e2a\u0e38\u0e14',
         description: '\u0e41\u0e2a\u0e14\u0e07\u0e23\u0e32\u0e22\u0e01\u0e32\u0e23\u0e42\u0e14\u0e40\u0e19\u0e17\u0e25\u0e48\u0e32\u0e2a\u0e38\u0e14',
+      },
+      'donate-page': {
+        name: '\u0e2b\u0e19\u0e49\u0e32\u0e23\u0e31\u0e1a\u0e42\u0e14\u0e40\u0e19\u0e17',
+        description: '\u0e14\u0e39\u0e15\u0e31\u0e27\u0e2d\u0e22\u0e48\u0e32\u0e07\u0e2b\u0e19\u0e49\u0e32\u0e23\u0e31\u0e1a\u0e42\u0e14\u0e40\u0e19\u0e17\u0e2a\u0e32\u0e18\u0e32\u0e23\u0e13\u0e30\u0e02\u0e2d\u0e07\u0e04\u0e38\u0e13',
       },
       'gift-alert': {
         name: '\u0e41\u0e08\u0e49\u0e07\u0e40\u0e15\u0e37\u0e2d\u0e19\u0e02\u0e2d\u0e07\u0e02\u0e27\u0e31\u0e0d',
@@ -179,6 +190,15 @@ const widgets = [
     settingsPage: 'widgets/recent-donate-settings',
   },
   {
+    id: 'donate-page',
+    icon: Monitor,
+    gradient: 'from-sky-500 to-cyan-500',
+    enabled: true,
+    hasToggle: false,
+    hasSettings: true,
+    settingsPage: 'DonatePageSettings',
+  },
+  {
     id: 'gift-alert',
     icon: Gift,
     gradient: 'from-rose-500 to-pink-500',
@@ -190,6 +210,7 @@ const widgets = [
 ];
 
 const PREVIEW_CARD_HEIGHT = 220;
+const DEFAULT_ALERT_TEST_MESSAGE = '\u0e02\u0e2d\u0e1a\u0e04\u0e38\u0e13\u0e21\u0e32\u0e01 \u0e46 \u0e2a\u0e33\u0e2b\u0e23\u0e31\u0e1a\u0e01\u0e33\u0e25\u0e31\u0e07\u0e43\u0e08\u0e19\u0e30 {{user}}!';
 const WIDGET_URL_TYPES = {
   'donate-alert': 'alert',
   'donate-goal': 'goal',
@@ -198,6 +219,31 @@ const WIDGET_URL_TYPES = {
   'recent-donate': 'recent',
   'gift-alert': 'gift',
 };
+
+const DEFAULT_GIFT_ALERT_PREVIEW_SETTINGS = {
+  enabled: false,
+  accentColor: '#ec4899',
+  backgroundColor: 'transparent',
+  textColor: '#ffffff',
+  showSenderName: true,
+  showGiftValue: true,
+};
+
+function getProfileSlug(user) {
+  const rawValue =
+    user?.slug ||
+    user?.username ||
+    user?.displayName ||
+    user?.name ||
+    user?.email?.split('@')[0] ||
+    '';
+
+  return String(rawValue)
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, '-')
+    .replace(/[^a-z0-9-_]/g, '');
+}
 
 function getPreviewNumber(value, fallback = 0) {
   const raw = Array.isArray(value) ? value[0] : value;
@@ -209,7 +255,6 @@ function getGoalPreviewCurrentAmount(settings) {
   const goalAmount = Number(settings?.goalAmount || 100);
   return Math.max(1, Math.round(goalAmount * 0.62));
 }
-
 
 function WidgetPreviewFrame({ children }) {
   return (
@@ -363,6 +408,66 @@ function CompactRecentDonateCard({ settings, donations = [] }) {
   );
 }
 
+function GiftAlertCardPreview({ settings }) {
+  const accentColor = settings?.accentColor || '#ec4899';
+  const textColor = settings?.textColor || '#ffffff';
+  const backgroundColor = settings?.backgroundColor && settings.backgroundColor !== 'transparent'
+    ? settings.backgroundColor
+    : 'rgba(15,23,42,0.78)';
+
+  return (
+    <div className="flex h-full items-center justify-center p-5">
+      <div
+        className="w-full max-w-[360px] rounded-2xl border px-4 py-4 shadow-xl"
+        style={{
+          borderColor: `${accentColor}55`,
+          background: `linear-gradient(180deg, ${backgroundColor}, rgba(2,6,23,0.92))`,
+          boxShadow: `0 18px 40px ${accentColor}22`,
+        }}
+      >
+        <div className="flex items-center gap-3">
+          <div
+            className="flex h-12 w-12 items-center justify-center rounded-2xl"
+            style={{ background: `${accentColor}22`, color: accentColor }}
+          >
+            <Gift className="h-6 w-6" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="text-xs uppercase tracking-[0.22em] text-slate-400">Gift Alert</p>
+            <p className="truncate text-sm font-semibold" style={{ color: textColor }}>
+              Premium gift support preview
+            </p>
+          </div>
+        </div>
+
+        <div
+          className="mt-4 rounded-xl border px-4 py-3"
+          style={{ borderColor: `${accentColor}33`, background: 'rgba(255,255,255,0.03)' }}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <div className="min-w-0">
+              {settings?.showSenderName && (
+                <p className="truncate text-sm font-semibold" style={{ color: textColor }}>
+                  SuperFan123 sent a gift
+                </p>
+              )}
+              <p className="mt-1 text-xs text-slate-400">Special alert for premium interactions</p>
+            </div>
+            {settings?.showGiftValue && (
+              <div
+                className="rounded-full px-3 py-1 text-sm font-bold"
+                style={{ background: `${accentColor}22`, color: accentColor }}
+              >
+                THB 100
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function WidgetCardPreview({ widgetId, preview }) {
   if (!preview) {
     return (
@@ -430,12 +535,37 @@ function WidgetCardPreview({ widgetId, preview }) {
     );
   }
 
+  if (widgetId === 'donate-page') {
+    return (
+      <WidgetPreviewFrame>
+        <ScaledWidgetViewport naturalWidth={1320} naturalHeight={860} className="px-3 py-4" contentClassName="pointer-events-none">
+          <div className="flex h-full w-full items-center justify-center">
+            <div className="w-[720px]">
+              <DonatePageRenderer settings={preview.settings} preview optimizeForEditor />
+            </div>
+          </div>
+        </ScaledWidgetViewport>
+      </WidgetPreviewFrame>
+    );
+  }
+
+  if (widgetId === 'gift-alert') {
+    return (
+      <WidgetPreviewFrame>
+        <GiftAlertCardPreview settings={preview.settings} />
+      </WidgetPreviewFrame>
+    );
+  }
+
   if (widgetId === 'donate-alert') {
     return (
       <WidgetPreviewFrame>
         <ScaledWidgetViewport naturalWidth={820} naturalHeight={500} className="px-3 py-4" contentClassName="pointer-events-none">
           <AlertPreview
-            settings={preview.settings}
+            settings={{
+              ...preview.settings,
+              messageText: preview.settings?.messageText || DEFAULT_ALERT_TEST_MESSAGE,
+            }}
             isPlaying={false}
             externalAnimationStep="display"
             externalIsVisible={true}
@@ -455,10 +585,13 @@ function WidgetCardPreview({ widgetId, preview }) {
 }
 
 function WidgetUrlCardField({ widgetId, preview }) {
+  const isDonatePage = widgetId === 'donate-page';
   const type = WIDGET_URL_TYPES[widgetId];
   const resolvedWidgetId = preview?.widgetId || null;
-  const widgetUrl = type ? createWidgetUrl(type, resolvedWidgetId || 'preview') : '';
-  const hasRealWidget = Boolean(type && resolvedWidgetId);
+  const widgetUrl = isDonatePage
+    ? preview?.publicUrl || ''
+    : type ? createWidgetUrl(type, resolvedWidgetId || 'preview') : '';
+  const hasRealWidget = isDonatePage ? Boolean(preview?.publicUrl) : Boolean(type && resolvedWidgetId);
 
   const handleCopy = async () => {
     if (!widgetUrl) return;
@@ -470,16 +603,16 @@ function WidgetUrlCardField({ widgetId, preview }) {
     window.open(widgetUrl, '_blank', 'noopener,noreferrer');
   };
 
-  if (!type) return null;
+  if (!type && !isDonatePage) return null;
 
   return (
     <div className="mb-4 rounded-xl border border-slate-700/60 bg-slate-950/70 p-3">
       <div className="mb-2 flex items-center justify-between gap-3">
         <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-400">
-          Widget URL
+          {isDonatePage ? 'Donate Page URL' : 'Widget URL'}
         </span>
         {!hasRealWidget && (
-          <span className="text-[10px] text-slate-500">Preview URL</span>
+          <span className="text-[10px] text-slate-500">{isDonatePage ? 'Public Page' : 'Preview URL'}</span>
         )}
       </div>
       <div className="flex gap-2">
@@ -512,13 +645,20 @@ function WidgetUrlCardField({ widgetId, preview }) {
 export default function Widgets() {
   const { language } = useLanguage();
   const { user, isLoading: isAuthLoading } = useAuth();
+  const [donatePageSettings, setDonatePageSettings] = React.useState(defaultDonatePageSettings);
   const {
     widgetPreviews,
     widgetStates,
     ensureWidgetPreviewsLoaded,
     setWidgetState,
+    loadedUserId,
+    isWidgetPreviewsLoading,
   } = useWidgetPreviews();
   const text = copy[language] || copy.en;
+
+  React.useEffect(() => {
+    setDonatePageSettings(loadDonatePageSettings(defaultDonatePageSettings));
+  }, []);
 
   React.useEffect(() => {
     if (isAuthLoading) return;
@@ -530,7 +670,26 @@ export default function Widgets() {
   };
 
   const outlineButtonClass =
-    "border-slate-700/80 bg-slate-900/70 text-slate-200 shadow-none hover:border-cyan-400/40 hover:bg-cyan-500/10 hover:text-cyan-100";
+    'border-slate-700/80 bg-slate-900/70 text-slate-200 shadow-none hover:border-cyan-400/40 hover:bg-cyan-500/10 hover:text-cyan-100';
+  const isUsingFreshPreviewData = !user?.id || loadedUserId === user.id;
+  const previewLoading = Boolean(user?.id) && (!isUsingFreshPreviewData || isWidgetPreviewsLoading);
+
+  const donatePageUrl = React.useMemo(() => {
+    const profileSlug = getProfileSlug(user);
+
+    if (!profileSlug || typeof window === 'undefined') {
+      return '';
+    }
+
+    return `${window.location.origin}/${profileSlug}`;
+  }, [user]);
+
+  const donatePagePreview = React.useMemo(() => ({
+    kind: 'donate-page',
+    widgetId: null,
+    settings: donatePageSettings,
+    publicUrl: donatePageUrl,
+  }), [donatePageSettings, donatePageUrl]);
 
   return (
     <div className="w-full space-y-8">
@@ -566,12 +725,12 @@ export default function Widgets() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.05 }}
             className={`relative rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border backdrop-blur-xl overflow-hidden transition-all duration-300 ${
-              widgetStates[widget.id]
+              (widget.hasToggle === false || widgetStates[widget.id])
                 ? 'border-cyan-500/30'
                 : 'border-slate-700/50'
             }`}
           >
-            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${widget.gradient} ${widgetStates[widget.id] ? 'opacity-100' : 'opacity-30'}`} />
+            <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${widget.gradient} ${(widget.hasToggle === false || widgetStates[widget.id]) ? 'opacity-100' : 'opacity-30'}`} />
 
             {widget.isPro && (
               <div className="absolute top-4 right-4 z-10">
@@ -583,24 +742,48 @@ export default function Widgets() {
 
             <div className="p-6">
               <div className="flex items-start justify-between mb-4">
-                <div className={`p-3 rounded-xl bg-gradient-to-br ${widget.gradient} ${widgetStates[widget.id] ? 'opacity-100' : 'opacity-50'} transition-opacity`}>
+                <div className={`p-3 rounded-xl bg-gradient-to-br ${widget.gradient} ${(widget.hasToggle === false || widgetStates[widget.id]) ? 'opacity-100' : 'opacity-50'} transition-opacity`}>
                   <widget.icon className="w-6 h-6 text-white" />
                 </div>
-                <Switch
-                  checked={widgetStates[widget.id]}
-                  onCheckedChange={() => toggleWidget(widget.id)}
-                  disabled={widget.isPro}
-                  className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-cyan-500 data-[state=checked]:to-blue-500"
-                />
+                {widget.hasToggle === false ? (
+                  <Badge className="border border-cyan-400/20 bg-cyan-500/10 text-cyan-200">
+                    {language === 'th' ? 'หน้าสาธารณะ' : 'Public Page'}
+                  </Badge>
+                ) : (
+                  <Switch
+                    checked={widgetStates[widget.id]}
+                    onCheckedChange={() => toggleWidget(widget.id)}
+                    disabled={widget.isPro}
+                    className="data-[state=checked]:bg-gradient-to-r data-[state=checked]:from-cyan-500 data-[state=checked]:to-blue-500"
+                  />
+                )}
               </div>
 
-              <h3 className={`text-lg font-semibold mb-2 ${widgetStates[widget.id] ? 'text-white' : 'text-slate-400'} transition-colors`}>
+              <h3 className={`text-lg font-semibold mb-2 ${(widget.hasToggle === false || widgetStates[widget.id]) ? 'text-white' : 'text-slate-400'} transition-colors`}>
                 {text.widgets[widget.id].name}
               </h3>
               <p className="text-slate-500 text-sm mb-4">{text.widgets[widget.id].description}</p>
 
-              <WidgetCardPreview widgetId={widget.id} preview={widgetPreviews[widget.id]} />
-              <WidgetUrlCardField widgetId={widget.id} preview={widgetPreviews[widget.id]} />
+              <WidgetCardPreview
+                widgetId={widget.id}
+                preview={
+                  widget.id === 'donate-page'
+                    ? donatePagePreview
+                    : widget.id === 'gift-alert'
+                      ? (widgetPreviews[widget.id] || { kind: 'gift-alert', widgetId: null, settings: DEFAULT_GIFT_ALERT_PREVIEW_SETTINGS })
+                      : previewLoading ? null : widgetPreviews[widget.id]
+                }
+              />
+              <WidgetUrlCardField
+                widgetId={widget.id}
+                preview={
+                  widget.id === 'donate-page'
+                    ? donatePagePreview
+                    : widget.id === 'gift-alert'
+                      ? (widgetPreviews[widget.id] || { kind: 'gift-alert', widgetId: null, settings: DEFAULT_GIFT_ALERT_PREVIEW_SETTINGS })
+                      : previewLoading ? null : widgetPreviews[widget.id]
+                }
+              />
 
               <div className="flex gap-2">
                 {widget.hasSettings && widget.settingsPage && (
@@ -623,21 +806,6 @@ export default function Widgets() {
                     {text.settings}
                   </Button>
                 )}
-                <Button
-                  variant="outline"
-                  size="icon"
-                  className={outlineButtonClass}
-                  onClick={() => {
-                    const preview = widgetPreviews[widget.id];
-                    const type = WIDGET_URL_TYPES[widget.id];
-                    const widgetUrl = type ? createWidgetUrl(type, preview?.widgetId || 'preview') : '';
-                    if (widgetUrl) {
-                      window.open(widgetUrl, '_blank', 'noopener,noreferrer');
-                    }
-                  }}
-                >
-                  <ExternalLink className="w-4 h-4" />
-                </Button>
               </div>
             </div>
           </motion.div>
@@ -666,10 +834,4 @@ export default function Widgets() {
     </div>
   );
 }
-
-
-
-
-
-
 

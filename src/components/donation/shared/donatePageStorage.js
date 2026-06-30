@@ -66,6 +66,26 @@ export function saveDonatePageSettings(settings) {
   }
 }
 
+export function savePartialDonatePageSettings(partialSettings, fallbackSettings = {}) {
+  if (typeof window === "undefined") {
+    return false;
+  }
+
+  try {
+    const current = loadDonatePageSettings(fallbackSettings);
+    const merged = mergeWithFallback(current, partialSettings);
+
+    window.localStorage.setItem(
+      DONATE_PAGE_SETTINGS_STORAGE_KEY,
+      JSON.stringify(merged)
+    );
+    return true;
+  } catch (error) {
+    console.error("Failed to save partial donate page settings to storage:", error);
+    return false;
+  }
+}
+
 export function clearDonatePageSettings() {
   if (typeof window === "undefined") {
     return false;

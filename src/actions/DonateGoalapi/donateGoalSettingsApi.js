@@ -12,11 +12,12 @@ export const fetchDonateGoalSettings = async (userId) => {
   }
 
   try {
-    const url = `${WIDGETS_API_BASE}/${userId}/widgets`;
+    const url = `${WIDGETS_API_BASE}/${userId}/widgets?ts=${Date.now()}`;
     logGoalApi("fetch request", { url, userId });
 
     const res = await fetch(url, {
       method: "GET",
+      cache: "no-store",
     });
 
     if (!res.ok) throw new Error(`Error: ${res.status}`);
