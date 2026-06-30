@@ -191,6 +191,7 @@ export default function DonatePageStructure({
   settings,
   preview = false,
   optimizeForEditor = false,
+  matchLiveLayout = false,
   className = "",
 }) {
   const [selectedSticker, setSelectedSticker] = useState(null);
@@ -316,7 +317,13 @@ export default function DonatePageStructure({
       {shouldShowSnowEffect && (preview ? <SnowOverlay /> : <Snowfall />)}
 
       <div className="relative z-10">
-        <div className={preview ? "flex justify-center pt-4" : "flex justify-center pt-6"}>
+        <div
+          className={
+            preview && !matchLiveLayout
+              ? "flex justify-center pt-4"
+              : "flex justify-center pt-6"
+          }
+        >
           <h1
             className={
               isMobilePreview
@@ -330,7 +337,7 @@ export default function DonatePageStructure({
 
         <div
           className={
-            preview
+            preview && !matchLiveLayout
               ? "mx-auto max-w-6xl px-3 pb-8 pt-4"
               : "mx-auto max-w-6xl px-4 pb-16 pt-6"
           }
@@ -349,7 +356,15 @@ export default function DonatePageStructure({
           )}
 
           {settings.display.showDonationForm && (
-            <div className={preview || isCompactPreview ? "mb-5" : "mb-5 lg:hidden"}>
+            <div
+              className={
+                preview && !matchLiveLayout
+                  ? "mb-5"
+                  : isCompactPreview
+                    ? "mb-5"
+                    : "mb-5 lg:hidden"
+              }
+            >
               <DonationForm
                 selectedSticker={selectedSticker}
                 decorations={donationDecorations}
@@ -372,7 +387,7 @@ export default function DonatePageStructure({
                   : "order-2 space-y-5 lg:order-1 lg:col-span-8"
               }
             >
-              {settings.display.showDonationForm && !preview && (
+              {settings.display.showDonationForm && (!preview || matchLiveLayout) && (
                 <div className="hidden lg:block">
                   <DonationForm
                     selectedSticker={selectedSticker}

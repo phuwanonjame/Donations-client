@@ -1,28 +1,16 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Play, Eye, Clock, Film } from "lucide-react";
+import { Play, Film } from "lucide-react";
+import { getVideoEmbedData } from "@/components/donation/shared/videoEmbed";
 
 const VIDEOS = [
   {
-    thumbnail:
-      "https://images.unsplash.com/photo-1542751371-adc38448a05e?w=400&h=225&fit=crop",
-    title: "Clutch 1v5 Valorant!!",
-    views: "12.5K",
-    duration: "0:45",
+    title: "YouTube Highlight",
+    url: "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
   },
   {
-    thumbnail:
-      "https://images.unsplash.com/photo-1511512578047-dfb367046420?w=400&h=225&fit=crop",
-    title: "โดเนทเพลง สุดฮา",
-    views: "8.2K",
-    duration: "1:20",
-  },
-  {
-    thumbnail:
-      "https://images.unsplash.com/photo-1550745165-9bc0b252726f?w=400&h=225&fit=crop",
-    title: "รีแอคชั่นสุดโหด!",
-    views: "15.1K",
-    duration: "0:58",
+    title: "TikTok Highlight",
+    url: "https://www.tiktok.com/@scout2015/video/6718335390845095173",
   },
 ];
 
@@ -44,6 +32,20 @@ export default function VideoHighlights({
 }) {
   const [playingIndex, setPlayingIndex] = useState(null);
   const theme = { ...defaultTheme, ...visualTheme };
+  const normalizedVideos = videos
+    .map((video, index) => {
+      const embed = getVideoEmbedData(video.url || "");
+
+      return {
+        ...video,
+        title: video.title || `${embed.platformLabel || "Highlight"} ${index + 1}`,
+        platform: embed.platform || video.platform || "",
+        platformLabel: embed.platformLabel || "วิดีโอ",
+        embedUrl: embed.embedUrl || video.embedUrl || "",
+        thumbnail: embed.thumbnailUrl || video.thumbnail || "",
+      };
+    })
+    .filter((video) => video.url || video.embedUrl);
 
   return (
     <motion.div
@@ -98,7 +100,7 @@ export default function VideoHighlights({
         </div>
 
         <div className="-mx-1 flex gap-3 overflow-x-auto px-1 pb-2 scrollbar-hide">
-          {videos.map((video, i) => (
+          {normalizedVideos.map((video, i) => (
             <motion.div
               key={i}
               whileHover={{ scale: 1.05, y: -4 }}
@@ -107,25 +109,44 @@ export default function VideoHighlights({
               className="group w-40 flex-shrink-0 cursor-pointer"
             >
               <div className="relative aspect-video overflow-hidden rounded-xl border border-white/10">
-                <img
-                  src={video.thumbnail}
-                  alt={video.title}
-                  className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
-                />
-
-                <div className="absolute inset-0 flex items-center justify-center bg-black/40 transition group-hover:bg-black/20">
-                  <motion.div
-                    whileHover={{ scale: 1.2 }}
-                    className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/20 backdrop-blur-md"
+                {playingIndex === i && video.embedUrl ? (
+                  <iframe
+                    src={video.embedUrl}
+                    title={video.title}
+                    className="h-full w-full"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowFullScreen
+                  />
+                ) : video.thumbnail ? (
+                  <img
+                    src={video.thumbnail}
+                    alt={video.title}
+                    className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-110"
+                  />
+                ) : (
+                  <div
+                    className="flex h-full w-full items-center justify-center bg-gradient-to-br text-white"
+                    style={{
+                      backgroundImage: `linear-gradient(135deg, ${rgba(theme.primary, 0.45)}, ${rgba(
+                        theme.secondary,
+                        0.4
+                      )})`,
+                    }}
                   >
-                    <Play className="ml-0.5 h-4 w-4 fill-white text-white" />
-                  </motion.div>
-                </div>
+                    <span className="text-sm font-semibold">{video.platformLabel}</span>
+                  </div>
+                )}
 
-                <div className="absolute bottom-1.5 right-1.5 flex items-center gap-0.5 rounded-md bg-black/70 px-1.5 py-0.5 text-[10px] text-white backdrop-blur-sm">
-                  <Clock className="h-2.5 w-2.5" />
-                  {video.duration}
-                </div>
+                {playingIndex !== i ? (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/40 transition group-hover:bg-black/20">
+                    <motion.div
+                      whileHover={{ scale: 1.2 }}
+                      className="flex h-10 w-10 items-center justify-center rounded-full border border-white/30 bg-white/20 backdrop-blur-md"
+                    >
+                      <Play className="ml-0.5 h-4 w-4 fill-white text-white" />
+                    </motion.div>
+                  </div>
+                ) : null}
               </div>
 
               <p
@@ -138,7 +159,7 @@ export default function VideoHighlights({
                 className="flex items-center gap-1 text-[11px]"
                 style={{ color: rgba(theme.mutedText, 0.6) }}
               >
-                <Eye className="h-3 w-3" /> {video.views} views
+                {video.platformLabel}
               </p>
             </motion.div>
           ))}
