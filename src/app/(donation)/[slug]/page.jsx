@@ -2,26 +2,21 @@
 
 import { useMemo, useState, useSyncExternalStore } from "react";
 import {
-  BadgeCheck,
-  Building2,
   CalendarDays,
-  ChevronDown,
-  CircleHelp,
   Clapperboard,
-  CloudUpload,
-  Gamepad2,
+  Check,
+  Copy,
+  Download,
   Globe,
   Heart,
-  Lock,
-  Moon,
+  Loader2,
   Music2,
   Play,
   ShieldCheck,
   Trophy,
+  Upload,
   UserRound,
-  WalletCards,
 } from "lucide-react";
-
 import { defaultDonatePageSettings } from "@/components/donation/shared/donatePageConfig";
 import { loadDonatePageSettings } from "@/components/donation/shared/donatePageStorage";
 import { getVideoEmbedData } from "@/components/donation/shared/videoEmbed";
@@ -56,10 +51,14 @@ function subscribe(onStoreChange) {
     return () => {};
   }
 
-  window.addEventListener("storage", onStoreChange);
+  const handleStorageChange = () => {
+    onStoreChange();
+  };
+
+  window.addEventListener("storage", handleStorageChange);
 
   return () => {
-    window.removeEventListener("storage", onStoreChange);
+    window.removeEventListener("storage", handleStorageChange);
   };
 }
 
@@ -83,123 +82,74 @@ const socialIcons = {
 
 const tabItems = [
   { id: "highlights", label: "ไฮไลต์ & คลิปเด็ด", icon: Play },
-  { id: "content", label: "คอนเทนต์ล่าสุด", icon: Gamepad2 },
+  { id: "content", label: "คอนเทนต์ล่าสุด", icon: Heart },
   { id: "schedule", label: "ตารางสตรีม", icon: CalendarDays },
   { id: "top", label: "Top Donors", icon: Trophy },
   { id: "about", label: "เกี่ยวกับสตรีมเมอร์", icon: UserRound },
 ];
 
-function cx(...classes) {
-  return classes.filter(Boolean).join(" ");
-}
-
-function GlassPanel({ children, className = "" }) {
-  return (
-    <section
-      className={cx(
-        "relative overflow-hidden rounded-[18px] border border-[#3845a5]/70 bg-[#071238]/92 shadow-[0_24px_70px_rgba(0,0,0,0.42)] backdrop-blur-xl",
-        className
-      )}
-    >
-      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_24%_0%,rgba(39,101,255,0.2),transparent_36%),linear-gradient(180deg,rgba(10,22,65,0.58),rgba(4,9,31,0.3))]" />
-      <div className="relative">{children}</div>
-    </section>
-  );
-}
-
-function StepTitle({ number, title, subtitle }) {
-  return (
-    <div className="mb-3 flex items-start gap-2.5">
-      <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full border border-[#4c8eff]/70 bg-[#0b1a50] text-xs font-bold text-[#7eb6ff] shadow-[0_0_14px_rgba(61,126,255,0.25)]">
-        {number}
-      </span>
-      <span>
-        <span className="block text-sm font-semibold leading-5 text-white">{title}</span>
-        {subtitle ? (
-          <span className="mt-0.5 block text-xs leading-5 text-slate-400">{subtitle}</span>
-        ) : null}
-      </span>
-    </div>
-  );
-}
-
-function PaymentMethodCard({ title, subtitle, active = false, icon: Icon }) {
+function PaymentMethodCard({
+  title,
+  subtitle,
+  active = false,
+  onClick,
+}) {
   return (
     <button
       type="button"
-      className={cx(
-        "flex min-h-[66px] items-center gap-3 rounded-[10px] border px-3 py-2.5 text-left transition",
+      onClick={onClick}
+      className={[
+        "flex items-center gap-3 rounded-[14px] border px-4 py-3 text-left transition",
         active
-          ? "border-[#5568ff]/70 bg-[#101d52] shadow-[inset_0_0_0_1px_rgba(72,112,255,0.18)]"
-          : "border-[#253266] bg-[#0a143a] hover:border-[#42519a]"
-      )}
+          ? "border-[#2c9eff] bg-[#132458] shadow-[0_0_0_1px_rgba(50,150,255,0.35),0_0_26px_rgba(69,92,255,0.24)]"
+          : "border-[#1d2c61] bg-[#0a1435] hover:border-[#344989] hover:bg-[#0d1842]",
+      ].join(" ")}
     >
-      <span className="flex h-10 w-12 shrink-0 items-center justify-center rounded-[8px] bg-white text-[#153065] shadow-[0_8px_18px_rgba(0,0,0,0.22)]">
-        <Icon className="h-5 w-5" />
-      </span>
-      <span className="min-w-0">
-        <span className="block truncate text-sm font-bold leading-5 text-white">
-          {title}
-        </span>
-        <span className="block truncate text-xs leading-4 text-slate-400">
-          {subtitle}
-        </span>
-      </span>
+      <div className="min-w-0">
+        <p className="truncate text-sm font-bold text-white">{title}</p>
+        <p className="truncate text-xs text-white/45">{subtitle}</p>
+      </div>
     </button>
   );
 }
 
-function SocialButton({ href, icon: Icon, label, tone }) {
+function SectionShell({ children, className = "" }) {
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noreferrer"
-      aria-label={label}
-      className={cx(
-        "flex h-11 w-11 items-center justify-center rounded-[9px] border border-white/10 shadow-[0_10px_24px_rgba(0,0,0,0.28)] transition hover:-translate-y-0.5",
-        tone || "bg-[#0c1740] text-white"
-      )}
+    <section
+      className={[
+        "rounded-[22px] border border-[#25356f]/90 bg-[linear-gradient(180deg,rgba(10,17,49,0.94),rgba(8,13,39,0.96))] shadow-[0_22px_80px_rgba(3,7,24,0.45),inset_0_1px_0_rgba(100,139,255,0.12)]",
+        className,
+      ].join(" ")}
     >
-      <Icon className="h-5 w-5" />
-    </a>
+      {children}
+    </section>
   );
 }
 
 function EmptyState({ title, description }) {
   return (
-    <div className="flex min-h-[208px] flex-col items-center justify-center rounded-[14px] border border-[#1d2b62] bg-[#071133]/84 px-5 text-center">
-      <div className="mb-3 text-[#314070]">
-        <Clapperboard className="h-16 w-16" strokeWidth={1.35} />
+    <div className="flex min-h-[280px] flex-col items-center justify-center rounded-[18px] border border-[#1d2d63] bg-[#0a1233]/80 px-6 text-center">
+      <div className="mb-5 flex h-16 w-16 items-center justify-center rounded-[14px] border border-[#26376f] bg-white/5">
+        <Play className="h-8 w-8 text-white/25" />
       </div>
-      <p className="text-sm font-semibold text-slate-300">{title}</p>
-      <p className="mt-1.5 text-xs text-slate-500">{description}</p>
-    </div>
-  );
-}
-
-function FakeQrPattern() {
-  return (
-    <div className="grid h-full w-full grid-cols-7 gap-1 bg-white p-1">
-      {Array.from({ length: 49 }).map((_, index) => {
-        const dark =
-          index % 2 === 0 ||
-          index % 5 === 0 ||
-          [1, 2, 7, 14, 35, 42, 43, 47, 48].includes(index);
-
-        return (
-          <span
-            key={index}
-            className={cx("rounded-[1px]", dark ? "bg-slate-950" : "bg-white")}
-          />
-        );
-      })}
+      <p className="text-lg font-semibold text-white/75">{title}</p>
+      <p className="mt-2 max-w-md text-sm text-white/38">{description}</p>
     </div>
   );
 }
 
 export default function DonateProfile() {
   const [activeTab, setActiveTab] = useState("highlights");
+  const [selectedPayment, setSelectedPayment] = useState("promptpay");
+  const [donationAmount, setDonationAmount] = useState(10);
+  const [customAmount, setCustomAmount] = useState("10");
+  const [copiedAccount, setCopiedAccount] = useState(false);
+  const [donorName, setDonorName] = useState("");
+  const [donorMessage, setDonorMessage] = useState("");
+  const [slipFile, setSlipFile] = useState(null);
+  const [formErrors, setFormErrors] = useState({});
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const settings = useSyncExternalStore(
     subscribe,
     getSnapshot,
@@ -226,6 +176,7 @@ export default function DonateProfile() {
             ...video,
             thumbnail: embed.thumbnailUrl || video.thumbnail || "",
             platformLabel: embed.platformLabel || video.platform || "Video",
+            embedUrl: embed.embedUrl || video.embedUrl || "",
           };
         })
         .slice(0, 4),
@@ -242,472 +193,691 @@ export default function DonateProfile() {
     [settings.schedule]
   );
 
-  const quickAmounts = (settings.donation.quickAmounts || [10, 20, 100, 500]).slice(
-    0,
-    4
-  );
+  const bankChannel = settings.donation?.channels?.bank || {};
+  const promptPayChannel = settings.donation?.channels?.promptpay || {};
+  const promptPayValue = promptPayChannel.value || "0826589650";
+  const promptPayQrAmount = customAmount || String(donationAmount);
+  const promptPayQrUrl = `https://promptpay.io/${encodeURIComponent(
+    promptPayValue
+  )}/${encodeURIComponent(promptPayQrAmount)}.png`;
+  const successMessage =
+    settings.donation?.successMessage || "ขอบคุณที่โดเนทให้ streamer นะครับ";
+
+  const handleQuickAmount = (amount) => {
+    setDonationAmount(amount);
+    setCustomAmount(String(amount));
+  };
+
+  const handleAmountInput = (event) => {
+    const value = event.target.value;
+    setCustomAmount(value);
+
+    const nextAmount = parseFloat(value);
+    if (!Number.isNaN(nextAmount)) {
+      setDonationAmount(nextAmount);
+    }
+  };
+
+  const clearFieldError = (fieldName) => {
+    setFormErrors((currentErrors) => {
+      if (!currentErrors[fieldName]) {
+        return currentErrors;
+      }
+
+      const nextErrors = { ...currentErrors };
+      delete nextErrors[fieldName];
+      return nextErrors;
+    });
+  };
+
+  const handleSlipChange = (event) => {
+    const file = event.target.files?.[0] || null;
+    setSlipFile(file);
+
+    if (file) {
+      clearFieldError("slipFile");
+    }
+  };
+
+  const handleDonateSubmit = () => {
+    if (isSubmitting) {
+      return;
+    }
+
+    const nextErrors = {};
+
+    if (!donorName.trim()) {
+      nextErrors.donorName = "กรุณากรอกชื่อผู้โดเนท";
+    }
+
+    if (!donorMessage.trim()) {
+      nextErrors.donorMessage = "กรุณากรอกข้อความถึงสตรีมเมอร์";
+    }
+
+    if (!slipFile) {
+      nextErrors.slipFile = "กรุณาแนบรูปสลิปการโอนเงิน";
+    }
+
+    setFormErrors(nextErrors);
+
+    if (Object.keys(nextErrors).length > 0) {
+      return;
+    }
+
+    setIsSubmitting(true);
+    window.setTimeout(() => {
+      setIsSubmitting(false);
+      setShowSuccessModal(true);
+    }, 700);
+  };
+
+  const handleCloseSuccessModal = () => {
+    setShowSuccessModal(false);
+    setIsSubmitting(false);
+    setDonorName("");
+    setDonorMessage("");
+    setSlipFile(null);
+    setFormErrors({});
+  };
+
+  const handleCopyAccountNumber = async () => {
+    const accountNumber = bankChannel.accountNumber || "";
+    if (!accountNumber || typeof navigator === "undefined") {
+      return;
+    }
+
+    await navigator.clipboard.writeText(accountNumber);
+    setCopiedAccount(true);
+    window.setTimeout(() => setCopiedAccount(false), 1600);
+  };
+
   const avatarFallback = settings.profile.name?.charAt(0)?.toUpperCase() || "D";
-  const bannerUrl =
-    settings.profile.bannerUrl ||
-    settings.profile.backgroundUrl ||
-    "https://images.unsplash.com/photo-1542751371-adc38448a05e";
 
   return (
-    <div className="min-h-screen bg-[#030720] text-white">
-      <nav className="sticky top-0 z-40 h-[57px] border-b border-[#27306d] bg-[#030720]/95 backdrop-blur-xl">
-        <div className="mx-auto flex h-full max-w-[1120px] items-center justify-between px-4 sm:px-10">
-          <div className="flex items-center gap-3">
-            <div className="relative flex h-9 w-9 items-center justify-center overflow-hidden rounded-[8px] bg-[#061044]">
-              <div className="absolute inset-1 rounded-br-[18px] rounded-tl-[5px] bg-[linear-gradient(135deg,#15b7ff,#2856ff_46%,#6d33ff)]" />
-              <div className="absolute left-0 top-0 h-full w-1/2 bg-[#030720]" />
-              <span className="relative text-sm font-black text-white">D</span>
-            </div>
-            <div className="leading-none">
-              <p className="text-[17px] font-black tracking-wide text-white">DONATEHUB</p>
-              <p className="mt-1 text-[11px] font-medium text-slate-400">by Streamflow</p>
-            </div>
-          </div>
+    <div
+      className="min-h-screen bg-[#040822] text-white"
+      style={{
+        backgroundImage:
+          "radial-gradient(circle at top, rgba(55, 65, 180, 0.18), transparent 28%), linear-gradient(180deg, #040822 0%, #05092a 100%)",
+      }}
+    >
+      <main className="mx-auto max-w-[1280px] px-4 pb-12 pt-6 lg:px-8">
+        <div className="overflow-hidden">
+          <div className="relative min-h-[260px]">
+            <div
+              className="absolute inset-0 bg-cover bg-center"
+              style={{
+                backgroundImage: `url(${settings.profile.bannerUrl || settings.profile.backgroundUrl})`,
+              }}
+            />
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,6,25,0.2),rgba(3,7,26,0.88))]" />
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_68%_28%,rgba(90,74,255,0.32),transparent_24%),radial-gradient(circle_at_84%_40%,rgba(255,72,145,0.16),transparent_18%)]" />
 
-          <div className="flex items-center gap-3">
-            <span className="hidden items-center gap-1.5 text-xs text-slate-300 sm:flex">
-              <ShieldCheck className="h-4 w-4" />
-              ปลอดภัย 100%
-            </span>
-            <button
-              type="button"
-              className="hidden h-8 w-8 items-center justify-center rounded-full text-slate-300 transition hover:bg-white/7 sm:flex"
-            >
-              <CircleHelp className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              className="hidden h-8 w-8 items-center justify-center rounded-full text-slate-300 transition hover:bg-white/7 sm:flex"
-            >
-              <Moon className="h-4 w-4" />
-            </button>
-            <button
-              type="button"
-              className="rounded-[10px] bg-[#1668ff] px-5 py-2.5 text-sm font-semibold text-white shadow-[0_0_24px_rgba(22,104,255,0.36)] transition hover:bg-[#2675ff]"
-            >
-              เข้าสู่ระบบ
-            </button>
-          </div>
-        </div>
-      </nav>
-
-      <header className="relative h-[198px] overflow-hidden border-b border-[#18245a] bg-[#030720] sm:h-[210px]">
-        <div
-          className="absolute inset-0 bg-cover"
-          style={{
-            backgroundImage: `url(${bannerUrl})`,
-            backgroundPosition: "center 38%",
-          }}
-        />
-        <div className="absolute inset-0 bg-[linear-gradient(90deg,#030720_0%,rgba(3,7,32,0.67)_30%,rgba(3,7,32,0.2)_70%,#030720_100%)]" />
-        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,7,32,0.04),rgba(3,7,32,0.9))]" />
-        <div className="absolute inset-x-0 bottom-0 h-16 bg-[linear-gradient(180deg,transparent,#030720)]" />
-
-        <div className="relative mx-auto flex h-full max-w-[1120px] items-end px-4 pb-7 sm:px-10">
-          <div className="flex items-end gap-5">
-            <div className="relative shrink-0">
-              {settings.profile.avatarUrl ? (
-                <img
-                  src={settings.profile.avatarUrl}
-                  alt={settings.profile.name}
-                  className="h-[126px] w-[126px] rounded-full border-[3px] border-[#44b7ff]/90 object-cover shadow-[0_18px_42px_rgba(0,0,0,0.45)]"
-                />
-              ) : (
-                <div className="flex h-[126px] w-[126px] items-center justify-center rounded-full border-[3px] border-[#44b7ff]/90 bg-[linear-gradient(135deg,#1c72ff,#7b35ff)] text-5xl font-black shadow-[0_18px_42px_rgba(0,0,0,0.45)]">
-                  {avatarFallback}
+            <div className="relative flex flex-col gap-6 px-5 py-8 sm:px-8 lg:flex-row lg:items-end lg:gap-8 lg:py-10">
+              <div className="relative shrink-0">
+                <div className="rounded-full border border-white/18 bg-white/8 p-1.5 shadow-[0_24px_70px_rgba(8,145,178,0.34)] backdrop-blur">
+                  <div className="rounded-full border-4 border-cyan-200/70 bg-[#071334] p-1 shadow-[inset_0_0_0_1px_rgba(255,255,255,0.12)]">
+                    {settings.profile.avatarUrl ? (
+                      <img
+                        src={settings.profile.avatarUrl}
+                        alt={settings.profile.name}
+                        className="h-36 w-36 rounded-full object-cover sm:h-40 sm:w-40 lg:h-44 lg:w-44"
+                      />
+                    ) : (
+                      <div className="flex h-36 w-36 items-center justify-center rounded-full bg-[linear-gradient(135deg,#2563eb,#7c3aed)] text-5xl font-black text-white sm:h-40 sm:w-40 lg:h-44 lg:w-44">
+                        {avatarFallback}
+                      </div>
+                    )}
+                  </div>
                 </div>
-              )}
-              <span className="absolute bottom-3 right-1.5 h-5 w-5 rounded-full border-[3px] border-[#071238] bg-[#34e64b]" />
-            </div>
-
-            <div className="pb-1">
-              {settings.profile.isOnline ? (
-                <div className="mb-2 flex items-center gap-2">
-                  <span className="rounded-[6px] bg-[#ff163b] px-2.5 py-1 text-[11px] font-black leading-none text-white">
-                    ♥ LIVE
-                  </span>
-                  <span className="rounded-[6px] border border-[#23c769]/35 bg-[#0d331f]/80 px-2.5 py-1 text-[11px] font-bold leading-none text-[#43e578]">
-                    ออนไลน์
-                  </span>
-                </div>
-              ) : null}
-
-              <div className="flex items-center gap-2">
-                <h1 className="text-[34px] font-black leading-none text-white sm:text-[38px]">
-                  {settings.profile.name}
-                </h1>
-                {settings.profile.verified ? (
-                  <BadgeCheck className="h-6 w-6 fill-[#168bff] text-white" />
-                ) : null}
+                <span className="absolute bottom-5 right-3 h-6 w-6 rounded-full border-4 border-[#0a1233] bg-lime-400 shadow-[0_0_18px_rgba(132,204,22,0.75)] lg:bottom-6 lg:right-4" />
               </div>
-              <p className="mt-2 text-sm text-slate-300">{settings.profile.handle}</p>
-              <p className="mt-2 max-w-[580px] text-sm leading-6 text-slate-100">
-                {settings.profile.bio}
-              </p>
-              <div className="mt-4 flex gap-3">
-                {socials.map((social) => {
-                  const Icon = socialIcons[social.id] || Play;
-                  const tone =
-                    social.id === "youtube"
-                      ? "bg-[#e8242f] text-white"
-                      : social.id === "facebook"
-                        ? "bg-[#1865d8] text-white"
-                        : "bg-[#111827] text-white";
+
+              <div className="max-w-3xl">
+                <div className="mb-3 flex flex-wrap items-center gap-2">
+                  {settings.profile.isOnline ? (
+                    <>
+                      <span className="rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white">
+                        LIVE
+                      </span>
+                      <span className="rounded-full border border-lime-400/25 bg-lime-400/10 px-3 py-1 text-xs font-medium text-lime-300">
+                        ออนไลน์
+                      </span>
+                    </>
+                  ) : null}
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl">
+                    {settings.profile.name}
+                  </h1>
+                  {settings.profile.verified ? (
+                    <span className="flex h-7 w-7 items-center justify-center rounded-full bg-cyan-500 text-white shadow-[0_0_20px_rgba(34,211,238,0.45)]">
+                      <ShieldCheck className="h-4 w-4" />
+                    </span>
+                  ) : null}
+                </div>
+
+                <p className="mt-1 text-base text-white/65">{settings.profile.handle}</p>
+                <p className="mt-3 max-w-2xl text-sm leading-7 text-white/80 sm:text-base">
+                  {settings.profile.bio}
+                </p>
+
+                <div className="mt-5 flex flex-wrap gap-3">
+                  {socials.map((social) => {
+                    const Icon = socialIcons[social.id] || Play;
+
+                    return (
+                      <a
+                        key={social.id}
+                        href={social.href}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex h-12 w-12 items-center justify-center rounded-[12px] border border-[#22336c] bg-[#0b1236]/85 text-white/80 transition hover:-translate-y-0.5 hover:border-[#2d8cff] hover:text-white"
+                      >
+                        <Icon className="h-5 w-5" />
+                      </a>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="px-3 py-4 sm:px-5 lg:px-6 lg:py-6">
+            <SectionShell className="border-[#30427d] bg-[radial-gradient(circle_at_54%_0%,rgba(43,91,255,0.22),transparent_30%),linear-gradient(180deg,rgba(11,22,62,0.98),rgba(6,12,39,0.98))] px-4 py-5 sm:px-7 lg:px-10 lg:py-9">
+              <div className="mb-7 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex items-start gap-3">
+                  <div className="mt-1 flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-500 text-white shadow-[0_0_24px_rgba(139,92,246,0.35)]">
+                    <Heart className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-white">
+                      {settings.donation.pageTitle}
+                    </h2>
+                    <p className="mt-1 text-sm text-white/50">
+                      {settings.donation.welcomeMessage}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid gap-8 xl:grid-cols-[1.3fr_1fr]">
+                <div className="space-y-6">
+                  <div>
+                    <div className="mb-3 flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[#2e73ff] bg-[#10285f] text-sm font-bold text-cyan-100 shadow-[0_0_18px_rgba(34,108,255,0.35)]">
+                        1
+                      </div>
+                      <div>
+                        <p className="font-semibold text-white">ใส่ข้อมูลผู้โดเนท</p>
+                        <p className="text-xs text-white/40">ชื่อของคุณ (แสดงบนสตรีม)</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <input
+                        value={donorName}
+                        onChange={(event) => {
+                          setDonorName(event.target.value);
+                          clearFieldError("donorName");
+                        }}
+                        className={[
+                          "w-full rounded-[12px] border bg-[#050b26]/90 px-4 py-3 text-sm text-white outline-none placeholder:text-white/24 focus:border-[#2d8cff]",
+                          formErrors.donorName ? "border-rose-400/70" : "border-[#17275a]",
+                        ].join(" ")}
+                        placeholder="เช่น xB6, Somchai, Anonymous"
+                      />
+                      {formErrors.donorName ? (
+                        <p className="-mt-2 text-xs text-rose-300">{formErrors.donorName}</p>
+                      ) : null}
+                      <div>
+                        <textarea
+                          rows={4}
+                          value={donorMessage}
+                          maxLength={255}
+                          onChange={(event) => {
+                            setDonorMessage(event.target.value);
+                            clearFieldError("donorMessage");
+                          }}
+                          className={[
+                            "w-full resize-none rounded-[12px] border bg-[#050b26]/90 px-4 py-3 text-sm text-white outline-none placeholder:text-white/24 focus:border-[#2d8cff]",
+                            formErrors.donorMessage ? "border-rose-400/70" : "border-[#17275a]",
+                          ].join(" ")}
+                          placeholder="ส่งข้อความให้กำลังใจสั้น ๆ ❤️"
+                        />
+                        <div className="mt-2 flex items-center justify-between gap-3">
+                          {formErrors.donorMessage ? (
+                            <p className="text-xs text-rose-300">{formErrors.donorMessage}</p>
+                          ) : (
+                            <span />
+                          )}
+                          <p className="text-right text-xs text-white/25">
+                            {donorMessage.length}/255
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="mb-3 flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[#2e73ff] bg-[#10285f] text-sm font-bold text-cyan-100 shadow-[0_0_18px_rgba(34,108,255,0.35)]">
+                        2
+                      </div>
+                      <div>
+                        <p className="font-semibold text-white">เลือกช่องทางการชำระเงิน</p>
+                        <p className="text-xs text-white/40">สแกน QR หรือโอนผ่านบัญชี</p>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-3 sm:grid-cols-3">
+                      <PaymentMethodCard
+                        title="PromptPay"
+                        subtitle="สแกน QR Code"
+                        active={selectedPayment === "promptpay"}
+                        onClick={() => setSelectedPayment("promptpay")}
+                      />
+                      <PaymentMethodCard
+                        title="โอนธนาคาร"
+                        subtitle="ทุกธนาคาร"
+                        active={selectedPayment === "bank"}
+                        onClick={() => setSelectedPayment("bank")}
+                      />
+                    </div>
+
+                    <div className="mt-5 rounded-[16px] border border-[#1d2d63] bg-[#07102f]/80 p-5">
+                      <p className="text-base font-bold text-white">วิธีการโอนเงิน:</p>
+                      <div className="mt-4 text-sm leading-7 text-white/68">
+                        {selectedPayment === "promptpay" ? (
+                          <ol className="list-decimal space-y-3 pl-5">
+                            <li>
+                              เปิดแอปธนาคารที่คุณใช้อยู่ (เช่น K PLUS, NEXT, SCB EASY) ที่มีฟีเจอร์สแกน QR Code และแสดงสลิปการโอนเงิน
+                            </li>
+                            <li>
+                              ใส่จำนวนเงินที่อยากโดเนท แล้วสแกน QR Code พร้อมเพย์ที่แสดงบนหน้าเว็บ
+                            </li>
+                            <li>
+                              หลังโอนเสร็จ แค่แนบสลิปการโอนเงินในเว็บ แล้วกดปุ่มเปย์ได้เลย!
+                            </li>
+                          </ol>
+                        ) : selectedPayment === "bank" ? (
+                          <ol className="list-decimal space-y-3 pl-5">
+                            <li>
+                              เปิดแอปธนาคารที่คุณใช้อยู่ (เช่น K PLUS, NEXT, SCB EASY) ที่สามารถแสดงสลิปการโอนเงินได้
+                            </li>
+                            <li>
+                              โอนเงินตามจำนวนที่อยากโดเนทไปยังบัญชีที่แสดงบนหน้าเว็บ
+                            </li>
+                            <li>
+                              พอโอนเสร็จแล้ว แค่แนบสลิปในเว็บ แล้วกดปุ่มเปย์ได้เลย!
+                            </li>
+                          </ol>
+                        ) : (
+                          <div className="space-y-3">
+                            <p>
+                              เลือกช่องทางที่ต้องการ ใส่จำนวนเงินที่อยากโดเนท แล้วทำรายการผ่านแอปหรือวอลเล็ตของคุณ
+                            </p>
+                            <p>
+                              หลังชำระเงินเสร็จ แนบสลิปการโอนเงินในเว็บ แล้วกดปุ่มยืนยันการโดเนท
+                            </p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex min-h-full flex-col border-t border-[#1e2e68] pt-6 xl:border-l xl:border-t-0 xl:pl-7 xl:pt-0">
+                  <div className="mb-6 grid gap-5 sm:grid-cols-[190px_1fr]">
+                    {selectedPayment === "bank" ? (
+                      <div className="sm:col-span-2">
+                        <p className="mb-3 text-sm font-medium text-white/58">
+                          ข้อมูลบัญชีสำหรับโอนเงิน
+                        </p>
+                        <div className="grid gap-3 rounded-[14px] border border-[#18285c] bg-[#07102f] p-4">
+                          <div className="rounded-[12px] border border-[#17275a] bg-[#050b26]/90 px-4 py-3">
+                            <p className="text-xs text-white/40">ชื่อบัญชี</p>
+                            <p className="mt-1 text-base font-bold text-white">
+                              {bankChannel.accountName || "ยังไม่ได้ระบุชื่อบัญชี"}
+                            </p>
+                          </div>
+                          <div className="rounded-[12px] border border-[#17275a] bg-[#050b26]/90 px-4 py-3">
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="min-w-0">
+                                <p className="text-xs text-white/40">เลขบัญชี</p>
+                                <p className="mt-1 break-all text-xl font-black tracking-wide text-cyan-100">
+                                  {bankChannel.accountNumber || "ยังไม่ได้ระบุเลขบัญชี"}
+                                </p>
+                              </div>
+                              <button
+                                type="button"
+                                onClick={handleCopyAccountNumber}
+                                disabled={!bankChannel.accountNumber}
+                                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[#2d8cff]/35 bg-[#10285f]/70 px-3 py-1.5 text-xs font-semibold text-cyan-100 transition hover:border-[#2d8cff] hover:bg-[#14306d] disabled:cursor-not-allowed disabled:opacity-45"
+                              >
+                                {copiedAccount ? (
+                                  <Check className="h-3.5 w-3.5" />
+                                ) : (
+                                  <Copy className="h-3.5 w-3.5" />
+                                )}
+                                {copiedAccount ? "Copied" : "Copy"}
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div>
+                          <p className="mb-3 text-sm font-medium text-white/58">
+                            *สแกน QR Code เพื่อชำระเงิน
+                          </p>
+                          <div className="rounded-[14px] border border-[#18285c] bg-[#07102f] p-3">
+                            <div className="flex h-[180px] items-center justify-center rounded-[10px] p-0">
+                              <img
+                                src={promptPayQrUrl}
+                                alt="QR Code"
+                                className="h-full w-full rounded-[6px] object-contain"
+                              />
+                            </div>
+                          </div>
+                          <a
+                            href={promptPayQrUrl}
+                            download={`promptpay-${promptPayQrAmount}.png`}
+                            className="mx-auto mt-3 flex w-fit items-center gap-1.5 rounded-full border border-[#2d8cff]/35 bg-[#10285f]/70 px-3 py-1.5 text-xs font-semibold text-cyan-100 transition hover:border-[#2d8cff] hover:bg-[#14306d]"
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                            Save QR
+                          </a>
+                        </div>
+
+                        <div>
+                          <p className="mb-3 text-sm font-medium text-white/58">
+                            หรือระบุจำนวนเงิน
+                          </p>
+                          <input
+                            type="number"
+                            min={1}
+                            value={customAmount}
+                            onChange={handleAmountInput}
+                            className="w-full rounded-[12px] border border-[#17275a] bg-[#050b26]/90 px-4 py-3 text-sm text-white outline-none placeholder:text-white/24 focus:border-[#2d8cff]"
+                            placeholder={`ขั้นต่ำ ${settings.donation.minAmount} บาท`}
+                          />
+
+                          <div className="mt-4">
+                            <p className="mb-3 text-sm font-medium text-white/45">ยอดนิยม</p>
+                            <div className="grid grid-cols-4 gap-2">
+                              {(settings.donation.quickAmounts || [10, 20, 100, 500])
+                                .slice(0, 4)
+                                .map((amount) => (
+                                  <button
+                                    type="button"
+                                    key={amount}
+                                    onClick={() => handleQuickAmount(amount)}
+                                    className={[
+                                      "rounded-[10px] border py-3 text-sm font-semibold transition hover:border-[#2d8cff] hover:bg-[#14275e] hover:text-white",
+                                      donationAmount === amount
+                                        ? "border-[#2d8cff] bg-[#14275e] text-cyan-100 shadow-[0_0_18px_rgba(45,140,255,0.22)]"
+                                        : "border-[#1b2a60] bg-[#101b44] text-white/75",
+                                    ].join(" ")}
+                                  >
+                                    ฿{amount}
+                                  </button>
+                                ))}
+                            </div>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+
+                  <div>
+                    <div className="mb-3 flex items-center gap-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[#2e73ff] bg-[#10285f] text-sm font-bold text-cyan-100 shadow-[0_0_18px_rgba(34,108,255,0.35)]">
+                        3
+                      </div>
+                      <p className="font-semibold text-white">อัปโหลดสลิป <span className="text-rose-300">*</span></p>
+                    </div>
+
+                    <label
+                      className={[
+                        "flex min-h-[280px] cursor-pointer flex-col items-center justify-center rounded-[18px] border-2 border-dashed bg-[#0a1439]/65 px-6 text-center transition hover:border-[#2d8cff] hover:bg-[#0d1842]/70",
+                        formErrors.slipFile ? "border-rose-400/70" : "border-[#2a376d]",
+                      ].join(" ")}
+                    >
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleSlipChange}
+                      />
+                      <div className="mb-4 flex h-14 w-14 items-center justify-center rounded-[14px] border border-[#53439a] bg-violet-400/10">
+                        <Upload className="h-7 w-7 text-violet-200/80" />
+                      </div>
+                      <p className="text-base font-semibold text-white/85">
+                        {slipFile ? slipFile.name : "คลิกหรือวางไฟล์มาวางที่นี่"}
+                      </p>
+                      <p className="mt-2 text-sm text-white/35">
+                        รองรับไฟล์ JPG, PNG ไม่เกิน 5MB
+                      </p>
+                    </label>
+                    {formErrors.slipFile ? (
+                      <p className="mt-2 text-xs text-rose-300">{formErrors.slipFile}</p>
+                    ) : null}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleDonateSubmit}
+                    disabled={isSubmitting}
+                    className="mt-10 w-full rounded-[12px] border border-[#47a0ff]/70 bg-[linear-gradient(135deg,#743bff,#1ba4ff)] px-5 py-5 text-lg font-bold text-white shadow-[0_20px_45px_rgba(64,82,255,0.35),inset_0_1px_0_rgba(255,255,255,0.22)] transition hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70 disabled:hover:brightness-100"
+                  >
+                    {isSubmitting ? (
+                      <>
+                        กำลังส่ง...
+                        <Loader2 className="ml-2 inline h-5 w-5 animate-spin" />
+                      </>
+                    ) : (
+                      <>
+                        ยืนยันการโดเนท <Heart className="ml-2 inline h-5 w-5 fill-white/70" />
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </SectionShell>
+
+            <SectionShell className="mt-6 overflow-hidden border-[#25356f] px-3 py-3 sm:px-4 sm:py-4">
+              <div className="grid grid-cols-2 gap-2 rounded-[16px] border border-[#1d2d63] bg-[#07102f]/85 p-2 lg:grid-cols-5">
+                {tabItems.map((item) => {
+                  const Icon = item.icon;
+                  const isActive = activeTab === item.id;
 
                   return (
-                    <SocialButton
-                      key={social.id}
-                      href={social.href}
-                      icon={Icon}
-                      label={social.label}
-                      tone={tone}
-                    />
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => setActiveTab(item.id)}
+                      className={[
+                        "flex items-center justify-center gap-2 rounded-[12px] border px-4 py-3 text-sm font-medium transition",
+                        isActive
+                          ? "border-[#7f55ff] bg-[linear-gradient(135deg,rgba(150,55,255,0.32),rgba(27,88,255,0.42))] text-violet-100 shadow-[0_0_28px_rgba(111,72,255,0.42)]"
+                          : "border-transparent bg-transparent text-white/55 hover:border-[#26376f] hover:bg-[#0d1740] hover:text-white/80",
+                      ].join(" ")}
+                    >
+                      <Icon className="h-4 w-4" />
+                      <span className="truncate">{item.label}</span>
+                    </button>
                   );
                 })}
               </div>
-            </div>
-          </div>
-        </div>
-      </header>
 
-      <main className="mx-auto max-w-[1120px] px-4 pb-10 pt-3 sm:px-10">
-        <GlassPanel className="mt-0">
-          <div className="p-5 sm:p-8">
-            <div className="mb-5 flex items-start justify-between gap-4">
-              <div className="flex items-start gap-3">
-                <Heart className="mt-1 h-7 w-7 fill-[#9c75ff] text-[#a88cff]" />
-                <div>
-                  <h2 className="text-[24px] font-bold leading-8 text-white">
-                    {settings.donation.pageTitle}
-                  </h2>
-                  <p className="mt-1 text-sm text-slate-400">
-                    โดเนทเพื่อเป็นกำลังใจให้สตรีมเมอร์คนโปรดของคุณ
-                  </p>
-                </div>
-              </div>
-
-              <div className="hidden items-center gap-3 rounded-[12px] border border-[#243873] bg-[#101b4b]/90 px-4 py-3 md:flex">
-                <div className="text-right">
-                  <p className="text-sm font-bold text-[#f7d66d]">ปลอดภัย 100%</p>
-                  <p className="text-[11px] text-slate-400">รายการแนบสลิปตรวจสอบด้วยระบบอัจฉริยะ</p>
-                </div>
-                <span className="flex h-11 w-11 items-center justify-center rounded-[12px] bg-[linear-gradient(135deg,#3f75ff,#7b47ff)]">
-                  <ShieldCheck className="h-6 w-6 text-white" />
-                </span>
-              </div>
-            </div>
-
-            <div className="grid gap-7 lg:grid-cols-[1.15fr_0.82fr]">
-              <div className="space-y-5 lg:border-r lg:border-[#22305f] lg:pr-7">
-                <section>
-                  <StepTitle
-                    number="1"
-                    title="ใส่ข้อมูลผู้โดเนท"
-                    subtitle="ชื่อของคุณ (แสดงบนสตรีม)"
-                  />
-                  <input
-                    className="h-10 w-full rounded-[9px] border border-[#1b295e] bg-[#040a24] px-4 text-sm text-white outline-none placeholder:text-slate-600 focus:border-[#3f7dff]"
-                    placeholder="เช่น xB6, Somchai, Anonymous"
-                  />
-                  <label className="mt-3 block text-sm text-slate-400">
-                    ข้อความถึงสตรีมเมอร์ (ไม่บังคับ)
-                  </label>
-                  <textarea
-                    rows={3}
-                    className="mt-2 h-[70px] w-full resize-none rounded-[9px] border border-[#1b295e] bg-[#040a24] px-4 py-3 text-sm text-white outline-none placeholder:text-slate-600 focus:border-[#3f7dff]"
-                    placeholder="ส่งข้อความให้กำลังใจสั้น ๆ ❤️"
-                  />
-                  <p className="mt-1 text-right text-xs text-slate-500">0/255</p>
-                </section>
-
-                <section>
-                  <StepTitle
-                    number="2"
-                    title="เลือกช่องทางการชำระเงิน"
-                    subtitle="สแกน QR Code หรือโอนผ่านบัญชี"
-                  />
-                  <div className="grid gap-3 sm:grid-cols-3">
-                    <PaymentMethodCard
-                      title="PromptPay"
-                      subtitle="สแกน QR Code"
-                      icon={WalletCards}
-                      active
-                    />
-                    <PaymentMethodCard
-                      title="โอนธนาคาร"
-                      subtitle="ทุกธนาคาร"
-                      icon={Building2}
-                    />
-                    <PaymentMethodCard
-                      title="TrueMoney"
-                      subtitle="วอลเล็ต"
-                      icon={WalletCards}
-                    />
-                  </div>
-
-                  <div className="mt-4 grid gap-4 sm:grid-cols-[245px_1fr]">
-                    <div>
-                      <p className="mb-2 text-sm text-slate-400">สแกน QR Code เพื่อชำระเงิน</p>
-                      <div className="rounded-[10px] border border-[#172454] bg-[#061032] p-3">
-                        <div className="mx-auto flex h-[170px] w-[170px] items-center justify-center rounded-[6px] bg-white p-2">
-                          {settings.donation.qrCodeUrl ? (
-                            <img
-                              src={settings.donation.qrCodeUrl}
-                              alt="QR Code"
-                              className="h-full w-full object-contain"
-                            />
-                          ) : (
-                            <FakeQrPattern />
-                          )}
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="pt-0 sm:pt-1">
-                      <p className="mb-2 text-sm text-slate-400">หรือระบุจำนวนเงิน</p>
-                      <input
-                        className="h-10 w-full rounded-[9px] border border-[#1b295e] bg-[#040a24] px-4 text-sm text-white outline-none placeholder:text-slate-600 focus:border-[#3f7dff]"
-                        placeholder="ระบุจำนวนเงิน (บาท)"
-                      />
-                      <p className="mb-2 mt-4 text-sm text-slate-500">ยอดนิยม</p>
-                      <div className="grid grid-cols-4 gap-2">
-                        {quickAmounts.map((amount) => (
-                          <button
-                            type="button"
-                            key={amount}
-                            className="h-10 rounded-[8px] border border-[#1d2b62] bg-[#10183d] text-sm font-semibold text-slate-300 transition hover:border-[#477cff] hover:text-white"
-                          >
-                            {amount}
-                          </button>
-                        ))}
-                      </div>
-                      <p className="mt-6 flex items-center gap-2 text-xs text-slate-500">
-                        <CircleHelp className="h-4 w-4" />
-                        เมื่อชำระเงินแล้ว กรุณาอัปโหลดสลิปเพื่อยืนยันการโดเนท
-                      </p>
-                    </div>
-                  </div>
-                </section>
-              </div>
-
-              <aside className="flex flex-col">
-                <StepTitle number="3" title="อัปโหลดสลิป" subtitle="(ไม่บังคับ)" />
-                <div className="flex min-h-[226px] flex-col items-center justify-center rounded-[16px] border border-dashed border-[#2c3b74] bg-[#071133]/76 px-5 text-center">
-                  <CloudUpload className="mb-3 h-9 w-9 text-[#9a80ff]" />
-                  <p className="text-base font-semibold text-slate-200">
-                    คลิกหรือวางไฟล์มาวางที่นี่
-                  </p>
-                  <p className="mt-1.5 text-xs text-slate-500">
-                    รองรับไฟล์ JPG, PNG ไม่เกิน 5MB
-                  </p>
-                </div>
-
-                <p className="mx-auto mt-4 flex max-w-[330px] items-start gap-2 text-center text-xs leading-5 text-emerald-300/82">
-                  <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0" />
-                  <span>
-                    ข้อมูลการชำระเงินของคุณจะถูกเก็บเป็นความลับ และไม่ถูกเปิดเผยต่อสาธารณะ
-                  </span>
-                </p>
-
-                <div className="flex-1" />
-                <button
-                  type="button"
-                  className="mt-24 h-[62px] w-full rounded-[11px] bg-[linear-gradient(90deg,#6d32ff,#159dff)] text-lg font-bold text-white shadow-[0_0_28px_rgba(54,101,255,0.48)] transition hover:brightness-110 lg:mt-auto"
-                >
-                  ยืนยันการโดเนท
-                  <Heart className="ml-2 inline h-5 w-5 fill-white/55 text-white/55" />
-                </button>
-                <p className="mt-4 text-center text-xs text-[#e4c65d]">
-                  ระบบปลอดภัย 100% by Streamflow
-                </p>
-              </aside>
-            </div>
-          </div>
-        </GlassPanel>
-
-        <GlassPanel className="mt-4">
-          <div className="flex min-h-[150px] flex-col items-center justify-center px-5 py-7 text-center">
-            <div className="-mt-10 mb-2 flex h-11 w-11 items-center justify-center rounded-full border border-[#2a376f] bg-[#071238] text-slate-300">
-              <Lock className="h-5 w-5" />
-            </div>
-            <h3 className="text-[22px] font-bold text-white">เนื้อหาอื่น ๆ ถูกซ่อนไว้</h3>
-            <p className="mt-1.5 text-sm text-slate-400">
-              คลิกเพื่อดูไฮไลต์, คอนเทนต์, ตารางสตรีม และข้อมูลอื่น ๆ เพิ่มเติม
-            </p>
-            <ChevronDown className="mt-4 h-6 w-6 text-white" />
-          </div>
-        </GlassPanel>
-
-        <GlassPanel className="mt-4">
-          <div className="p-5">
-            <div className="grid overflow-hidden rounded-[10px] border border-[#1d2b62] bg-[#071033] sm:grid-cols-5">
-              {tabItems.map((item) => {
-                const Icon = item.icon;
-                const isActive = activeTab === item.id;
-
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => setActiveTab(item.id)}
-                    className={cx(
-                      "flex h-[58px] items-center justify-center gap-2 border-[#1d2b62] px-3 text-sm font-semibold transition sm:border-r sm:last:border-r-0",
-                      isActive
-                        ? "border border-[#ab44ff] bg-[linear-gradient(90deg,rgba(161,49,255,0.26),rgba(18,91,255,0.34))] text-white shadow-[0_0_24px_rgba(118,64,255,0.38)]"
-                        : "text-slate-400 hover:bg-white/5 hover:text-white"
-                    )}
-                  >
-                    <Icon
-                      className={cx(
-                        "h-5 w-5",
-                        item.id === "top" ? "text-[#e8c96d]" : "text-[#a58cff]"
-                      )}
-                    />
-                    <span className="truncate">{item.label}</span>
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="mt-4 rounded-[13px] border border-[#1b295e] bg-[#071133]/74 p-4">
-              {activeTab === "highlights" ? (
-                videos.length > 0 ? (
-                  <div className="grid gap-4 lg:grid-cols-2">
-                    {videos.map((video) => (
-                      <article
-                        key={video.id}
-                        className="overflow-hidden rounded-[13px] border border-[#1d2b62] bg-[#061032]"
-                      >
-                        <div className="relative aspect-video bg-[#040a24]">
-                          {video.thumbnail ? (
-                            <img
-                              src={video.thumbnail}
-                              alt={video.title}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-full items-center justify-center">
-                              <Play className="h-10 w-10 text-slate-500" />
+              <div className="mt-5 rounded-[18px] border border-[#1d2d63] bg-[#09112f]/90 p-4 sm:p-5">
+                {activeTab === "highlights" ? (
+                  videos.length > 0 ? (
+                    <div className="grid gap-4 lg:grid-cols-2">
+                      {videos.map((video) => (
+                        <div
+                          key={video.id}
+                          className="overflow-hidden rounded-[16px] border border-[#1d2d63] bg-[#071028]"
+                        >
+                          <div className="relative aspect-video bg-[#050b1f]">
+                            {video.thumbnail ? (
+                              <img
+                                src={video.thumbnail}
+                                alt={video.title}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-full items-center justify-center bg-[linear-gradient(135deg,rgba(109,59,255,0.25),rgba(24,162,255,0.2))]">
+                                <Play className="h-10 w-10 text-white/70" />
+                              </div>
+                            )}
+                            <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(2,6,23,0.85))]" />
+                            <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
+                              <div>
+                                <p className="text-xs font-medium uppercase tracking-[0.24em] text-cyan-200/80">
+                                  {video.platformLabel}
+                                </p>
+                                <p className="mt-1 text-lg font-semibold text-white">
+                                  {video.title}
+                                </p>
+                              </div>
+                              <a
+                                href={video.url}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur"
+                              >
+                                <Play className="ml-0.5 h-4 w-4 fill-white" />
+                              </a>
                             </div>
-                          )}
-                          <div className="absolute inset-0 bg-[linear-gradient(180deg,transparent,rgba(3,7,32,0.9))]" />
-                          <div className="absolute bottom-4 left-4 right-4 flex items-end justify-between gap-3">
-                            <div>
-                              <p className="text-xs font-semibold uppercase text-cyan-200/75">
-                                {video.platformLabel}
-                              </p>
-                              <p className="mt-1 text-base font-semibold text-white">
-                                {video.title}
-                              </p>
-                            </div>
-                            <a
-                              href={video.url}
-                              target="_blank"
-                              rel="noreferrer"
-                              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/15 text-white backdrop-blur"
-                            >
-                              <Play className="ml-0.5 h-4 w-4 fill-white" />
-                            </a>
                           </div>
                         </div>
-                      </article>
-                    ))}
-                  </div>
-                ) : (
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyState
+                      title="ยังไม่มีไฮไลต์หรือคลิป"
+                      description="ติดตามสตรีมเมอร์เพื่อรับชมไฮไลต์และคลิปเด็ด!"
+                    />
+                  )
+                ) : null}
+
+                {activeTab === "content" ? (
+                  posts.length > 0 ? (
+                    <div className="space-y-4">
+                      {posts.map((post) => (
+                        <div
+                          key={post.id}
+                          className="rounded-[16px] border border-[#1d2d63] bg-[#071028] p-4"
+                        >
+                          {post.image ? (
+                            <img
+                              src={post.image}
+                              alt=""
+                              className="mb-4 h-56 w-full rounded-[18px] object-cover"
+                            />
+                          ) : null}
+                          <p className="text-base leading-7 text-white/85">{post.text}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyState
+                      title="ยังไม่มีคอนเทนต์ล่าสุด"
+                      description="คอนเทนต์ใหม่จะมาแสดงที่นี่เมื่อมีการอัปเดตจากหน้า settings"
+                    />
+                  )
+                ) : null}
+
+                {activeTab === "schedule" ? (
+                  schedule.length > 0 ? (
+                    <div className="grid gap-3">
+                      {schedule.map((item) => (
+                        <div
+                          key={item.id}
+                          className="grid items-center gap-3 rounded-[14px] border border-[#1d2d63] bg-[#071028] px-4 py-4 sm:grid-cols-[90px_1fr_1fr]"
+                        >
+                          <span className="text-sm font-semibold text-cyan-200">{item.day}</span>
+                          <span className="text-sm text-white/75">{item.time}</span>
+                          <span className="text-sm text-white/55">{item.title}</span>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyState
+                      title="ยังไม่มีตารางสตรีม"
+                      description="ตารางสตรีมจะมาแสดงที่นี่เมื่อมีการตั้งค่าไว้ในระบบ"
+                    />
+                  )
+                ) : null}
+
+                {activeTab === "top" ? (
                   <EmptyState
-                    title="ยังไม่มีไฮไลต์หรือคลิป"
-                    description="ติดตามสตรีมเมอร์เพื่อรับชมไฮไลต์และคลิปเด็ด"
+                    title="ยังไม่มี Top Donors"
+                    description="อันดับผู้สนับสนุนจะมาแสดงที่นี่เมื่อมีข้อมูลการโดเนทจริง"
                   />
-                )
-              ) : null}
+                ) : null}
 
-              {activeTab === "content" ? (
-                posts.length > 0 ? (
-                  <div className="space-y-4">
-                    {posts.map((post) => (
-                      <article
-                        key={post.id}
-                        className="rounded-[13px] border border-[#1d2b62] bg-[#061032] p-4"
-                      >
-                        {post.image ? (
-                          <img
-                            src={post.image}
-                            alt=""
-                            className="mb-4 h-56 w-full rounded-[10px] object-cover"
-                          />
-                        ) : null}
-                        <p className="text-sm leading-7 text-slate-200">{post.text}</p>
-                      </article>
-                    ))}
+                {activeTab === "about" ? (
+                  <div className="rounded-[16px] border border-[#1d2d63] bg-[#071028] p-5 sm:p-6">
+                    <p className="text-xs font-semibold uppercase tracking-[0.26em] text-cyan-200/70">
+                      About Streamer
+                    </p>
+                    <h3 className="mt-3 text-2xl font-bold text-white">{settings.profile.name}</h3>
+                    <p className="mt-4 max-w-3xl text-sm leading-7 text-white/70">
+                      {settings.profile.bio}
+                    </p>
+                    <div className="mt-5 flex flex-wrap gap-3">
+                      {socials.map((social) => (
+                        <span
+                          key={social.id}
+                          className="rounded-full border border-[#24346d] bg-white/5 px-4 py-2 text-sm text-white/65"
+                        >
+                          {social.label}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                ) : (
-                  <EmptyState
-                    title="ยังไม่มีคอนเทนต์ล่าสุด"
-                    description="คอนเทนต์ใหม่จะแสดงที่นี่เมื่อมีการอัปเดต"
-                  />
-                )
-              ) : null}
-
-              {activeTab === "schedule" ? (
-                schedule.length > 0 ? (
-                  <div className="grid gap-3">
-                    {schedule.map((item) => (
-                      <div
-                        key={item.id}
-                        className="grid items-center gap-3 rounded-[10px] border border-[#1d2b62] bg-[#061032] px-4 py-3 sm:grid-cols-[90px_1fr_1fr]"
-                      >
-                        <span className="text-sm font-semibold text-cyan-200">{item.day}</span>
-                        <span className="text-sm text-slate-300">{item.time}</span>
-                        <span className="text-sm text-slate-400">{item.title}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <EmptyState
-                    title="ยังไม่มีตารางสตรีม"
-                    description="ตารางสตรีมจะแสดงเมื่อมีการตั้งค่าไว้ในระบบ"
-                  />
-                )
-              ) : null}
-
-              {activeTab === "top" ? (
-                <EmptyState
-                  title="ยังไม่มี Top Donors"
-                  description="อันดับผู้สนับสนุนจะแสดงที่นี่เมื่อมีข้อมูลการโดเนทจริง"
-                />
-              ) : null}
-
-              {activeTab === "about" ? (
-                <div className="rounded-[13px] border border-[#1d2b62] bg-[#061032] p-5">
-                  <p className="text-xs font-semibold uppercase text-cyan-200/70">
-                    About Streamer
-                  </p>
-                  <h3 className="mt-3 text-2xl font-bold text-white">
-                    {settings.profile.name}
-                  </h3>
-                  <p className="mt-3 max-w-3xl text-sm leading-7 text-slate-300">
-                    {settings.profile.bio}
-                  </p>
-                </div>
-              ) : null}
-            </div>
-          </div>
-        </GlassPanel>
-      </main>
-
-      <footer className="border-t border-[#131d4a]">
-        <div className="mx-auto flex max-w-[1120px] flex-col gap-3 px-5 py-7 text-xs text-slate-600 sm:flex-row sm:items-center sm:justify-between">
-          <span>© 2025 Streamflow Co., Ltd. All rights reserved.</span>
-          <div className="flex gap-9">
-            <span>นโยบายความเป็นส่วนตัว</span>
-            <span>เงื่อนไขการให้บริการ</span>
+                ) : null}
+              </div>
+            </SectionShell>
           </div>
         </div>
-      </footer>
+      </main>
+
+      {showSuccessModal ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#020617]/80 px-4 backdrop-blur-md">
+          <div className="w-full max-w-md rounded-[22px] border border-[#2d8cff]/35 bg-[radial-gradient(circle_at_50%_0%,rgba(45,140,255,0.2),transparent_32%),linear-gradient(180deg,rgba(10,18,50,0.98),rgba(5,10,31,0.98))] p-6 text-center shadow-[0_28px_90px_rgba(0,0,0,0.58),inset_0_1px_0_rgba(255,255,255,0.12)]">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full border border-cyan-300/35 bg-cyan-400/10 shadow-[0_0_34px_rgba(34,211,238,0.28)]">
+              <Check className="h-9 w-9 text-cyan-200" />
+            </div>
+            <h2 className="mt-5 text-2xl font-black text-white">ส่งสำเร็จแล้ว!</h2>
+            <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-white/62">
+              {successMessage}
+            </p>
+            <div className="mt-5 rounded-[16px] border border-[#1d2d63] bg-[#07102f]/86 px-4 py-3 text-left">
+              <div className="flex items-center justify-between gap-3 text-sm">
+                <span className="text-white/45">ชื่อผู้โดเนท</span>
+                <span className="truncate font-bold text-white">{donorName}</span>
+              </div>
+              <div className="mt-2 flex items-center justify-between gap-3 text-sm">
+                <span className="text-white/45">ยอดโดเนท</span>
+                <span className="font-black text-cyan-100">฿{promptPayQrAmount}</span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleCloseSuccessModal}
+              className="mt-6 w-full rounded-[12px] border border-[#47a0ff]/70 bg-[linear-gradient(135deg,#743bff,#1ba4ff)] px-5 py-3.5 text-sm font-bold text-white shadow-[0_18px_42px_rgba(64,82,255,0.35),inset_0_1px_0_rgba(255,255,255,0.22)] transition hover:brightness-110"
+            >
+              ปิด
+            </button>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
