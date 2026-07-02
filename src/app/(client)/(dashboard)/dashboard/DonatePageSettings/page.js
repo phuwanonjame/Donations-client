@@ -62,7 +62,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import DonatePageRenderer from "@/components/donation/shared/DonatePageRenderer";
+import PublicDonatePage from "@/components/donation/shared/PublicDonatePage";
 import { donationDecorationPresets } from "@/components/donation/shared/donatePageConfig";
 import { getVideoEmbedData } from "@/components/donation/shared/videoEmbed";
 import {
@@ -4010,15 +4010,10 @@ const LivePreview = memo(function LivePreview({
   optimizeForEditor = false,
   fullBleed = false,
 }) {
-  return (
-    <DonatePageRenderer
-      settings={settings}
-      preview
-      optimizeForEditor={optimizeForEditor}
-      matchLiveLayout
-      fullBleedPreview={fullBleed}
-    />
-  );
+  void optimizeForEditor;
+  void fullBleed;
+
+  return <PublicDonatePage settings={settings} />;
 });
 
 const PREVIEW_VIEWPORTS = {
