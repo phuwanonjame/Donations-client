@@ -403,15 +403,15 @@ export default function PublicDonatePage({ settings }) {
                         <div className="flex h-8 w-8 items-center justify-center rounded-full border border-[#2e73ff] bg-[#10285f] text-sm font-bold text-cyan-100 shadow-[0_0_18px_rgba(34,108,255,0.35)]">
                           2
                         </div>
-                      <div>
-                        <p className="font-semibold text-white">เลือกช่องทางการชำระเงิน</p>
-                        <p className="text-xs text-white/40">สแกน QR หรือโอนผ่านบัญชี</p>
+                        <div>
+                          <p className="font-semibold text-white">เลือกช่องทางการชำระเงิน</p>
+                          <p className="text-xs text-white/40">สแกน QR หรือโอนผ่านบัญชี</p>
+                        </div>
+                      </div>
+                      <div className="w-fit rounded-full border border-[#2d8cff]/30 bg-[#10285f]/55 px-4 py-2 text-sm font-bold text-cyan-100 shadow-[0_0_18px_rgba(45,140,255,0.14)]">
+                        โอนเงินขั้นต่ำ ฿{settings.donation.minAmount}
                       </div>
                     </div>
-                    <div className="w-fit rounded-full border border-[#2d8cff]/30 bg-[#10285f]/55 px-4 py-2 text-sm font-bold text-cyan-100 shadow-[0_0_18px_rgba(45,140,255,0.14)]">
-                      โอนเงินขั้นต่ำ ฿{settings.donation.minAmount}
-                    </div>
-                  </div>
 
                     <div className="grid gap-3 sm:grid-cols-3">
                       <PaymentMethodCard
@@ -546,7 +546,7 @@ export default function PublicDonatePage({ settings }) {
                             className="w-full rounded-[12px] border border-[#17275a] bg-[#050b26]/90 px-4 py-3 text-sm text-white outline-none placeholder:text-white/24 focus:border-[#2d8cff]"
                             placeholder={`ขั้นต่ำ ${settings.donation.minAmount} บาท`}
                           />
-	                          <div className="mt-4">
+                          <div className="mt-4">
                             <p className="mb-3 text-sm font-medium text-white/45">ยอดนิยม</p>
                             <div className="grid grid-cols-4 gap-2">
                               {(settings.donation.quickAmounts || [10, 20, 100, 500])
