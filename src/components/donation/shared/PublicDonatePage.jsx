@@ -13,7 +13,7 @@ import {
   Music2,
   Play,
   ShieldCheck,
-  Trophy,
+  ImageIcon,
   Upload,
   UserRound,
 } from "lucide-react";
@@ -29,13 +29,14 @@ const tabItems = [
   { id: "highlights", label: "ไฮไลต์ & คลิปเด็ด", icon: Play },
   { id: "content", label: "คอนเทนต์ล่าสุด", icon: Heart },
   { id: "schedule", label: "ตารางสตรีม", icon: CalendarDays },
-  { id: "top", label: "Top Donors", icon: Trophy },
+  { id: "gallery", label: "รูปภาพ", icon: ImageIcon },
   { id: "about", label: "เกี่ยวกับสตรีมเมอร์", icon: UserRound },
 ];
 
 function PaymentMethodCard({
   title,
   subtitle,
+  logoSrc,
   active = false,
   onClick,
 }) {
@@ -50,6 +51,15 @@ function PaymentMethodCard({
           : "border-[#1d2c61] bg-[#0a1435] hover:border-[#344989] hover:bg-[#0d1842]",
       ].join(" ")}
     >
+      {logoSrc ? (
+        <div className="flex h-10 w-12 shrink-0 items-center justify-center rounded-[10px] bg-white p-1.5">
+          <img
+            src={logoSrc}
+            alt={title}
+            className="max-h-full max-w-full object-contain"
+          />
+        </div>
+      ) : null}
       <div className="min-w-0">
         <p className="truncate text-sm font-bold text-white">{title}</p>
         <p className="truncate text-xs text-white/45">{subtitle}</p>
@@ -130,6 +140,11 @@ export default function PublicDonatePage({ settings }) {
   const schedule = useMemo(
     () => (settings.schedule || []).filter((item) => item.enabled).slice(0, 6),
     [settings.schedule]
+  );
+
+  const gallery = useMemo(
+    () => (settings.gallery || []).filter((item) => item.enabled).slice(0, 6),
+    [settings.gallery]
   );
 
   const bankChannel = settings.donation?.channels?.bank || {};
@@ -323,7 +338,7 @@ export default function PublicDonatePage({ settings }) {
             </div>
           </div>
 
-          <div className="px-3 py-4 sm:px-5 lg:px-6 lg:py-6">
+          <div className="">
             <SectionShell className="border-[#30427d] bg-[radial-gradient(circle_at_54%_0%,rgba(43,91,255,0.22),transparent_30%),linear-gradient(180deg,rgba(11,22,62,0.98),rgba(6,12,39,0.98))] px-4 py-5 sm:px-7 lg:px-10 lg:py-9">
               <div className="mb-7 flex items-start gap-3">
                 <div className="mt-1 flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-500 text-white shadow-[0_0_24px_rgba(139,92,246,0.35)]">
@@ -417,160 +432,153 @@ export default function PublicDonatePage({ settings }) {
                       <PaymentMethodCard
                         title="PromptPay"
                         subtitle="สแกน QR Code"
+                        logoSrc="/imgs/prompt-pay-logo.png"
                         active={selectedPayment === "promptpay"}
                         onClick={() => setSelectedPayment("promptpay")}
                       />
                       <PaymentMethodCard
                         title="โอนธนาคาร"
                         subtitle="ทุกธนาคาร"
+                        logoSrc="/imgs/bank-logo.png"
                         active={selectedPayment === "bank"}
                         onClick={() => setSelectedPayment("bank")}
                       />
                     </div>
 
-                    <div className="mt-5 rounded-[16px] border border-[#1d2d63] bg-[#07102f]/80 p-5">
-                      <p className="text-base font-bold text-white">วิธีการโอนเงิน:</p>
-                      <div className="mt-4 text-sm leading-7 text-white/68">
-                        {selectedPayment === "promptpay" ? (
-                          <ol className="list-decimal space-y-3 pl-5">
-                            <li>
-                              เปิดแอปธนาคารที่คุณใช้อยู่ (เช่น K PLUS, NEXT, SCB EASY) ที่มีฟีเจอร์สแกน QR Code และแสดงสลิปการโอนเงิน
-                            </li>
-                            <li>
-                              ใส่จำนวนเงินที่อยากโดเนท แล้วสแกน QR Code พร้อมเพย์ที่แสดงบนหน้าเว็บ
-                            </li>
-                            <li>
-                              หลังโอนเสร็จ แค่แนบสลิปการโอนเงินในเว็บ แล้วกดปุ่มเปย์ได้เลย!
-                            </li>
-                          </ol>
-                        ) : selectedPayment === "bank" ? (
-                          <ol className="list-decimal space-y-3 pl-5">
-                            <li>
-                              เปิดแอปธนาคารที่คุณใช้อยู่ (เช่น K PLUS, NEXT, SCB EASY) ที่สามารถแสดงสลิปการโอนเงินได้
-                            </li>
-                            <li>
-                              โอนเงินตามจำนวนที่อยากโดเนทไปยังบัญชีที่แสดงบนหน้าเว็บ
-                            </li>
-                            <li>
-                              พอโอนเสร็จแล้ว แค่แนบสลิปในเว็บ แล้วกดปุ่มเปย์ได้เลย!
-                            </li>
-                          </ol>
-                        ) : (
-                          <div className="space-y-3">
-                            <p>
-                              เลือกช่องทางที่ต้องการ ใส่จำนวนเงินที่อยากโดเนท แล้วทำรายการผ่านแอปหรือวอลเล็ตของคุณ
-                            </p>
-                            <p>
-                              หลังชำระเงินเสร็จ แนบสลิปการโอนเงินในเว็บ แล้วกดปุ่มยืนยันการโดเนท
-                            </p>
+                    <div className="mt-5 grid gap-5 sm:grid-cols-[190px_1fr]">
+                      {selectedPayment === "bank" ? (
+                        <div className="sm:col-span-2">
+                          <p className="mb-3 text-sm font-medium text-white/58">
+                            ข้อมูลบัญชีสำหรับโอนเงิน
+                          </p>
+                          <div className="grid gap-3 rounded-[14px] border border-[#18285c] bg-[#07102f] p-4">
+                            <div className="rounded-[12px] border border-[#17275a] bg-[#050b26]/90 px-4 py-3">
+                              <p className="text-xs text-white/40">ชื่อบัญชี</p>
+                              <p className="mt-1 text-base font-bold text-white">
+                                {bankChannel.accountName || "ยังไม่ได้ระบุชื่อบัญชี"}
+                              </p>
+                            </div>
+                            <div className="rounded-[12px] border border-[#17275a] bg-[#050b26]/90 px-4 py-3">
+                              <div className="flex items-center justify-between gap-3">
+                                <div className="min-w-0">
+                                  <p className="text-xs text-white/40">เลขบัญชี</p>
+                                  <p className="mt-1 break-all text-xl font-black tracking-wide text-cyan-100">
+                                    {bankChannel.accountNumber || "ยังไม่ได้ระบุเลขบัญชี"}
+                                  </p>
+                                </div>
+                                <button
+                                  type="button"
+                                  onClick={handleCopyAccountNumber}
+                                  disabled={!bankChannel.accountNumber}
+                                  className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[#2d8cff]/35 bg-[#10285f]/70 px-3 py-1.5 text-xs font-semibold text-cyan-100 transition hover:border-[#2d8cff] hover:bg-[#14306d] disabled:cursor-not-allowed disabled:opacity-45"
+                                >
+                                  {copiedAccount ? (
+                                    <Check className="h-3.5 w-3.5" />
+                                  ) : (
+                                    <Copy className="h-3.5 w-3.5" />
+                                  )}
+                                  {copiedAccount ? "Copied" : "Copy"}
+                                </button>
+                              </div>
+                            </div>
                           </div>
-                        )}
-                      </div>
+                        </div>
+                      ) : (
+                        <>
+                          <div>
+                            <p className="mb-3 text-sm font-medium text-white/58">
+                              *สแกน QR Code เพื่อชำระเงิน
+                            </p>
+                            <div className="rounded-[14px] border border-[#18285c] bg-[#07102f] p-3">
+                              <div className="flex h-[180px] items-center justify-center rounded-[10px] p-0">
+                                <img
+                                  src={promptPayQrUrl}
+                                  alt="QR Code"
+                                  className="h-full w-full rounded-[6px] object-contain"
+                                />
+                              </div>
+                            </div>
+                            <a
+                              href={promptPayQrUrl}
+                              download={`promptpay-${promptPayQrAmount}.png`}
+                              className="mx-auto mt-3 flex w-fit items-center gap-1.5 rounded-full border border-[#2d8cff]/35 bg-[#10285f]/70 px-3 py-1.5 text-xs font-semibold text-cyan-100 transition hover:border-[#2d8cff] hover:bg-[#14306d]"
+                            >
+                              <Download className="h-3.5 w-3.5" />
+                              Save QR
+                            </a>
+                          </div>
+
+                          <div>
+                            <p className="mb-3 text-sm font-medium text-white/58">
+                              หรือระบุจำนวนเงิน
+                            </p>
+                            <input
+                              type="number"
+                              min={1}
+                              value={customAmount}
+                              onChange={handleAmountInput}
+                              className="w-full rounded-[12px] border border-[#17275a] bg-[#050b26]/90 px-4 py-3 text-sm text-white outline-none placeholder:text-white/24 focus:border-[#2d8cff]"
+                              placeholder={`ขั้นต่ำ ${settings.donation.minAmount} บาท`}
+                            />
+                            <div className="mt-4">
+                              <p className="mb-3 text-sm font-medium text-white/45">ยอดนิยม</p>
+                              <div className="grid grid-cols-4 gap-2">
+                                {(settings.donation.quickAmounts || [10, 20, 100, 500])
+                                  .slice(0, 4)
+                                  .map((amount) => (
+                                    <button
+                                      type="button"
+                                      key={amount}
+                                      onClick={() => handleQuickAmount(amount)}
+                                      className={[
+                                        "rounded-[10px] border py-3 text-sm font-semibold transition hover:border-[#2d8cff] hover:bg-[#14275e] hover:text-white",
+                                        donationAmount === amount
+                                          ? "border-[#2d8cff] bg-[#14275e] text-cyan-100 shadow-[0_0_18px_rgba(45,140,255,0.22)]"
+                                          : "border-[#1b2a60] bg-[#101b44] text-white/75",
+                                      ].join(" ")}
+                                    >
+                                      ฿{amount}
+                                    </button>
+                                  ))}
+                              </div>
+                            </div>
+                          </div>
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
 
                 <div className="flex min-h-full flex-col border-t border-[#1e2e68] pt-6 xl:border-l xl:border-t-0 xl:pl-7 xl:pt-0">
-                  <div className="mb-6 grid gap-5 sm:grid-cols-[190px_1fr]">
-                    {selectedPayment === "bank" ? (
-                      <div className="sm:col-span-2">
-                        <p className="mb-3 text-sm font-medium text-white/58">
-                          ข้อมูลบัญชีสำหรับโอนเงิน
-                        </p>
-                        <div className="grid gap-3 rounded-[14px] border border-[#18285c] bg-[#07102f] p-4">
-                          <div className="rounded-[12px] border border-[#17275a] bg-[#050b26]/90 px-4 py-3">
-                            <p className="text-xs text-white/40">ชื่อบัญชี</p>
-                            <p className="mt-1 text-base font-bold text-white">
-                              {bankChannel.accountName || "ยังไม่ได้ระบุชื่อบัญชี"}
-                            </p>
-                          </div>
-                          <div className="rounded-[12px] border border-[#17275a] bg-[#050b26]/90 px-4 py-3">
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="min-w-0">
-                                <p className="text-xs text-white/40">เลขบัญชี</p>
-                                <p className="mt-1 break-all text-xl font-black tracking-wide text-cyan-100">
-                                  {bankChannel.accountNumber || "ยังไม่ได้ระบุเลขบัญชี"}
-                                </p>
-                              </div>
-                              <button
-                                type="button"
-                                onClick={handleCopyAccountNumber}
-                                disabled={!bankChannel.accountNumber}
-                                className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-[#2d8cff]/35 bg-[#10285f]/70 px-3 py-1.5 text-xs font-semibold text-cyan-100 transition hover:border-[#2d8cff] hover:bg-[#14306d] disabled:cursor-not-allowed disabled:opacity-45"
-                              >
-                                {copiedAccount ? (
-                                  <Check className="h-3.5 w-3.5" />
-                                ) : (
-                                  <Copy className="h-3.5 w-3.5" />
-                                )}
-                                {copiedAccount ? "Copied" : "Copy"}
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    ) : (
-                      <>
-                        <div>
-                          <p className="mb-3 text-sm font-medium text-white/58">
-                            *สแกน QR Code เพื่อชำระเงิน
-                          </p>
-                          <div className="rounded-[14px] border border-[#18285c] bg-[#07102f] p-3">
-                            <div className="flex h-[180px] items-center justify-center rounded-[10px] p-0">
-                              <img
-                                src={promptPayQrUrl}
-                                alt="QR Code"
-                                className="h-full w-full rounded-[6px] object-contain"
-                              />
-                            </div>
-                          </div>
-                          <a
-                            href={promptPayQrUrl}
-                            download={`promptpay-${promptPayQrAmount}.png`}
-                            className="mx-auto mt-3 flex w-fit items-center gap-1.5 rounded-full border border-[#2d8cff]/35 bg-[#10285f]/70 px-3 py-1.5 text-xs font-semibold text-cyan-100 transition hover:border-[#2d8cff] hover:bg-[#14306d]"
-                          >
-                            <Download className="h-3.5 w-3.5" />
-                            Save QR
-                          </a>
-                        </div>
-
-                        <div>
-                          <p className="mb-3 text-sm font-medium text-white/58">
-                            หรือระบุจำนวนเงิน
-                          </p>
-                          <input
-                            type="number"
-                            min={1}
-                            value={customAmount}
-                            onChange={handleAmountInput}
-                            className="w-full rounded-[12px] border border-[#17275a] bg-[#050b26]/90 px-4 py-3 text-sm text-white outline-none placeholder:text-white/24 focus:border-[#2d8cff]"
-                            placeholder={`ขั้นต่ำ ${settings.donation.minAmount} บาท`}
-                          />
-                          <div className="mt-4">
-                            <p className="mb-3 text-sm font-medium text-white/45">ยอดนิยม</p>
-                            <div className="grid grid-cols-4 gap-2">
-                              {(settings.donation.quickAmounts || [10, 20, 100, 500])
-                                .slice(0, 4)
-                                .map((amount) => (
-                                  <button
-                                    type="button"
-                                    key={amount}
-                                    onClick={() => handleQuickAmount(amount)}
-                                    className={[
-                                      "rounded-[10px] border py-3 text-sm font-semibold transition hover:border-[#2d8cff] hover:bg-[#14275e] hover:text-white",
-                                      donationAmount === amount
-                                        ? "border-[#2d8cff] bg-[#14275e] text-cyan-100 shadow-[0_0_18px_rgba(45,140,255,0.22)]"
-                                        : "border-[#1b2a60] bg-[#101b44] text-white/75",
-                                    ].join(" ")}
-                                  >
-                                    ฿{amount}
-                                  </button>
-                                ))}
-                            </div>
-                          </div>
-                        </div>
-                      </>
-                    )}
+                  <div className="mb-6 rounded-[16px] border border-[#1d2d63] bg-[#07102f]/80 p-5">
+                    <p className="text-base font-bold text-white">วิธีการโอนเงิน</p>
+                    <ol className="mt-4 list-decimal space-y-3 pl-5 text-sm leading-6 text-white/68">
+                      {selectedPayment === "bank" ? (
+                        <>
+                          <li>
+                            เปิดแอปธนาคารที่สามารถแสดงสลิปการโอนเงินได้
+                          </li>
+                          <li>
+                            โอนเงินตามจำนวนที่อยากโดเนทไปยังบัญชีที่แสดงบนหน้าเว็บ
+                          </li>
+                          <li>
+                            แนบสลิปในเว็บ แล้วกดปุ่มยืนยันการโดเนท
+                          </li>
+                        </>
+                      ) : (
+                        <>
+                          <li>
+                            เปิดแอปธนาคารที่มีฟีเจอร์สแกน QR Code และแสดงสลิปได้
+                          </li>
+                          <li>
+                            ใส่จำนวนเงินที่อยากโดเนท แล้วสแกน QR Code พร้อมเพย์
+                          </li>
+                          <li>
+                            แนบสลิปการโอนเงินในเว็บ แล้วกดปุ่มยืนยันการโดเนท
+                          </li>
+                        </>
+                      )}
+                    </ol>
                   </div>
 
                   <div>
@@ -629,8 +637,8 @@ export default function PublicDonatePage({ settings }) {
               </div>
             </SectionShell>
 
-            <SectionShell className="mt-6 overflow-hidden border-[#25356f] px-3 py-3 sm:px-4 sm:py-4">
-              <div className="grid grid-cols-2 gap-2 rounded-[16px] border border-[#1d2d63] bg-[#07102f]/85 p-2 lg:grid-cols-5">
+            <section className="mt-6 overflow-hidden rounded-[22px] border border-[#25356f]/80 bg-[linear-gradient(180deg,rgba(10,17,49,0.78),rgba(8,13,39,0.9))] p-3 shadow-[0_22px_80px_rgba(3,7,24,0.32)] sm:p-4">
+              <div className="grid grid-cols-2 gap-2 rounded-[16px] bg-[#07102f]/75 p-2 lg:grid-cols-5">
                 {tabItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = activeTab === item.id;
@@ -643,8 +651,8 @@ export default function PublicDonatePage({ settings }) {
                       className={[
                         "flex items-center justify-center gap-2 rounded-[12px] border px-4 py-3 text-sm font-medium transition",
                         isActive
-                          ? "border-[#7f55ff] bg-[linear-gradient(135deg,rgba(150,55,255,0.32),rgba(27,88,255,0.42))] text-violet-100 shadow-[0_0_28px_rgba(111,72,255,0.42)]"
-                          : "border-transparent bg-transparent text-white/55 hover:border-[#26376f] hover:bg-[#0d1740] hover:text-white/80",
+                          ? "border-[#7f55ff] bg-[linear-gradient(135deg,rgba(150,55,255,0.34),rgba(27,88,255,0.46))] text-violet-100 shadow-[0_0_28px_rgba(111,72,255,0.34)]"
+                          : "border-[#1d2d63]/70 bg-transparent text-white/55 hover:border-[#26376f] hover:bg-[#0d1740] hover:text-white/80",
                       ].join(" ")}
                     >
                       <Icon className="h-4 w-4" />
@@ -654,7 +662,7 @@ export default function PublicDonatePage({ settings }) {
                 })}
               </div>
 
-              <div className="mt-5 rounded-[18px] border border-[#1d2d63] bg-[#09112f]/90 p-4 sm:p-5">
+              <div className="mt-5 rounded-[18px] bg-[#09112f]/74 p-4 sm:p-5">
                 {activeTab === "highlights" ? (
                   videos.length > 0 ? (
                     <div className="grid gap-4 lg:grid-cols-2">
@@ -712,16 +720,33 @@ export default function PublicDonatePage({ settings }) {
                       {posts.map((post) => (
                         <div
                           key={post.id}
-                          className="rounded-[16px] border border-[#1d2d63] bg-[#071028] p-4"
+                          className="overflow-hidden rounded-[18px] border border-[#1d2d63] bg-[#071028]"
                         >
-                          {post.image ? (
-                            <img
-                              src={post.image}
-                              alt=""
-                              className="mb-4 h-56 w-full rounded-[18px] object-cover"
-                            />
+                          <div className="flex items-center gap-3 border-b border-[#1d2d63]/80 px-4 py-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[linear-gradient(135deg,#2563eb,#7c3aed)] text-sm font-black text-white">
+                              {avatarFallback}
+                            </div>
+                            <div>
+                              <p className="text-sm font-semibold text-white">
+                                {settings.profile.name}
+                              </p>
+                              <p className="text-xs text-white/35">คอนเทนต์ล่าสุด</p>
+                            </div>
+                          </div>
+                          {post.text ? (
+                            <p className="whitespace-pre-line px-4 py-4 text-base leading-7 text-white/85">
+                              {post.text}
+                            </p>
                           ) : null}
-                          <p className="text-base leading-7 text-white/85">{post.text}</p>
+                          {post.image ? (
+                            <div className="flex min-h-[240px] items-center justify-center bg-[#04091f]/70">
+                              <img
+                                src={post.image}
+                                alt=""
+                                className="max-h-[520px] w-full object-contain"
+                              />
+                            </div>
+                          ) : null}
                         </div>
                       ))}
                     </div>
@@ -735,15 +760,35 @@ export default function PublicDonatePage({ settings }) {
 
                 {activeTab === "schedule" ? (
                   schedule.length > 0 ? (
-                    <div className="grid gap-3">
-                      {schedule.map((item) => (
+                    <div className="overflow-hidden rounded-[18px] bg-[#071028]/82">
+                      {schedule.map((item, index) => (
                         <div
                           key={item.id}
-                          className="grid items-center gap-3 rounded-[14px] border border-[#1d2d63] bg-[#071028] px-4 py-4 sm:grid-cols-[90px_1fr_1fr]"
+                          className={[
+                            "grid gap-4 px-4 py-4 sm:grid-cols-[92px_1fr_auto] sm:items-center sm:px-5",
+                            index > 0 ? "border-t border-white/8" : "",
+                          ].join(" ")}
                         >
-                          <span className="text-sm font-semibold text-cyan-200">{item.day}</span>
-                          <span className="text-sm text-white/75">{item.time}</span>
-                          <span className="text-sm text-white/55">{item.title}</span>
+                          <div className="flex items-center gap-3">
+                            <span className="text-xs font-semibold text-white/24">
+                              {String(index + 1).padStart(2, "0")}
+                            </span>
+                            <span className="text-sm font-bold text-cyan-100">
+                              {item.day}
+                            </span>
+                          </div>
+                          <div className="min-w-0 border-l border-cyan-300/18 pl-4">
+                            <p className="truncate text-base font-semibold text-white">
+                              {item.title}
+                            </p>
+                            <p className="mt-1 text-xs text-white/38">
+                              Stream schedule
+                            </p>
+                          </div>
+                          <div className="flex w-fit items-center gap-2 rounded-full bg-white/[0.04] px-3 py-1.5 text-sm font-medium text-white/74 sm:justify-self-end">
+                            <span className="h-1.5 w-1.5 rounded-full bg-cyan-300" />
+                            {item.time}
+                          </div>
                         </div>
                       ))}
                     </div>
@@ -755,11 +800,30 @@ export default function PublicDonatePage({ settings }) {
                   )
                 ) : null}
 
-                {activeTab === "top" ? (
-                  <EmptyState
-                    title="ยังไม่มี Top Donors"
-                    description="อันดับผู้สนับสนุนจะมาแสดงที่นี่เมื่อมีข้อมูลการโดเนทจริง"
-                  />
+                {activeTab === "gallery" ? (
+                  gallery.length > 0 ? (
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                      {gallery.map((item) => (
+                        <div
+                          key={item.id}
+                          className="overflow-hidden rounded-[16px] border border-[#1d2d63] bg-[#071028]"
+                        >
+                          <div className="flex aspect-square items-center justify-center bg-[#04091f]/70">
+                            <img
+                              src={item.url}
+                              alt={`Gallery ${item.id}`}
+                              className="h-full w-full object-cover transition duration-300 hover:scale-105"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <EmptyState
+                      title="ยังไม่มีรูปภาพ"
+                      description="รูปจากเมนูแกลเลอรีจะแสดงที่นี่เมื่อเปิดใช้งานไว้"
+                    />
+                  )
                 ) : null}
 
                 {activeTab === "about" ? (
@@ -784,7 +848,7 @@ export default function PublicDonatePage({ settings }) {
                   </div>
                 ) : null}
               </div>
-            </SectionShell>
+            </section>
           </div>
         </div>
       </main>

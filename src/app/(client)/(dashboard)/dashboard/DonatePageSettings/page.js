@@ -28,7 +28,6 @@ import {
   Sparkles,
   Shield,
   Gift,
-  ExternalLink,
   Copy,
   X,
   Play,
@@ -36,7 +35,6 @@ import {
   Users,
   Headphones,
   Camera,
-  Settings2,
   ChevronDown,
   Tablet,
   Smartphone,
@@ -269,13 +267,13 @@ const navItems = [
   {
     id: "donation",
     title: "ช่องทางรับเงิน",
-    desc: "ตั้งค่าช่องทางรับเงินและฟอร์มโดเนท",
+    desc: "ตั้งค่าช่องทางรับเงิน",
     icon: Heart,
   },
   {
     id: "filter",
     title: "ข้อความ / ฟิลเตอร์",
-    desc: "จัดการข้อความและตัวกรอง",
+    desc: "ข้อความฟอร์มและตัวกรอง",
     icon: MessageSquare,
   },
   {
@@ -301,12 +299,6 @@ const navItems = [
     title: "ตารางสตรีม",
     desc: "กำหนดวันและเวลาไลฟ์",
     icon: CalendarDays,
-  },
-  {
-    id: "display",
-    title: "การแสดงผล",
-    desc: "จัดการการแสดงผลส่วนต่างๆ",
-    icon: Monitor,
   },
 ];
 
@@ -908,13 +900,11 @@ export default function DonatePageSettings() {
   const [settings, setSettings] = useState(buildInitialSettings);
   const [saveMessage, setSaveMessage] = useState("");
   const [customProfanityInput, setCustomProfanityInput] = useState("");
-  const [editorView, setEditorView] = useState("settings");
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [previewViewport, setPreviewViewport] = useState("desktop");
   const deferredSettings = useDeferredValue(settings);
   const avatarFileInputRef = useRef(null);
   const bannerFileInputRef = useRef(null);
-  const backgroundFileInputRef = useRef(null);
   const galleryFileInputRef = useRef(null);
 
   const selectedTheme = useMemo(() => {
@@ -1024,16 +1014,6 @@ export default function DonatePageSettings() {
       ...prev,
       music: {
         ...prev.music,
-        [key]: value,
-      },
-    }));
-  };
-
-  const updateDisplay = (key, value) => {
-    setSettings((prev) => ({
-      ...prev,
-      display: {
-        ...prev.display,
         [key]: value,
       },
     }));
@@ -1424,9 +1404,6 @@ export default function DonatePageSettings() {
   };
 
   const scrollToSection = (id) => {
-    if (editorView === "preview") {
-      setEditorView("settings");
-    }
     setActiveTab(id);
   };
 
@@ -1555,79 +1532,19 @@ export default function DonatePageSettings() {
               </div>
 
               <div className="flex items-center gap-2">
-                <div className="hidden items-center rounded-2xl border border-slate-800 bg-slate-950/70 p-1 md:flex">
-                  <button
-                    type="button"
-                    onClick={() => setEditorView("settings")}
-                    className={cx(
-                      "rounded-xl px-3 py-2 text-sm font-medium transition",
-                      editorView === "settings"
-                        ? "bg-cyan-500/15 text-cyan-300"
-                        : "text-slate-400 hover:text-white"
-                    )}
-                  >
-                    Settings
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setEditorView("preview")}
-                    className={cx(
-                      "rounded-xl px-3 py-2 text-sm font-medium transition",
-                      editorView === "preview"
-                        ? "bg-cyan-500/15 text-cyan-300"
-                        : "text-slate-400 hover:text-white"
-                    )}
-                  >
-                    Preview
-                  </button>
-                </div>
-
-                {editorView === "preview" && (
-                  <Button
-                    variant="outline"
-                    className="hidden border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white md:inline-flex"
-                    onClick={() => setIsPreviewModalOpen(true)}
-                  >
-                    <Eye className="mr-2 h-4 w-4" />
-                    ดูตัวอย่างเต็มจอ
-                  </Button>
-                )}
-
+                <Button
+                  variant="outline"
+                  className="border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white"
+                  onClick={() => setIsPreviewModalOpen(true)}
+                >
+                  <Eye className="mr-2 h-4 w-4" />
+                  ดูตัวอย่างเต็มจอ
+                </Button>
               </div>
             </div>
           </header>
 
-          <div className="border-b border-slate-800/80 bg-slate-950/70 px-4 py-3 md:hidden lg:px-6">
-            <div className="grid grid-cols-2 gap-2 rounded-2xl border border-slate-800 bg-slate-950/80 p-1">
-              <button
-                type="button"
-                onClick={() => setEditorView("settings")}
-                className={cx(
-                  "rounded-xl px-3 py-2 text-sm font-medium transition",
-                  editorView === "settings"
-                    ? "bg-cyan-500/15 text-cyan-300"
-                    : "text-slate-400"
-                )}
-              >
-                Settings
-              </button>
-              <button
-                type="button"
-                onClick={() => setEditorView("preview")}
-                className={cx(
-                  "rounded-xl px-3 py-2 text-sm font-medium transition",
-                  editorView === "preview"
-                    ? "bg-cyan-500/15 text-cyan-300"
-                    : "text-slate-400"
-                )}
-              >
-                Preview
-              </button>
-            </div>
-          </div>
-
           <div className="p-4 lg:p-6">
-            {editorView === "settings" ? (
             <div className="space-y-5">
               {activeTab === "theme" && (
               <SectionCard
@@ -1851,11 +1768,11 @@ export default function DonatePageSettings() {
                     <div className="mb-5">
                       <p className="text-sm font-semibold text-white">รูปภาพโปรไฟล์</p>
                       <p className="text-xs text-slate-500">
-                        อัปโหลดรูปโปรไฟล์ รูปปก และรูปพื้นหลังสำหรับหน้าโดเนท
+                        อัปโหลดรูปโปรไฟล์และรูปปกสำหรับหน้าโดเนท
                       </p>
                     </div>
 
-                    <div className="grid gap-4 xl:grid-cols-3">
+                    <div className="grid gap-4 xl:grid-cols-2">
                       <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
                         <p className="mb-3 text-sm font-medium text-slate-300">
                           รูปโปรไฟล์
@@ -1919,34 +1836,6 @@ export default function DonatePageSettings() {
                         />
                       </div>
 
-                      <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
-                        <p className="mb-3 text-sm font-medium text-slate-300">
-                          รูปพื้นหลัง
-                        </p>
-                        <div
-                          className="h-24 rounded-xl bg-cover bg-center"
-                          style={{
-                            backgroundImage: `url(${settings.profile.backgroundUrl || settings.profile.bannerUrl})`,
-                          }}
-                        />
-                        <Button
-                          variant="outline"
-                          className="mt-4 w-full border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white"
-                          onClick={() => backgroundFileInputRef.current?.click()}
-                        >
-                          <Upload className="mr-2 h-4 w-4" />
-                          อัปรูปพื้นหลัง
-                        </Button>
-                        <input
-                          ref={backgroundFileInputRef}
-                          type="file"
-                          accept="image/*"
-                          className="hidden"
-                          onChange={(e) =>
-                            handleProfileImageUpload("backgroundUrl", e.target.files?.[0])
-                          }
-                        />
-                      </div>
                     </div>
 
                   </div>
@@ -2129,39 +2018,6 @@ export default function DonatePageSettings() {
                 icon={Gift}
               >
                 <div className="space-y-5">
-                  <div className="rounded-3xl border border-slate-800 bg-slate-950/40 p-5">
-                    <div className="mb-4">
-                      <p className="font-semibold text-white">ยอดโดเนทขั้นต่ำ</p>
-                      <p className="text-xs text-slate-500">
-                        กำหนดยอดเริ่มต้นขั้นต่ำที่ผู้สนับสนุนต้องกรอก
-                      </p>
-                    </div>
-
-                    <div className="grid gap-4 md:grid-cols-2">
-                      <Field label="ยอดโดเนทขั้นต่ำ">
-                        <GlassInput
-                          type="number"
-                          min="0"
-                          value={settings.donation.minAmount}
-                          onChange={(e) =>
-                            updateDonation("minAmount", Number(e.target.value || 0))
-                          }
-                        />
-                      </Field>
-                    </div>
-
-                    <div className="mt-4 flex justify-end">
-                      <Button
-                        variant="outline"
-                        className="border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white"
-                        onClick={() => handleSaveSettings("draft")}
-                      >
-                        <Save className="mr-2 h-4 w-4" />
-                        บันทึกส่วนนี้
-                      </Button>
-                    </div>
-                  </div>
-
                   <div className="rounded-3xl border border-slate-800 bg-slate-950/40 p-5">
                     <div className="mb-4">
                       <p className="font-semibold text-white">ช่องทางรับเงิน</p>
@@ -2522,8 +2378,8 @@ export default function DonatePageSettings() {
               <>
                 <SectionCard
                   id="donation-filter"
-                  title="ช่องทางรับเงิน"
-                  description="ตั้งค่าฟอร์มโดเนทและข้อความที่จะแสดง"
+                  title="ตั้งค่าฟอร์มโดเนท"
+                  description="ตั้งค่ายอดขั้นต่ำ ข้อความ และปุ่มที่จะแสดงบนฟอร์ม"
                   icon={Heart}
                 >
                   <div className="grid gap-4 md:grid-cols-2">
@@ -2531,6 +2387,17 @@ export default function DonatePageSettings() {
                       <GlassInput
                         value={settings.donation.pageTitle}
                         onChange={(e) => updateDonation("pageTitle", e.target.value)}
+                      />
+                    </Field>
+
+                    <Field label="ยอดโดเนทขั้นต่ำ">
+                      <GlassInput
+                        type="number"
+                        min="0"
+                        value={settings.donation.minAmount}
+                        onChange={(e) =>
+                          updateDonation("minAmount", Number(e.target.value || 0))
+                        }
                       />
                     </Field>
 
@@ -3024,9 +2891,9 @@ export default function DonatePageSettings() {
                       {settings.posts.map((post) => (
                         <div
                           key={post.id}
-                          className="rounded-xl border border-slate-800 bg-slate-950/40 p-3"
+                          className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-950/60"
                         >
-                          <div className="mb-3 flex items-center justify-between">
+                          <div className="flex items-center justify-between border-b border-slate-800/80 px-4 py-3">
                             <div className="flex items-center gap-2 text-slate-500">
                               <GripVertical className="h-4 w-4" />
                               <span className="text-sm text-slate-400">
@@ -3051,19 +2918,50 @@ export default function DonatePageSettings() {
                               </Button>
                             </div>
                           </div>
-                          <div className="mb-3 space-y-3">
-                            <div
-                              className="h-36 rounded-xl border border-slate-800 bg-slate-900/70 bg-cover bg-center"
-                              style={{
-                                backgroundImage: post.image ? `url(${post.image})` : "none",
-                              }}
-                            >
-                              {!post.image ? (
-                                <div className="flex h-full items-center justify-center text-sm text-slate-500">
-                                  ยังไม่มีรูปคอนเทนต์
+
+                          <div className="space-y-4 p-4">
+                            <div className="rounded-2xl border border-slate-800 bg-slate-900/70">
+                              <div className="flex items-center gap-3 border-b border-slate-800/80 px-4 py-3">
+                                <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-gradient-to-br from-cyan-500 to-blue-600 text-sm font-bold text-white">
+                                  {settings.profile.avatarUrl ? (
+                                    <img
+                                      src={settings.profile.avatarUrl}
+                                      alt={settings.profile.name}
+                                      className="h-full w-full object-cover"
+                                    />
+                                  ) : (
+                                    settings.profile.name.slice(0, 1).toUpperCase()
+                                  )}
                                 </div>
+                                <div>
+                                  <p className="text-sm font-semibold text-white">
+                                    {settings.profile.name || "ชื่อสตรีมเมอร์"}
+                                  </p>
+                                  <p className="text-xs text-slate-500">โพสต์ตัวอย่าง</p>
+                                </div>
+                              </div>
+
+                              {post.text ? (
+                                <p className="whitespace-pre-line px-4 py-3 text-sm leading-6 text-slate-200">
+                                  {post.text}
+                                </p>
                               ) : null}
+
+                              <div className="flex min-h-[220px] items-center justify-center bg-slate-950/70">
+                                {post.image ? (
+                                  <img
+                                    src={post.image}
+                                    alt=""
+                                    className="max-h-[420px] w-full object-contain"
+                                  />
+                                ) : (
+                                  <div className="flex h-56 w-full items-center justify-center text-sm text-slate-500">
+                                    ยังไม่มีรูปคอนเทนต์
+                                  </div>
+                                )}
+                              </div>
                             </div>
+
                             <label className="inline-flex cursor-pointer items-center rounded-lg border border-slate-700 bg-slate-900/60 px-3 py-2 text-sm text-slate-300 transition hover:bg-slate-800 hover:text-white">
                               <Upload className="mr-2 h-4 w-4" />
                               อัปโหลดรูป
@@ -3074,14 +2972,15 @@ export default function DonatePageSettings() {
                                 onChange={(e) => handlePostImageUpload(post.id, e.target.files?.[0])}
                               />
                             </label>
+
+                            <GlassTextarea
+                              value={post.text}
+                              placeholder="พิมพ์ข้อความคอนเทนต์ที่จะแสดงบนหน้าโดเนท"
+                              onChange={(e) =>
+                                updateArrayItem("posts", post.id, "text", e.target.value)
+                              }
+                            />
                           </div>
-                          <GlassTextarea
-                            value={post.text}
-                            placeholder="พิมพ์ข้อความคอนเทนต์ที่จะแสดงบนหน้าโดเนท"
-                            onChange={(e) =>
-                              updateArrayItem("posts", post.id, "text", e.target.value)
-                            }
-                          />
                         </div>
                       ))}
                     </div>
@@ -3391,88 +3290,6 @@ export default function DonatePageSettings() {
               </SectionCard>
               )}
 
-              {activeTab === "display" && (
-              <SectionCard
-                id="display"
-                title="การแสดงผล"
-                description="เปิด/ปิด section ต่าง ๆ ที่จะแสดงบนหน้า DonateProfile"
-                icon={Monitor}
-              >
-                <div className="grid gap-3 md:grid-cols-2">
-                  <ToggleRow
-                    icon={User}
-                    title="Profile Header"
-                    description="แสดงข้อมูลโปรไฟล์ด้านบน"
-                    checked={settings.display.showProfileHeader}
-                    onChange={(value) => updateDisplay("showProfileHeader", value)}
-                  />
-                  <ToggleRow
-                    icon={Heart}
-                    title="Donation Form"
-                    description="แสดงฟอร์มโดเนท"
-                    checked={settings.display.showDonationForm}
-                    onChange={(value) => updateDisplay("showDonationForm", value)}
-                  />
-                  <ToggleRow
-                    icon={Music}
-                    title="Music Player"
-                    description="แสดงเครื่องเล่นเพลง"
-                    checked={settings.display.showMusicPanel}
-                    onChange={(value) => updateDisplay("showMusicPanel", value)}
-                  />
-                  <ToggleRow
-                    icon={Video}
-                    title="Video Highlights"
-                    description="แสดงวิดีโอไฮไลท์"
-                    checked={settings.display.showVideoHighlights}
-                    onChange={(value) => updateDisplay("showVideoHighlights", value)}
-                  />
-                  <ToggleRow
-                    icon={MessageSquare}
-                    title="Daily Content"
-                    description="แสดงโพสต์รายวัน"
-                    checked={settings.display.showDailyContent}
-                    onChange={(value) => updateDisplay("showDailyContent", value)}
-                  />
-                  <ToggleRow
-                    icon={Camera}
-                    title="Photo Gallery"
-                    description="แสดงแกลเลอรีรูปภาพ"
-                    checked={settings.display.showGallery}
-                    onChange={(value) => updateDisplay("showGallery", value)}
-                  />
-                  <ToggleRow
-                    icon={CalendarDays}
-                    title="Stream Schedule"
-                    description="แสดงตารางสตรีม"
-                    checked={settings.display.showSchedule}
-                    onChange={(value) => updateDisplay("showSchedule", value)}
-                  />
-                  <ToggleRow
-                    icon={ShoppingBag}
-                    title="Product Promo"
-                    description="แสดงสินค้าและโปรโมชัน"
-                    checked={settings.display.showProducts}
-                    onChange={(value) => updateDisplay("showProducts", value)}
-                  />
-                  <ToggleRow
-                    icon={Gift}
-                    title="Recent Donations"
-                    description="แสดงผู้สนับสนุนล่าสุด"
-                    checked={settings.display.showRecentDonations}
-                    onChange={(value) => updateDisplay("showRecentDonations", value)}
-                  />
-                  <ToggleRow
-                    icon={Settings2}
-                    title="Footer"
-                    description="แสดง Footer ด้านล่าง"
-                    checked={settings.display.showFooter}
-                    onChange={(value) => updateDisplay("showFooter", value)}
-                  />
-                </div>
-              </SectionCard>
-              )}
-
               <div className="sticky bottom-0 z-20 -mx-4 border-t border-slate-800 bg-slate-950/95 px-4 py-4 lg:-mx-6 lg:px-6">
                 <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
                   {saveMessage ? (
@@ -3505,87 +3322,6 @@ export default function DonatePageSettings() {
                 </div>
               </div>
             </div>
-            ) : (
-            <motion.section
-              initial={{ opacity: 0, y: 12 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.22 }}
-              className="overflow-hidden rounded-[28px] border border-slate-800/80 bg-slate-950/80 shadow-2xl shadow-black/20"
-            >
-              <div className="flex flex-col gap-4 border-b border-slate-800 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.14),transparent_28%),linear-gradient(180deg,rgba(15,23,42,0.92),rgba(2,6,23,0.96))] px-4 py-4 lg:flex-row lg:items-center lg:justify-between lg:px-5">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="font-bold text-white">Live Preview</p>
-                    <span className="h-2 w-2 rounded-full bg-green-400" />
-                    <span className="text-xs text-slate-500">อัปเดตแบบเรียลไทม์</span>
-                  </div>
-                  <p className="mt-1 text-sm text-slate-400">
-                    ดูตัวอย่างเต็มพื้นที่แทนหน้า Settings เพื่อไม่ให้เนื้อหาถูกบีบ
-                  </p>
-                </div>
-
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className={cx(
-                      "border-slate-700 bg-slate-900/60 text-slate-400",
-                      previewViewport === "desktop" &&
-                        "border-cyan-500/50 bg-cyan-500/10 text-cyan-300"
-                    )}
-                    onClick={() => setPreviewViewport("desktop")}
-                  >
-                    <Monitor className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className={cx(
-                      "border-slate-700 bg-slate-900/60 text-slate-400",
-                      previewViewport === "tablet" &&
-                        "border-cyan-500/50 bg-cyan-500/10 text-cyan-300"
-                    )}
-                    onClick={() => setPreviewViewport("tablet")}
-                  >
-                    <Tablet className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    className={cx(
-                      "border-slate-700 bg-slate-900/60 text-slate-400",
-                      previewViewport === "mobile" &&
-                        "border-cyan-500/50 bg-cyan-500/10 text-cyan-300"
-                    )}
-                    onClick={() => setPreviewViewport("mobile")}
-                  >
-                    <Smartphone className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white"
-                    onClick={() => setEditorView("settings")}
-                  >
-                    กลับไปแก้ Settings
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white"
-                    onClick={() => setIsPreviewModalOpen(true)}
-                  >
-                    <ExternalLink className="mr-2 h-4 w-4" />
-                    เต็มจอ
-                  </Button>
-                </div>
-              </div>
-
-              <div className="p-3 lg:p-4">
-                <PreviewSurface viewport={previewViewport} fullScreen>
-                  <LivePreview settings={deferredSettings} fullBleed />
-                </PreviewSurface>
-              </div>
-            </motion.section>
-            )}
           </div>
         </main>
       </div>
