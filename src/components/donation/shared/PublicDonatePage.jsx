@@ -1,6 +1,7 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import Image from "next/image";
+import { useMemo, useState, useTransition } from "react";
 import {
   CalendarDays,
   Clapperboard,
@@ -15,9 +16,10 @@ import {
   ShieldCheck,
   ImageIcon,
   Upload,
-  UserRound,
 } from "lucide-react";
+import { createDonation } from "@/actions/Donationsapi/donationHistoryApi";
 import { getVideoEmbedData } from "@/components/donation/shared/videoEmbed";
+import { defaultDonatePageSettings } from "@/components/donation/shared/donatePageConfig";
 
 const socialIcons = {
   youtube: Clapperboard,
@@ -30,8 +32,31 @@ const tabItems = [
   { id: "content", label: "คอนเทนต์ล่าสุด", icon: Heart },
   { id: "schedule", label: "ตารางสตรีม", icon: CalendarDays },
   { id: "gallery", label: "รูปภาพ", icon: ImageIcon },
-  { id: "about", label: "เกี่ยวกับสตรีมเมอร์", icon: UserRound },
 ];
+
+function DecorationSprite({
+  src,
+  alt,
+  className = "",
+  width = 160,
+  height = 160,
+}) {
+  if (!src) {
+    return null;
+  }
+
+  return (
+    <div className={["pointer-events-none absolute z-20", className].join(" ")}>
+      <Image
+        src={src}
+        alt={alt || ""}
+        width={width}
+        height={height}
+        className="h-auto w-full object-contain"
+      />
+    </div>
+  );
+}
 
 function PaymentMethodCard({
   title,
@@ -93,8 +118,120 @@ function EmptyState({ title, description }) {
   );
 }
 
-export default function PublicDonatePage({ settings }) {
+function TabContentSkeleton({ variant = "grid" }) {
+  if (variant === "list") {
+    return (
+      <div className="space-y-4">
+        {Array.from({ length: 3 }).map((_, index) => (
+          <div
+            key={index}
+            className="overflow-hidden rounded-[18px] border border-[#1d2d63] bg-[#071028] p-4"
+          >
+            <div className="mb-4 h-4 w-32 animate-pulse rounded-full bg-white/10" />
+            <div className="space-y-3">
+              <div className="h-3 w-full animate-pulse rounded-full bg-white/8" />
+              <div className="h-3 w-4/5 animate-pulse rounded-full bg-white/8" />
+              <div className="h-24 animate-pulse rounded-[14px] bg-white/6" />
+            </div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+      {Array.from({ length: 3 }).map((_, index) => (
+        <div
+          key={index}
+          className="overflow-hidden rounded-[16px] border border-[#1d2d63] bg-[#071028]"
+        >
+          <div className="aspect-[4/3] animate-pulse bg-white/6" />
+          <div className="space-y-3 p-4">
+            <div className="h-3 w-24 animate-pulse rounded-full bg-white/8" />
+            <div className="h-4 w-3/4 animate-pulse rounded-full bg-white/10" />
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MediaImage({
+  src,
+  alt,
+  className = "",
+  wrapperClassName = "",
+  onLoad,
+}) {
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  return (
+    <div className={["relative overflow-hidden", wrapperClassName].join(" ")}>
+      {!isLoaded ? (
+        <div className="absolute inset-0 animate-pulse bg-[linear-gradient(135deg,rgba(148,163,184,0.12),rgba(30,41,59,0.35))]" />
+      ) : null}
+      <img
+        src={src}
+        alt={alt}
+        loading="lazy"
+        decoding="async"
+        fetchPriority="low"
+        onLoad={(event) => {
+          setIsLoaded(true);
+          onLoad?.(event);
+        }}
+        onError={() => setIsLoaded(true)}
+        className={[
+          "transition-opacity duration-300",
+          isLoaded ? "opacity-100" : "opacity-0",
+          className,
+        ].join(" ")}
+      />
+    </div>
+  );
+}
+
+export default function PublicDonatePage({
+  settings: incomingSettings,
+  donationTargetUserId = null,
+  donationTargetUsername = "",
+}) {
+  const settings = {
+    ...defaultDonatePageSettings,
+    ...(incomingSettings || {}),
+    design: {
+      ...(defaultDonatePageSettings.design || {}),
+      ...(incomingSettings?.design || {}),
+    },
+    profile: {
+      ...(defaultDonatePageSettings.profile || {}),
+      ...(incomingSettings?.profile || {}),
+    },
+    donation: {
+      ...(defaultDonatePageSettings.donation || {}),
+      ...(incomingSettings?.donation || {}),
+      channels: {
+        ...(defaultDonatePageSettings.donation?.channels || {}),
+        ...(incomingSettings?.donation?.channels || {}),
+        promptpay: {
+          ...(defaultDonatePageSettings.donation?.channels?.promptpay || {}),
+          ...(incomingSettings?.donation?.channels?.promptpay || {}),
+        },
+        bank: {
+          ...(defaultDonatePageSettings.donation?.channels?.bank || {}),
+          ...(incomingSettings?.donation?.channels?.bank || {}),
+        },
+      },
+    },
+    display: {
+      ...(defaultDonatePageSettings.display || {}),
+      ...(incomingSettings?.display || {}),
+    },
+  };
+
   const [activeTab, setActiveTab] = useState("highlights");
+  const [isTabPending, startTabSwitch] = useTransition();
   const [selectedPayment, setSelectedPayment] = useState("promptpay");
   const [donationAmount, setDonationAmount] = useState(10);
   const [customAmount, setCustomAmount] = useState("10");
@@ -105,6 +242,7 @@ export default function PublicDonatePage({ settings }) {
   const [formErrors, setFormErrors] = useState({});
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState("");
   const socials = useMemo(
     () =>
       (settings.socials || [])
@@ -146,7 +284,7 @@ export default function PublicDonatePage({ settings }) {
     () => (settings.gallery || []).filter((item) => item.enabled).slice(0, 6),
     [settings.gallery]
   );
-
+  const sectionDecorations = settings.design?.sectionDecorations || {};
   const bankChannel = settings.donation?.channels?.bank || {};
   const promptPayChannel = settings.donation?.channels?.promptpay || {};
   const promptPayValue = promptPayChannel.value || "0826589650";
@@ -155,16 +293,24 @@ export default function PublicDonatePage({ settings }) {
     promptPayValue
   )}/${encodeURIComponent(promptPayQrAmount)}.png`;
   const successMessage =
-    settings.donation?.successMessage || "ขอบคุณที่โดเนทให้ streamer นะครับ";
+    settings.donation?.welcomeMessage ||
+    settings.donation?.successMessage ||
+    "ขอบคุณที่โดเนทให้ streamer นะครับ";
+  const donateButtonText =
+    settings.donation?.buttonText ||
+    defaultDonatePageSettings.donation?.buttonText ||
+    "โดเนทเลย";
 
   const handleQuickAmount = (amount) => {
     setDonationAmount(amount);
     setCustomAmount(String(amount));
+    clearFieldError("amount");
   };
 
   const handleAmountInput = (event) => {
     const value = event.target.value;
     setCustomAmount(value);
+    clearFieldError("amount");
 
     const nextAmount = parseFloat(value);
     if (!Number.isNaN(nextAmount)) {
@@ -187,25 +333,30 @@ export default function PublicDonatePage({ settings }) {
   const handleSlipChange = (event) => {
     const file = event.target.files?.[0] || null;
     setSlipFile(file);
+    setSubmitError("");
 
     if (file) {
       clearFieldError("slipFile");
     }
   };
 
-  const handleDonateSubmit = () => {
+  const handleDonateSubmit = async () => {
     if (isSubmitting) {
       return;
     }
 
     const nextErrors = {};
+    const minAmount = Number(settings.donation?.minAmount) || 1;
+    const parsedAmount = Number.parseFloat(customAmount);
 
     if (!donorName.trim()) {
       nextErrors.donorName = "กรุณากรอกชื่อผู้โดเนท";
     }
 
-    if (!donorMessage.trim()) {
-      nextErrors.donorMessage = "กรุณากรอกข้อความถึงสตรีมเมอร์";
+    if (customAmount.trim() === "" || Number.isNaN(parsedAmount) || parsedAmount <= 0) {
+      nextErrors.amount = "กรุณาระบุจำนวนเงินให้ถูกต้อง";
+    } else if (parsedAmount < minAmount) {
+      nextErrors.amount = `จำนวนขั้นต่ำ ${minAmount} บาท`;
     }
 
     if (!slipFile) {
@@ -218,11 +369,37 @@ export default function PublicDonatePage({ settings }) {
       return;
     }
 
-    setIsSubmitting(true);
-    window.setTimeout(() => {
-      setIsSubmitting(false);
+    if (!donationTargetUserId) {
+      setSubmitError(
+        donationTargetUsername
+          ? `ไม่พบบัญชีผู้รับโดเนทสำหรับ ${donationTargetUsername}`
+          : "ไม่พบบัญชีผู้รับโดเนท"
+      );
+      return;
+    }
+
+    try {
+      setIsSubmitting(true);
+      setSubmitError("");
+
+      const formData = new FormData();
+      formData.append("userId", donationTargetUserId);
+      formData.append("donorName", donorName.trim());
+      if (donorMessage.trim()) {
+        formData.append("donorMessage", donorMessage.trim());
+      }
+      formData.append("amount", String(parsedAmount));
+      formData.append("currency", "THB");
+      formData.append("paymentMethod", selectedPayment.toUpperCase());
+      formData.append("slip", slipFile);
+
+      await createDonation(formData);
       setShowSuccessModal(true);
-    }, 700);
+    } catch (error) {
+      setSubmitError(error?.message || "ส่งข้อมูลโดเนทไม่สำเร็จ");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleCloseSuccessModal = () => {
@@ -232,6 +409,7 @@ export default function PublicDonatePage({ settings }) {
     setDonorMessage("");
     setSlipFile(null);
     setFormErrors({});
+    setSubmitError("");
   };
 
   const handleCopyAccountNumber = async () => {
@@ -246,6 +424,15 @@ export default function PublicDonatePage({ settings }) {
   };
 
   const avatarFallback = settings.profile.name?.charAt(0)?.toUpperCase() || "D";
+  const handleTabChange = (nextTab) => {
+    if (nextTab === activeTab) {
+      return;
+    }
+
+    startTabSwitch(() => {
+      setActiveTab(nextTab);
+    });
+  };
 
   return (
     <div
@@ -266,6 +453,20 @@ export default function PublicDonatePage({ settings }) {
             />
             <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(3,6,25,0.2),rgba(3,7,26,0.88))]" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_68%_28%,rgba(90,74,255,0.32),transparent_24%),radial-gradient(circle_at_84%_40%,rgba(255,72,145,0.16),transparent_18%)]" />
+            <DecorationSprite
+              src={sectionDecorations.panelLeft?.src}
+              alt={sectionDecorations.panelLeft?.alt}
+              className="left-0 top-0 w-24 sm:w-28 lg:w-32"
+              width={128}
+              height={128}
+            />
+            <DecorationSprite
+              src={sectionDecorations.panelRight?.src}
+              alt={sectionDecorations.panelRight?.alt}
+              className="right-0 top-0 w-24 sm:w-28 lg:w-32"
+              width={128}
+              height={128}
+            />
 
             <div className="relative flex flex-col gap-6 px-5 py-8 sm:px-8 lg:flex-row lg:items-end lg:gap-8 lg:py-10">
               <div className="relative shrink-0">
@@ -339,7 +540,21 @@ export default function PublicDonatePage({ settings }) {
           </div>
 
           <div className="">
-            <SectionShell className="border-[#30427d] bg-[radial-gradient(circle_at_54%_0%,rgba(43,91,255,0.22),transparent_30%),linear-gradient(180deg,rgba(11,22,62,0.98),rgba(6,12,39,0.98))] px-4 py-5 sm:px-7 lg:px-10 lg:py-9">
+            <SectionShell className="relative border-[#30427d] bg-[radial-gradient(circle_at_54%_0%,rgba(43,91,255,0.22),transparent_30%),linear-gradient(180deg,rgba(11,22,62,0.98),rgba(6,12,39,0.98))] px-4 py-5 sm:px-7 lg:px-10 lg:py-9">
+              <DecorationSprite
+                src={sectionDecorations.panelLeft?.src}
+                alt={sectionDecorations.panelLeft?.alt}
+                className="left-0 top-0 w-20 sm:w-24"
+                width={96}
+                height={96}
+              />
+              <DecorationSprite
+                src={sectionDecorations.panelRight?.src}
+                alt={sectionDecorations.panelRight?.alt}
+                className="right-0 top-0 w-20 sm:w-24"
+                width={96}
+                height={96}
+              />
               <div className="mb-7 flex items-start gap-3">
                 <div className="mt-1 flex h-11 w-11 items-center justify-center rounded-2xl bg-gradient-to-br from-violet-500 to-cyan-500 text-white shadow-[0_0_24px_rgba(139,92,246,0.35)]">
                   <Heart className="h-5 w-5" />
@@ -517,9 +732,15 @@ export default function PublicDonatePage({ settings }) {
                               min={1}
                               value={customAmount}
                               onChange={handleAmountInput}
-                              className="w-full rounded-[12px] border border-[#17275a] bg-[#050b26]/90 px-4 py-3 text-sm text-white outline-none placeholder:text-white/24 focus:border-[#2d8cff]"
+                              className={[
+                                "w-full rounded-[12px] border bg-[#050b26]/90 px-4 py-3 text-sm text-white outline-none placeholder:text-white/24 focus:border-[#2d8cff]",
+                                formErrors.amount ? "border-rose-400/70" : "border-[#17275a]",
+                              ].join(" ")}
                               placeholder={`ขั้นต่ำ ${settings.donation.minAmount} บาท`}
                             />
+                            {formErrors.amount ? (
+                              <p className="mt-2 text-xs text-rose-300">{formErrors.amount}</p>
+                            ) : null}
                             <div className="mt-4">
                               <p className="mb-3 text-sm font-medium text-white/45">ยอดนิยม</p>
                               <div className="grid grid-cols-4 gap-2">
@@ -614,6 +835,11 @@ export default function PublicDonatePage({ settings }) {
                     {formErrors.slipFile ? (
                       <p className="mt-2 text-xs text-rose-300">{formErrors.slipFile}</p>
                     ) : null}
+                    {submitError ? (
+                      <p className="mt-3 rounded-[12px] border border-rose-400/25 bg-rose-500/10 px-3 py-2 text-xs text-rose-200">
+                        {submitError}
+                      </p>
+                    ) : null}
                   </div>
 
                   <button
@@ -629,7 +855,7 @@ export default function PublicDonatePage({ settings }) {
                       </>
                     ) : (
                       <>
-                        ยืนยันการโดเนท <Heart className="ml-2 inline h-5 w-5 fill-white/70" />
+                        {donateButtonText} <Heart className="ml-2 inline h-5 w-5 fill-white/70" />
                       </>
                     )}
                   </button>
@@ -637,8 +863,22 @@ export default function PublicDonatePage({ settings }) {
               </div>
             </SectionShell>
 
-            <section className="mt-6 overflow-hidden rounded-[22px] border border-[#25356f]/80 bg-[linear-gradient(180deg,rgba(10,17,49,0.78),rgba(8,13,39,0.9))] p-3 shadow-[0_22px_80px_rgba(3,7,24,0.32)] sm:p-4">
-              <div className="grid grid-cols-2 gap-2 rounded-[16px] bg-[#07102f]/75 p-2 lg:grid-cols-5">
+            <section className="relative mt-6 overflow-hidden rounded-[22px] border border-[#25356f]/80 bg-[linear-gradient(180deg,rgba(10,17,49,0.78),rgba(8,13,39,0.9))] p-3 shadow-[0_22px_80px_rgba(3,7,24,0.32)] sm:p-4">
+              <DecorationSprite
+                src={sectionDecorations.panelLeft?.src}
+                alt={sectionDecorations.panelLeft?.alt}
+                className="left-0 top-0 w-16 sm:w-20"
+                width={80}
+                height={80}
+              />
+              <DecorationSprite
+                src={sectionDecorations.panelRight?.src}
+                alt={sectionDecorations.panelRight?.alt}
+                className="right-0 top-0 w-16 sm:w-20"
+                width={80}
+                height={80}
+              />
+              <div className="grid grid-cols-2 gap-2 rounded-[16px] bg-[#07102f]/75 p-2 lg:grid-cols-4">
                 {tabItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = activeTab === item.id;
@@ -647,12 +887,13 @@ export default function PublicDonatePage({ settings }) {
                     <button
                       key={item.id}
                       type="button"
-                      onClick={() => setActiveTab(item.id)}
+                      onClick={() => handleTabChange(item.id)}
                       className={[
                         "flex items-center justify-center gap-2 rounded-[12px] border px-4 py-3 text-sm font-medium transition",
                         isActive
                           ? "border-[#7f55ff] bg-[linear-gradient(135deg,rgba(150,55,255,0.34),rgba(27,88,255,0.46))] text-violet-100 shadow-[0_0_28px_rgba(111,72,255,0.34)]"
                           : "border-[#1d2d63]/70 bg-transparent text-white/55 hover:border-[#26376f] hover:bg-[#0d1740] hover:text-white/80",
+                        isTabPending ? "will-change-transform" : "",
                       ].join(" ")}
                     >
                       <Icon className="h-4 w-4" />
@@ -663,7 +904,9 @@ export default function PublicDonatePage({ settings }) {
               </div>
 
               <div className="mt-5 rounded-[18px] bg-[#09112f]/74 p-4 sm:p-5">
-                {activeTab === "highlights" ? (
+                {isTabPending ? <TabContentSkeleton variant={activeTab === "schedule" ? "list" : "grid"} /> : null}
+
+                {!isTabPending && activeTab === "highlights" ? (
                   videos.length > 0 ? (
                     <div className="grid gap-4 lg:grid-cols-2">
                       {videos.map((video) => (
@@ -673,9 +916,10 @@ export default function PublicDonatePage({ settings }) {
                         >
                           <div className="relative aspect-video bg-[#050b1f]">
                             {video.thumbnail ? (
-                              <img
+                              <MediaImage
                                 src={video.thumbnail}
                                 alt={video.title}
+                                wrapperClassName="h-full w-full"
                                 className="h-full w-full object-cover"
                               />
                             ) : (
@@ -714,7 +958,7 @@ export default function PublicDonatePage({ settings }) {
                   )
                 ) : null}
 
-                {activeTab === "content" ? (
+                {!isTabPending && activeTab === "content" ? (
                   posts.length > 0 ? (
                     <div className="space-y-4">
                       {posts.map((post) => (
@@ -740,9 +984,10 @@ export default function PublicDonatePage({ settings }) {
                           ) : null}
                           {post.image ? (
                             <div className="flex min-h-[240px] items-center justify-center bg-[#04091f]/70">
-                              <img
+                              <MediaImage
                                 src={post.image}
                                 alt=""
+                                wrapperClassName="w-full"
                                 className="max-h-[520px] w-full object-contain"
                               />
                             </div>
@@ -758,7 +1003,7 @@ export default function PublicDonatePage({ settings }) {
                   )
                 ) : null}
 
-                {activeTab === "schedule" ? (
+                {!isTabPending && activeTab === "schedule" ? (
                   schedule.length > 0 ? (
                     <div className="overflow-hidden rounded-[18px] bg-[#071028]/82">
                       {schedule.map((item, index) => (
@@ -800,7 +1045,7 @@ export default function PublicDonatePage({ settings }) {
                   )
                 ) : null}
 
-                {activeTab === "gallery" ? (
+                {!isTabPending && activeTab === "gallery" ? (
                   gallery.length > 0 ? (
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                       {gallery.map((item) => (
@@ -809,9 +1054,10 @@ export default function PublicDonatePage({ settings }) {
                           className="overflow-hidden rounded-[16px] border border-[#1d2d63] bg-[#071028]"
                         >
                           <div className="flex aspect-square items-center justify-center bg-[#04091f]/70">
-                            <img
+                            <MediaImage
                               src={item.url}
                               alt={`Gallery ${item.id}`}
+                              wrapperClassName="h-full w-full"
                               className="h-full w-full object-cover transition duration-300 hover:scale-105"
                             />
                           </div>
@@ -826,27 +1072,6 @@ export default function PublicDonatePage({ settings }) {
                   )
                 ) : null}
 
-                {activeTab === "about" ? (
-                  <div className="rounded-[16px] border border-[#1d2d63] bg-[#071028] p-5 sm:p-6">
-                    <p className="text-xs font-semibold uppercase tracking-[0.26em] text-cyan-200/70">
-                      About Streamer
-                    </p>
-                    <h3 className="mt-3 text-2xl font-bold text-white">{settings.profile.name}</h3>
-                    <p className="mt-4 max-w-3xl text-sm leading-7 text-white/70">
-                      {settings.profile.bio}
-                    </p>
-                    <div className="mt-5 flex flex-wrap gap-3">
-                      {socials.map((social) => (
-                        <span
-                          key={social.id}
-                          className="rounded-full border border-[#24346d] bg-white/5 px-4 py-2 text-sm text-white/65"
-                        >
-                          {social.label}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
               </div>
             </section>
           </div>

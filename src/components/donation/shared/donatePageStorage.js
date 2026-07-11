@@ -41,8 +41,7 @@ export function loadDonatePageSettings(fallbackSettings) {
       return fallbackSettings;
     }
 
-    const parsed = JSON.parse(raw);
-    return mergeWithFallback(fallbackSettings, parsed);
+    return mergeWithFallback(fallbackSettings, JSON.parse(raw));
   } catch (error) {
     console.error("Failed to load donate page settings from storage:", error);
     return fallbackSettings;
@@ -99,4 +98,3 @@ export function clearDonatePageSettings() {
     return false;
   }
 }
-

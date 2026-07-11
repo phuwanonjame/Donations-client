@@ -1,9 +1,7 @@
-"use client";
-
-import { useSyncExternalStore } from "react";
 import PublicDonatePage from "@/components/donation/shared/PublicDonatePage";
 import { defaultDonatePageSettings } from "@/components/donation/shared/donatePageConfig";
-import { loadDonatePageSettings } from "@/components/donation/shared/donatePageStorage";
+import { fetchPublicDonatePageSettings } from "@/actions/DonatePageapi/donatePageSettingsApi";
+import { buildDonatePageSettingsPatch } from "@/components/donation/shared/donatePageMetadata";
 
 function buildPublicDonatePageSettings(source) {
   return {
@@ -24,46 +22,61 @@ function buildPublicDonatePageSettings(source) {
   };
 }
 
+function mergeDonatePageSettings(base, patch) {
+  return {
+    ...base,
+    ...patch,
+    design: {
+      ...(base.design || {}),
+      ...(patch.design || {}),
+    },
+    profile: {
+      ...(base.profile || {}),
+      ...(patch.profile || {}),
+    },
+    donation: {
+      ...(base.donation || {}),
+      ...(patch.donation || {}),
+      channels: {
+        ...(base.donation?.channels || {}),
+        ...(patch.donation?.channels || {}),
+        promptpay: {
+          ...(base.donation?.channels?.promptpay || {}),
+          ...(patch.donation?.channels?.promptpay || {}),
+        },
+        bank: {
+          ...(base.donation?.channels?.bank || {}),
+          ...(patch.donation?.channels?.bank || {}),
+        },
+      },
+    },
+  };
+}
+
 const defaultPublicDonatePageSettings =
   buildPublicDonatePageSettings(defaultDonatePageSettings);
 
-let cachedRawSettings = null;
-let cachedPublicSettings = defaultPublicDonatePageSettings;
+export default async function DonateProfile({ params }) {
+  const resolvedParams = await params;
+  const slug = resolvedParams?.slug;
+  const response = await fetchPublicDonatePageSettings(slug);
+  const metadata = response?.metadata;
+  const donationTargetUserId = response?.user?.id || null;
 
-function subscribe(onStoreChange) {
-  if (typeof window === "undefined") {
-    return () => {};
-  }
+  const settings = metadata
+    ? buildPublicDonatePageSettings(
+        mergeDonatePageSettings(
+          defaultDonatePageSettings,
+          buildDonatePageSettingsPatch(metadata)
+        )
+      )
+    : defaultPublicDonatePageSettings;
 
-  const handleStorageChange = () => {
-    onStoreChange();
-  };
-
-  window.addEventListener("storage", handleStorageChange);
-
-  return () => {
-    window.removeEventListener("storage", handleStorageChange);
-  };
-}
-
-function getSnapshot() {
-  const loadedSettings = loadDonatePageSettings(defaultDonatePageSettings);
-  const rawSettings = JSON.stringify(loadedSettings);
-
-  if (rawSettings !== cachedRawSettings) {
-    cachedRawSettings = rawSettings;
-    cachedPublicSettings = buildPublicDonatePageSettings(loadedSettings);
-  }
-
-  return cachedPublicSettings;
-}
-
-export default function DonateProfile() {
-  const settings = useSyncExternalStore(
-    subscribe,
-    getSnapshot,
-    () => defaultPublicDonatePageSettings
+  return (
+    <PublicDonatePage
+      settings={settings}
+      donationTargetUserId={donationTargetUserId}
+      donationTargetUsername={slug || ""}
+    />
   );
-
-  return <PublicDonatePage settings={settings} />;
 }

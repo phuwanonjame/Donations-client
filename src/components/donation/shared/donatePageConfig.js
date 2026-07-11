@@ -1,5 +1,3 @@
-"use client";
-
 export const donateThemes = [
   {
     id: "v2-default",
@@ -58,6 +56,43 @@ export const donateThemes = [
 ];
 
 export const donationDecorationPresets = [
+  {
+    id: "original-default",
+    name: "Default",
+    description: "ลุคเดิมของหน้าแบบไม่เพิ่มกรอบหรือลายตกแต่งพิเศษ",
+    preview: "from-slate-950 via-slate-900 to-slate-950",
+    badge: "Original",
+    themeId: "v2-default",
+    settingsPatch: {},
+    formTheme: {
+      primary: "186, 230, 253",
+      secondary: "147, 197, 253",
+      accent: "255, 255, 255",
+      base: "4, 15, 30",
+      baseSecondary: "12, 28, 48",
+      text: "255, 255, 255",
+      mutedText: "255, 255, 255",
+      buttonText: "13, 42, 58",
+      buttonBackground: "linear-gradient(120deg, rgb(186, 230, 253), rgb(255, 255, 255))",
+      cardBackground: "linear-gradient(180deg, rgba(4, 15, 30, 0.96), rgba(9, 24, 44, 0.94))",
+      innerBackground: "rgba(4, 15, 30, 0.95)",
+    },
+    sectionTheme: {
+      primary: "186, 230, 253",
+      secondary: "147, 197, 253",
+      accent: "255, 255, 255",
+      base: "4, 15, 30",
+      baseSecondary: "12, 28, 48",
+      text: "255, 255, 255",
+      mutedText: "255, 255, 255",
+      buttonText: "13, 42, 58",
+      buttonBackground: "linear-gradient(120deg, rgb(186, 230, 253), rgb(255, 255, 255))",
+      cardBackground: "linear-gradient(180deg, rgba(4, 15, 30, 0.96), rgba(9, 24, 44, 0.94))",
+      innerBackground: "rgba(4, 15, 30, 0.95)",
+    },
+    sectionDecorations: {},
+    decorations: {},
+  },
   {
     id: "ice-default",
     name: "Ice Default",
@@ -313,7 +348,7 @@ export function getDonationDecorationPreset(presetId) {
   );
 }
 
-const defaultDonationDecorationPreset = getDonationDecorationPreset("ice-default");
+const defaultDonationDecorationPreset = getDonationDecorationPreset("original-default");
 
 export const defaultDonatePageSettings = {
   theme: "v2-default",

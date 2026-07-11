@@ -198,7 +198,7 @@ export default function PromptpayForm() {
 
                 {/* Save */}
                 <FormButton
-                  className="bg-gradient-to-r from-cyan-500 to-blue-500 px-8"
+                  className="h-10 self-start rounded-lg bg-gradient-to-r from-cyan-500 to-blue-500 px-5"
                   loading={loading}
                   isDirty={isDirty}
                 >

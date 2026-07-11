@@ -1,8 +1,9 @@
 ﻿"use client";
 
-import React, { memo, useDeferredValue, useMemo, useRef, useState } from "react";
+import React, { memo, useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
+import { toast } from "sonner";
 import {
   Palette,
   User,
@@ -13,7 +14,6 @@ import {
   Video,
   ImageIcon,
   CalendarDays,
-  ShoppingBag,
   Monitor,
   Check,
   Eye,
@@ -25,17 +25,11 @@ import {
   GripVertical,
   Bell,
   HelpCircle,
-  Sparkles,
-  Shield,
   Gift,
-  Copy,
   X,
   Play,
-  Clock,
   Users,
-  Headphones,
   Camera,
-  ChevronDown,
   Tablet,
   Smartphone,
 } from "lucide-react";
@@ -52,7 +46,6 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { Slider } from "@/components/ui/slider";
 import {
   Dialog,
   DialogContent,
@@ -60,77 +53,25 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { useAuth } from "@/contexts/AuthContext";
+import {
+  fetchDonatePageSettings,
+  saveDonatePageSettings,
+} from "@/actions/DonatePageapi/donatePageSettingsApi";
+import {
+  buildDonatePageMetadata,
+  buildDonatePageSettingsPatch,
+} from "@/components/donation/shared/donatePageMetadata";
 import PublicDonatePage from "@/components/donation/shared/PublicDonatePage";
 import { donationDecorationPresets } from "@/components/donation/shared/donatePageConfig";
 import { getVideoEmbedData } from "@/components/donation/shared/videoEmbed";
-import {
-  loadDonatePageSettings,
-  saveDonatePageSettings,
-} from "@/components/donation/shared/donatePageStorage";
 
 const defaultDecorationPreset =
-  donationDecorationPresets.find((preset) => preset.id === "ice-default") ||
+  donationDecorationPresets.find((preset) => preset.id === "original-default") ||
   donationDecorationPresets[0];
 const MAX_GALLERY_IMAGES = 6;
 const MAX_CONTENT_POSTS = 2;
 const MAX_HIGHLIGHT_VIDEOS = 4;
-
-const themes = [
-  {
-    id: "v2-default",
-    name: "V2 Default",
-    preview: "from-slate-900 via-slate-800 to-slate-950",
-    accent: "from-cyan-500 to-blue-500",
-    primary: "#06B6D4",
-    secondary: "#3B82F6",
-    background: "#0B0F19",
-  },
-  {
-    id: "aquamarine",
-    name: "AquaMarine",
-    preview: "from-teal-900 via-cyan-900 to-slate-950",
-    accent: "from-teal-400 to-cyan-400",
-    primary: "#2DD4BF",
-    secondary: "#22D3EE",
-    background: "#081F26",
-  },
-  {
-    id: "midnight-purple",
-    name: "Midnight Purple",
-    preview: "from-purple-950 via-violet-950 to-slate-950",
-    accent: "from-purple-500 to-pink-500",
-    primary: "#8B5CF6",
-    secondary: "#EC4899",
-    background: "#120A25",
-  },
-  {
-    id: "sunset-orange",
-    name: "Sunset Orange",
-    preview: "from-orange-950 via-red-950 to-slate-950",
-    accent: "from-orange-500 to-red-500",
-    primary: "#F97316",
-    secondary: "#EF4444",
-    background: "#24100A",
-  },
-  {
-    id: "forest-green",
-    name: "Forest Green",
-    preview: "from-emerald-950 via-green-950 to-slate-950",
-    accent: "from-emerald-500 to-teal-500",
-    primary: "#10B981",
-    secondary: "#14B8A6",
-    background: "#071A12",
-  },
-  {
-    id: "neon-pink",
-    name: "Neon Pink",
-    preview: "from-pink-950 via-rose-950 to-slate-950",
-    accent: "from-pink-500 to-rose-500",
-    primary: "#EC4899",
-    secondary: "#F43F5E",
-    background: "#240915",
-  },
-];
 
 const MAX_PROFILE_CATEGORIES = 5;
 
@@ -663,86 +604,18 @@ function ToggleRow({ icon: Icon, title, description, checked, onChange }) {
   );
 }
 
-function DonationChannelCard({
-  title,
-  subtitle,
-  badge,
-  enabled,
-  expanded,
-  onToggleEnabled,
-  onToggleExpanded,
-  children,
-}) {
+function SectionSaveAction({ onSave, className, disabled = false, label = "บันทึกส่วนนี้" }) {
   return (
-    <div
-      className={cx(
-        "overflow-hidden rounded-2xl border bg-slate-950/40 backdrop-blur-sm transition-all duration-300",
-        expanded ? "border-slate-600/80" : "border-slate-800"
-      )}
-    >
-      <div className="flex items-center justify-between gap-3 px-5 py-4">
-        <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-cyan-500 text-white shadow-lg shadow-emerald-500/20">
-            <span className="text-sm font-bold">{badge}</span>
-          </div>
-          <div className="min-w-0">
-            <p className="truncate text-sm font-medium leading-tight text-white sm:text-base">
-              {title}
-            </p>
-            <p className="truncate text-xs text-slate-500 sm:text-sm">
-              {subtitle}
-            </p>
-          </div>
-        </div>
-
-        <div className="flex shrink-0 flex-col items-center gap-1">
-          <button
-            type="button"
-            onClick={onToggleEnabled}
-            className={cx(
-              "relative h-6 w-11 rounded-full border transition-all duration-300",
-              enabled
-                ? "border-emerald-700 bg-emerald-600"
-                : "border-slate-700 bg-slate-800"
-            )}
-          >
-            <span
-              className={cx(
-                "absolute left-[3px] top-[3px] h-[18px] w-[18px] rounded-full bg-white shadow-sm transition-transform duration-300",
-                enabled ? "translate-x-5" : "translate-x-0"
-              )}
-            />
-          </button>
-          <span className="text-[10px] text-slate-500">
-            {enabled ? "Enabled" : "Disabled"}
-          </span>
-        </div>
-      </div>
-
-      <div className="px-5 pb-4">
-        <button
-          type="button"
-          onClick={onToggleExpanded}
-          className="flex w-full items-center justify-center gap-1.5 rounded-lg border border-slate-800 py-2 text-xs text-slate-400 transition-all duration-200 hover:bg-slate-900/70 hover:text-slate-200 sm:text-sm"
-        >
-          <ChevronDown
-            size={14}
-            className={cx("transition-transform duration-300", expanded && "rotate-180")}
-          />
-          {expanded ? "Hide settings" : "Configure"}
-        </button>
-      </div>
-
-      <div
-        className={cx(
-          "overflow-hidden transition-all duration-300 ease-in-out",
-          expanded ? "max-h-[520px] opacity-100" : "max-h-0 opacity-0"
-        )}
+    <div className={cx("mt-4 flex justify-end", className)}>
+      <Button
+        type="button"
+        disabled={disabled}
+        className="h-10 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-500 px-4 text-sm font-medium text-white shadow-lg shadow-cyan-500/20 transition-all duration-200 hover:from-cyan-400 hover:to-blue-400 hover:shadow-cyan-500/30 disabled:cursor-not-allowed disabled:opacity-60"
+        onClick={onSave}
       >
-        <div className="space-y-4 border-t border-slate-800 px-5 pb-5 pt-4">
-          {children}
-        </div>
-      </div>
+        <Save className="mr-2 h-4 w-4" />
+        {label}
+      </Button>
     </div>
   );
 }
@@ -877,8 +750,35 @@ function buildScheduleTimeRange(startTime, endTime) {
   return `${startTime} - ${endTime}`;
 }
 
-function buildInitialSettings() {
-  const loadedSettings = loadDonatePageSettings(defaultSettings);
+function buildInitialSettings(source = defaultSettings) {
+  const loadedSettings = {
+    ...defaultSettings,
+    ...(source || {}),
+    design: {
+      ...defaultSettings.design,
+      ...(source?.design || {}),
+    },
+    profile: {
+      ...defaultSettings.profile,
+      ...(source?.profile || {}),
+    },
+    donation: {
+      ...defaultSettings.donation,
+      ...(source?.donation || {}),
+      channels: {
+        ...defaultSettings.donation.channels,
+        ...(source?.donation?.channels || {}),
+        promptpay: {
+          ...defaultSettings.donation.channels.promptpay,
+          ...(source?.donation?.channels?.promptpay || {}),
+        },
+        bank: {
+          ...defaultSettings.donation.channels.bank,
+          ...(source?.donation?.channels?.bank || {}),
+        },
+      },
+    },
+  };
 
   return {
     ...loadedSettings,
@@ -896,20 +796,54 @@ function buildInitialSettings() {
 }
 
 export default function DonatePageSettings() {
+  const { user, isLoading: isAuthLoading } = useAuth();
   const [activeTab, setActiveTab] = useState("theme");
-  const [settings, setSettings] = useState(buildInitialSettings);
-  const [saveMessage, setSaveMessage] = useState("");
+  const [settings, setSettings] = useState(() => buildInitialSettings());
   const [customProfanityInput, setCustomProfanityInput] = useState("");
   const [isPreviewModalOpen, setIsPreviewModalOpen] = useState(false);
   const [previewViewport, setPreviewViewport] = useState("desktop");
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const deferredSettings = useDeferredValue(settings);
   const avatarFileInputRef = useRef(null);
   const bannerFileInputRef = useRef(null);
   const galleryFileInputRef = useRef(null);
 
-  const selectedTheme = useMemo(() => {
-    return themes.find((theme) => theme.id === settings.theme) || themes[0];
-  }, [settings.theme]);
+  useEffect(() => {
+    const loadSettings = async () => {
+      if (isAuthLoading) {
+        return;
+      }
+
+      if (!user?.id) {
+        setSettings(buildInitialSettings());
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        const response = await fetchDonatePageSettings(user.id);
+        const metadata = response?.metadata;
+
+        setSettings(
+          metadata
+            ? buildInitialSettings(buildDonatePageSettingsPatch(metadata))
+            : buildInitialSettings()
+        );
+      } catch (error) {
+        console.error(error);
+        setSettings(buildInitialSettings());
+        toast.error("โหลดข้อมูลไม่สำเร็จ ใช้ค่าเริ่มต้นชั่วคราว");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    void loadSettings();
+  }, [isAuthLoading, user?.id]);
+
   const activeNavItem = useMemo(() => {
     return navItems.find((item) => item.id === activeTab) || navItems[0];
   }, [activeTab]);
@@ -925,18 +859,18 @@ export default function DonatePageSettings() {
       (settings.profileCategories || []).includes(item.id)
     );
   }, [settings.profileCategories]);
-  const donationChannels =
-    settings.donation?.channels || defaultSettings.donation.channels;
   const profanityFilter =
     settings.filters.find((item) => item.id === "profanity") ||
     defaultSettings.filters[0];
+  const sectionSaveActionProps = {
+    disabled: saving || loading,
+    label: saving ? "กำลังบันทึก..." : "บันทึกส่วนนี้",
+  };
 
   const cloneDecorations = (decorations) =>
     Object.fromEntries(
       Object.entries(decorations).map(([key, value]) => [key, { ...value }])
     );
-  const cloneFormTheme = (formTheme) => ({ ...formTheme });
-  const cloneSectionTheme = (sectionTheme) => ({ ...sectionTheme });
   const cloneSectionDecorations = (decorations) =>
     Object.fromEntries(
       Object.entries(decorations || {}).map(([key, value]) => [key, { ...value }])
@@ -946,14 +880,11 @@ export default function DonatePageSettings() {
   const applyDecorationPreset = (preset) => {
     setSettings((prev) => ({
       ...prev,
-      theme: preset.themeId || prev.theme,
       design: {
         ...prev.design,
         ...preset.settingsPatch,
         decorationPreset: preset.id,
         donationFormDecorations: cloneDecorations(preset.decorations),
-        donationFormTheme: cloneFormTheme(preset.formTheme),
-        sectionTheme: cloneSectionTheme(preset.sectionTheme),
         sectionDecorations: cloneSectionDecorations(preset.sectionDecorations),
       },
     }));
@@ -979,22 +910,48 @@ export default function DonatePageSettings() {
     }));
   };
 
-  const handleProfileImageUpload = (key, file) => {
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = () => {
-      if (typeof reader.result === "string") {
-        updateProfile(key, reader.result);
-      }
-    };
-    reader.readAsDataURL(file);
-  };
-
-  const readFileAsDataUrl = (file) =>
+  const readFileAsDataUrl = (file, options = {}) =>
     new Promise((resolve, reject) => {
+      const {
+        maxWidth = 1600,
+        maxHeight = 1600,
+        quality = 0.82,
+      } = options;
+
       const reader = new FileReader();
-      reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
+      reader.onload = () => {
+        if (typeof reader.result !== "string") {
+          reject(new Error("read-failed"));
+          return;
+        }
+
+        const image = new window.Image();
+        image.onload = () => {
+          const canvas = document.createElement("canvas");
+          let { width, height } = image;
+
+          const widthRatio = maxWidth / width;
+          const heightRatio = maxHeight / height;
+          const ratio = Math.min(1, widthRatio, heightRatio);
+
+          width = Math.max(1, Math.round(width * ratio));
+          height = Math.max(1, Math.round(height * ratio));
+
+          canvas.width = width;
+          canvas.height = height;
+
+          const context = canvas.getContext("2d");
+          if (!context) {
+            reject(new Error("canvas-context-unavailable"));
+            return;
+          }
+
+          context.drawImage(image, 0, 0, width, height);
+          resolve(canvas.toDataURL("image/jpeg", quality));
+        };
+        image.onerror = () => reject(new Error("image-load-failed"));
+        image.src = reader.result;
+      };
       reader.onerror = () => reject(new Error("read-failed"));
       reader.readAsDataURL(file);
     });
@@ -1009,26 +966,15 @@ export default function DonatePageSettings() {
     }));
   };
 
-  const updateMusic = (key, value) => {
-    setSettings((prev) => ({
-      ...prev,
-      music: {
-        ...prev.music,
-        [key]: value,
-      },
-    }));
-  };
-
-  const updateDonationChannel = (channel, key, value) => {
+  const updateDonationChannel = (channelKey, key, value) => {
     setSettings((prev) => ({
       ...prev,
       donation: {
         ...prev.donation,
         channels: {
-          ...(prev.donation.channels || defaultSettings.donation.channels),
-          [channel]: {
-            ...(prev.donation.channels?.[channel] ||
-              defaultSettings.donation.channels[channel]),
+          ...prev.donation.channels,
+          [channelKey]: {
+            ...prev.donation.channels[channelKey],
             [key]: value,
           },
         },
@@ -1068,21 +1014,71 @@ export default function DonatePageSettings() {
     }));
   };
 
-  const handleRestoreSaved = () => {
-    setSettings(buildInitialSettings());
-    setSaveMessage("โหลดค่าที่บันทึกล่าสุดกลับมาแล้ว");
+  const persistSettings = async (nextSettings, mode = "publish") => {
+    if (saving || loading) {
+      return false;
+    }
+
+    if (!user?.id) {
+      toast.error("ไม่พบข้อมูลผู้ใช้");
+      return false;
+    }
+
+    setSaving(true);
+
+    try {
+      const response = await saveDonatePageSettings(
+        user.id,
+        buildDonatePageMetadata(nextSettings)
+      );
+
+      if (!response) {
+        throw new Error("save-failed");
+      }
+
+      toast.success(
+        mode === "draft"
+          ? "บันทึกข้อมูลเรียบร้อยแล้ว"
+          : "บันทึกและเผยแพร่เรียบร้อยแล้ว"
+      );
+      return true;
+    } catch (error) {
+      console.error(error);
+      toast.error("บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง");
+      return false;
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const handleSaveSettings = (mode = "publish") => {
-    const saved = saveDonatePageSettings(settings);
+  const handleSaveSettings = async (mode = "publish") => {
+    return persistSettings(settings, mode);
+  };
 
-    setSaveMessage(
-      saved
-        ? mode === "draft"
-          ? "บันทึกร่างแล้ว และหน้าโปรไฟล์จริงจะใช้ค่านี้ชั่วคราว"
-          : "บันทึกและอัปเดตหน้าโปรไฟล์จริงแล้ว"
-        : "บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง"
-    );
+  const handleProfileImageUpload = async (key, file) => {
+    if (!file) return;
+
+    try {
+      const dataUrl = await readFileAsDataUrl(file);
+
+      if (!dataUrl) {
+        throw new Error("empty-image");
+      }
+
+      const nextSettings = {
+        ...settings,
+        profile: {
+          ...settings.profile,
+          [key]: dataUrl,
+        },
+      };
+
+      setSettings(nextSettings);
+      await persistSettings(nextSettings, "draft");
+    } catch (error) {
+      console.error(error);
+      toast.error("อัปโหลดรูปไม่สำเร็จ ลองใหม่อีกครั้ง");
+    }
   };
 
   const updateSocial = (id, key, value) => {
@@ -1317,13 +1313,19 @@ export default function DonatePageSettings() {
 
     const remainingSlots = Math.max(0, MAX_GALLERY_IMAGES - (settings.gallery?.length || 0));
     if (remainingSlots <= 0) {
-      setSaveMessage(`เพิ่มรูปได้สูงสุด ${MAX_GALLERY_IMAGES} รูป`);
+      toast.error(`เพิ่มรูปได้สูงสุด ${MAX_GALLERY_IMAGES} รูป`);
       return;
     }
 
     try {
       const uploadedUrls = await Promise.all(
-        files.slice(0, remainingSlots).map((file) => readFileAsDataUrl(file))
+        files.slice(0, remainingSlots).map((file) =>
+          readFileAsDataUrl(file, {
+            maxWidth: 1280,
+            maxHeight: 1280,
+            quality: 0.78,
+          })
+        )
       );
 
       setSettings((prev) => {
@@ -1343,10 +1345,10 @@ export default function DonatePageSettings() {
       });
 
       if (files.length > remainingSlots) {
-        setSaveMessage(`เพิ่มได้สูงสุด ${MAX_GALLERY_IMAGES} รูป ระบบเพิ่มให้ ${remainingSlots} รูปแรก`);
+        toast.warning(`เพิ่มได้สูงสุด ${MAX_GALLERY_IMAGES} รูป ระบบเพิ่มให้ ${remainingSlots} รูปแรก`);
       }
     } catch {
-      setSaveMessage("อัปโหลดรูปไม่สำเร็จ ลองใหม่อีกครั้ง");
+      toast.error("อัปโหลดรูปไม่สำเร็จ ลองใหม่อีกครั้ง");
     }
   };
 
@@ -1366,40 +1368,6 @@ export default function DonatePageSettings() {
       [arrayKey]: prev[arrayKey].map((item) =>
         item.id === id ? { ...item, [key]: value } : item
       ),
-    }));
-  };
-
-  const addQuickAmount = () => {
-    setSettings((prev) => ({
-      ...prev,
-      donation: {
-        ...prev.donation,
-        quickAmounts: [...prev.donation.quickAmounts, 100],
-      },
-    }));
-  };
-
-  const updateQuickAmount = (index, value) => {
-    const nextValue = Number(value || 0);
-
-    setSettings((prev) => ({
-      ...prev,
-      donation: {
-        ...prev.donation,
-        quickAmounts: prev.donation.quickAmounts.map((amount, idx) =>
-          idx === index ? nextValue : amount
-        ),
-      },
-    }));
-  };
-
-  const removeQuickAmount = (index) => {
-    setSettings((prev) => ({
-      ...prev,
-      donation: {
-        ...prev.donation,
-        quickAmounts: prev.donation.quickAmounts.filter((_, idx) => idx !== index),
-      },
     }));
   };
 
@@ -1534,6 +1502,7 @@ export default function DonatePageSettings() {
               <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
+                  disabled={loading}
                   className="border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white"
                   onClick={() => setIsPreviewModalOpen(true)}
                 >
@@ -1550,67 +1519,17 @@ export default function DonatePageSettings() {
               <SectionCard
                 id="theme"
                 title="ธีม & ดีไซน์"
-                description="เลือกธีม สี เอฟเฟกต์ และบรรยากาศของหน้ารับโดเนท"
+                description="แยกโทนสีหลักออกจากกรอบเทศกาล เพื่อให้หน้าดูสะอาดและไม่สีจัดเกินไป"
                 icon={Palette}
               >
-                <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  {themes.map((theme, index) => (
-                    <motion.button
-                      key={theme.id}
-                      initial={{ opacity: 0, scale: 0.96 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.03 }}
-                      onClick={() =>
-                        setSettings((prev) => ({ ...prev, theme: theme.id }))
-                      }
-                      className={cx(
-                        "group relative overflow-hidden rounded-xl border p-4 text-left transition-all",
-                        settings.theme === theme.id
-                          ? "border-cyan-400 shadow-lg shadow-cyan-500/20"
-                          : "border-slate-700/70 hover:border-slate-500"
-                      )}
-                    >
-                      <div
-                        className={cx(
-                          "absolute inset-0 bg-gradient-to-br opacity-80",
-                          theme.preview
-                        )}
-                      />
-                      <div className="relative">
-                        <div className="mb-6 flex items-start justify-between">
-                          <div
-                            className={cx(
-                              "h-11 w-11 rounded-xl bg-gradient-to-br shadow-lg",
-                              theme.accent
-                            )}
-                          />
-                          {settings.theme === theme.id && (
-                            <div className="flex h-7 w-7 items-center justify-center rounded-full bg-cyan-400 text-slate-950">
-                              <Check className="h-4 w-4" />
-                            </div>
-                          )}
-                        </div>
-
-                        <div className="space-y-2">
-                          <div className="h-2 rounded-full bg-white/20" />
-                          <div className="h-2 w-2/3 rounded-full bg-white/10" />
-                          <div className="h-8 rounded-lg bg-black/25" />
-                        </div>
-
-                        <p className="mt-4 font-semibold text-white">{theme.name}</p>
-                      </div>
-                    </motion.button>
-                  ))}
-                </div>
-
-                <div className="mt-6">
+                <div>
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <div>
                       <p className="text-sm font-semibold text-white">
-                        Seasonal Decoration Presets
+                        กรอบเทศกาล
                       </p>
                       <p className="text-xs text-slate-500">
-                        เลือกชุดของตกแต่งสำเร็จรูปสำหรับฟอร์มโดเนท แล้ว preview จะอัปเดตทันที
+                        เพิ่มแค่กรอบ ลาย และ ornament ตามเทศกาล โดยคงโทนสีหลักที่เลือกไว้
                       </p>
                     </div>
                     <div className="rounded-full border border-slate-700 bg-slate-900/70 px-3 py-1 text-xs text-slate-300">
@@ -1618,7 +1537,7 @@ export default function DonatePageSettings() {
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                  <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
                     {donationDecorationPresets.map((preset) => {
                       const isActive =
                         settings.design.decorationPreset === preset.id;
@@ -1661,97 +1580,43 @@ export default function DonatePageSettings() {
                               )}
                             </div>
 
-                            <div className="grid grid-cols-3 gap-2">
-                              <div className="h-14 rounded-xl border border-white/10 bg-black/20" />
-                              <div className="h-14 rounded-xl border border-white/10 bg-black/15" />
-                              <div className="h-14 rounded-xl border border-white/10 bg-black/10" />
+                            <div className="relative h-24 overflow-hidden rounded-2xl border border-white/10 bg-[radial-gradient(circle_at_top,_rgba(255,255,255,0.16),_transparent_42%),linear-gradient(180deg,rgba(15,23,42,0.55),rgba(2,6,23,0.75))]">
+                              {preset.sectionDecorations?.panelLeft?.src ? (
+                                <Image
+                                  src={preset.sectionDecorations.panelLeft.src}
+                                  alt={preset.sectionDecorations.panelLeft.alt || `${preset.name} left decoration`}
+                                  width={56}
+                                  height={56}
+                                  className="pointer-events-none absolute -left-2 -top-2 h-14 w-auto opacity-95"
+                                />
+                              ) : null}
+                              {preset.sectionDecorations?.panelRight?.src ? (
+                                <Image
+                                  src={preset.sectionDecorations.panelRight.src}
+                                  alt={preset.sectionDecorations.panelRight.alt || `${preset.name} right decoration`}
+                                  width={56}
+                                  height={56}
+                                  className="pointer-events-none absolute -right-2 -top-2 h-14 w-auto opacity-95"
+                                />
+                              ) : null}
+                              <div className="absolute inset-x-4 bottom-4 h-10 rounded-xl border border-white/10 bg-black/20" />
+                              <div className="absolute inset-x-8 bottom-8 h-2 rounded-full bg-white/10" />
                             </div>
 
                             <p className="text-[11px] text-white/65">
-                              Applies color theme: {preset.themeId}
+                              {preset.id === "original-default"
+                                ? "ลุคเดิมของหน้าแบบไม่เพิ่มกรอบหรือลายพิเศษ"
+                                : preset.id === "ice-default"
+                                  ? "ลุคพื้นฐานของระบบ พร้อมกรอบน้ำแข็งเดิม"
+                                  : "เปลี่ยนเฉพาะกรอบเทศกาล ไม่เปลี่ยนโทนสีหลัก"}
                             </p>
                           </div>
                         </button>
                       );
                     })}
                   </div>
-                </div>
 
-                <div className="mt-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
-                  <Field label="สีหลัก Primary">
-                    <GlassInput value={selectedTheme.primary} readOnly />
-                  </Field>
-                  <Field label="สีรอง Secondary">
-                    <GlassInput value={selectedTheme.secondary} readOnly />
-                  </Field>
-                  <Field label="พื้นหลัง Background">
-                    <GlassInput value={selectedTheme.background} readOnly />
-                  </Field>
-                </div>
-
-                <div className="mt-5 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                  <ToggleRow
-                    icon={Sparkles}
-                    title="เอฟเฟกต์หิมะ"
-                    description="แสดงหิมะตกบนหน้าโดเนท"
-                    checked={settings.design.snowEffect}
-                    onChange={(value) => updateDesign("snowEffect", value)}
-                  />
-                  <ToggleRow
-                    icon={Shield}
-                    title="Glass Effect"
-                    description="เปิดพื้นหลังโปร่งใสแบบกระจก"
-                    checked={settings.design.glassEffect}
-                    onChange={(value) => updateDesign("glassEffect", value)}
-                  />
-                  <ToggleRow
-                    icon={Sparkles}
-                    title="Glow Effect"
-                    description="เพิ่มแสงเรืองให้ปุ่มและการ์ด"
-                    checked={settings.design.glowEffect}
-                    onChange={(value) => updateDesign("glowEffect", value)}
-                  />
-                  <ToggleRow
-                    icon={Monitor}
-                    title="Compact Mode"
-                    description="ลดช่องไฟให้หน้าแน่นขึ้น"
-                    checked={settings.design.compactMode}
-                    onChange={(value) => updateDesign("compactMode", value)}
-                  />
-                </div>
-
-                <div className="mt-5 grid gap-5 md:grid-cols-3">
-                  <Field label={`ความเข้มของการ์ด ${settings.design.cardOpacity}%`}>
-                    <Slider
-                      value={[settings.design.cardOpacity]}
-                      min={30}
-                      max={100}
-                      step={1}
-                      onValueChange={(value) => updateDesign("cardOpacity", value[0])}
-                    />
-                  </Field>
-                  <Field label={`ความเบลอพื้นหลัง ${settings.design.backgroundBlur}%`}>
-                    <Slider
-                      value={[settings.design.backgroundBlur]}
-                      min={0}
-                      max={100}
-                      step={1}
-                      onValueChange={(value) =>
-                        updateDesign("backgroundBlur", value[0])
-                      }
-                    />
-                  </Field>
-                  <Field label={`ความโค้งมุม ${settings.design.borderRadius}px`}>
-                    <Slider
-                      value={[settings.design.borderRadius]}
-                      min={8}
-                      max={32}
-                      step={1}
-                      onValueChange={(value) =>
-                        updateDesign("borderRadius", value[0])
-                      }
-                    />
-                  </Field>
+                  <SectionSaveAction onSave={() => handleSaveSettings("draft")} {...sectionSaveActionProps} />
                 </div>
               </SectionCard>
               )}
@@ -1777,7 +1642,7 @@ export default function DonatePageSettings() {
                         <p className="mb-3 text-sm font-medium text-slate-300">
                           รูปโปรไฟล์
                         </p>
-                        <div className="mx-auto h-24 w-24 overflow-hidden rounded-2xl shadow-lg shadow-purple-500/20">
+                        <div className="mx-auto h-56 w-56 overflow-hidden rounded-full border-4 border-slate-800 shadow-xl shadow-purple-500/20">
                           {settings.profile.avatarUrl ? (
                             <img
                               src={settings.profile.avatarUrl}
@@ -1785,7 +1650,7 @@ export default function DonatePageSettings() {
                               className="h-full w-full object-cover"
                             />
                           ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple-500 to-blue-500 text-3xl font-bold text-white">
+                            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple-500 to-blue-500 text-6xl font-bold text-white">
                               {settings.profile.name.slice(0, 1).toUpperCase()}
                             </div>
                           )}
@@ -1814,7 +1679,7 @@ export default function DonatePageSettings() {
                           รูปปก Banner
                         </p>
                         <div
-                          className="h-24 rounded-xl bg-cover bg-center"
+                          className="aspect-[16/6] w-full overflow-hidden rounded-2xl border border-slate-800 bg-cover bg-center shadow-lg shadow-black/20"
                           style={{ backgroundImage: `url(${settings.profile.bannerUrl})` }}
                         />
                         <Button
@@ -1850,7 +1715,7 @@ export default function DonatePageSettings() {
                       </div>
 
                       <div className="flex items-center gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 px-4 py-3">
-                        <div className="h-16 w-16 overflow-hidden rounded-2xl shadow-lg shadow-purple-500/20">
+                        <div className="h-28 w-28 overflow-hidden rounded-full border-4 border-slate-800 shadow-xl shadow-purple-500/20">
                           {settings.profile.avatarUrl ? (
                             <img
                               src={settings.profile.avatarUrl}
@@ -1858,7 +1723,7 @@ export default function DonatePageSettings() {
                               className="h-full w-full object-cover"
                             />
                           ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple-500 to-blue-500 text-2xl font-bold text-white">
+                            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple-500 to-blue-500 text-[2.25rem] font-bold text-white">
                               {settings.profile.name.slice(0, 1).toUpperCase()}
                             </div>
                           )}
@@ -1900,16 +1765,7 @@ export default function DonatePageSettings() {
                       </p>
                     </Field>
 
-                    <div className="mt-4 flex justify-end">
-                      <Button
-                        variant="outline"
-                        className="border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white"
-                        onClick={() => handleSaveSettings("draft")}
-                      >
-                        <Save className="mr-2 h-4 w-4" />
-                        บันทึกส่วนนี้
-                      </Button>
-                    </div>
+                    <SectionSaveAction onSave={() => handleSaveSettings("draft")} {...sectionSaveActionProps} />
                   </div>
 
                   <div className="rounded-[28px] border border-white/15 bg-gradient-to-tl from-white/10 via-slate-900/30 to-transparent p-5 sm:p-6">
@@ -1994,16 +1850,7 @@ export default function DonatePageSettings() {
                       เพิ่มลิงก์
                     </Button>
 
-                    <div className="mt-4 flex justify-end">
-                      <Button
-                        variant="outline"
-                        className="border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white"
-                        onClick={() => handleSaveSettings("draft")}
-                      >
-                        <Save className="mr-2 h-4 w-4" />
-                        บันทึกส่วนนี้
-                      </Button>
-                    </div>
+                    <SectionSaveAction onSave={() => handleSaveSettings("draft")} {...sectionSaveActionProps} />
                   </div>
                 </div>
               </SectionCard>
@@ -2017,359 +1864,136 @@ export default function DonatePageSettings() {
                 description="ตั้งค่าช่องทางรับเงินที่ใช้รับการสนับสนุน"
                 icon={Gift}
               >
-                <div className="space-y-5">
+                <div className="grid gap-4 xl:grid-cols-3">
                   <div className="rounded-3xl border border-slate-800 bg-slate-950/40 p-5">
-                    <div className="mb-4">
-                      <p className="font-semibold text-white">ช่องทางรับเงิน</p>
-                      <p className="text-xs text-slate-500">
-                        ตั้งค่าช่องทางที่ผู้สนับสนุนใช้โอนเงินหรือส่งโดเนท
-                      </p>
+                    <div className="mb-5 flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-base font-semibold text-white">พร้อมเพย์</p>
+                        <p className="text-sm text-slate-400">เบอร์โทร, เลขบัตรประชาชน หรือเลขบัญชี</p>
+                      </div>
+                      <MiniSwitch
+                        checked={settings.donation.channels.promptpay.enabled}
+                        onCheckedChange={(value) =>
+                          updateDonationChannel("promptpay", "enabled", value)
+                        }
+                      />
                     </div>
 
-                    <div className="grid gap-4 lg:grid-cols-2">
-                    <DonationChannelCard
-                      title="Bank Account"
-                      subtitle="Receive donations via direct bank transfer"
-                      badge="BK"
-                      enabled={donationChannels.bank.enabled}
-                      expanded={donationChannels.bank.expanded}
-                      onToggleEnabled={() =>
-                        updateDonationChannel(
-                          "bank",
-                          "enabled",
-                          !donationChannels.bank.enabled
-                        )
-                      }
-                      onToggleExpanded={() =>
-                        updateDonationChannel(
-                          "bank",
-                          "expanded",
-                          !donationChannels.bank.expanded
-                        )
-                      }
-                    >
-                      <Field label="Bank Name">
+                    <div className="space-y-4">
+                      <Field label="ประเภทพร้อมเพย์">
+                        <Select
+                          value={settings.donation.channels.promptpay.type}
+                          onValueChange={(value) =>
+                            updateDonationChannel("promptpay", "type", value)
+                          }
+                        >
+                          <SelectTrigger className="border-slate-700 bg-slate-950/50 text-white">
+                            <SelectValue placeholder="เลือกประเภท" />
+                          </SelectTrigger>
+                          <SelectContent className="border-slate-700 bg-slate-900 text-white">
+                            <SelectItem value="phone" className="text-white focus:bg-slate-800 focus:text-white">
+                              เบอร์โทรศัพท์
+                            </SelectItem>
+                            <SelectItem value="national_id" className="text-white focus:bg-slate-800 focus:text-white">
+                              เลขประจำตัวประชาชน
+                            </SelectItem>
+                            <SelectItem value="account" className="text-white focus:bg-slate-800 focus:text-white">
+                              เลขบัญชี
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </Field>
+
+                      <Field label="หมายเลขพร้อมเพย์">
                         <GlassInput
-                          value={donationChannels.bank.bankName}
-                          placeholder="Enter bank name"
+                          value={settings.donation.channels.promptpay.value}
+                          placeholder="กรอกข้อมูลพร้อมเพย์"
+                          onChange={(e) =>
+                            updateDonationChannel("promptpay", "value", e.target.value)
+                          }
+                        />
+                      </Field>
+                    </div>
+                  </div>
+
+                  <div className="rounded-3xl border border-slate-800 bg-slate-950/40 p-5">
+                    <div className="mb-5 flex items-start justify-between gap-3">
+                      <div>
+                        <p className="text-base font-semibold text-white">บัญชีธนาคาร</p>
+                        <p className="text-sm text-slate-400">ข้อมูลบัญชีสำหรับการโอนผ่านธนาคาร</p>
+                      </div>
+                      <MiniSwitch
+                        checked={settings.donation.channels.bank.enabled}
+                        onCheckedChange={(value) =>
+                          updateDonationChannel("bank", "enabled", value)
+                        }
+                      />
+                    </div>
+
+                    <div className="space-y-4">
+                      <Field label="ชื่อธนาคาร">
+                        <GlassInput
+                          value={settings.donation.channels.bank.bankName}
+                          placeholder="เช่น SCB"
                           onChange={(e) =>
                             updateDonationChannel("bank", "bankName", e.target.value)
                           }
                         />
                       </Field>
 
-                      <Field label="Account Name">
+                      <Field label="ชื่อบัญชี">
                         <GlassInput
-                          value={donationChannels.bank.accountName}
-                          placeholder="Enter account name"
+                          value={settings.donation.channels.bank.accountName}
+                          placeholder="ชื่อเจ้าของบัญชี"
                           onChange={(e) =>
-                            updateDonationChannel(
-                              "bank",
-                              "accountName",
-                              e.target.value
-                            )
+                            updateDonationChannel("bank", "accountName", e.target.value)
                           }
                         />
                       </Field>
 
-                      <Field label="Account Number">
+                      <Field label="เลขบัญชี">
                         <GlassInput
-                          value={donationChannels.bank.accountNumber}
-                          placeholder="Enter account number"
+                          value={settings.donation.channels.bank.accountNumber}
+                          placeholder="123-4-56789-0"
                           onChange={(e) =>
-                            updateDonationChannel(
-                              "bank",
-                              "accountNumber",
-                              e.target.value
-                            )
+                            updateDonationChannel("bank", "accountNumber", e.target.value)
                           }
                         />
                       </Field>
-
-                      <div className="flex justify-end">
-                        <Button
-                          variant="outline"
-                          className="border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white"
-                          onClick={() => handleSaveSettings("draft")}
-                        >
-                          <Save className="mr-2 h-4 w-4" />
-                          บันทึกส่วนนี้
-                        </Button>
-                      </div>
-                    </DonationChannelCard>
+                    </div>
                   </div>
+
+                  <div className="rounded-3xl border border-dashed border-cyan-500/20 bg-cyan-500/5 p-5">
+                    <p className="text-sm font-semibold text-cyan-200">สถานะการใช้งาน</p>
+                    <div className="mt-4 space-y-3 text-sm text-slate-300">
+                      <div className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950/50 px-4 py-3">
+                        <span>พร้อมเพย์</span>
+                        <span className={cx(
+                          "rounded-full px-2.5 py-1 text-xs font-medium",
+                          settings.donation.channels.promptpay.enabled
+                            ? "bg-emerald-500/15 text-emerald-300"
+                            : "bg-slate-800 text-slate-400"
+                        )}>
+                          {settings.donation.channels.promptpay.enabled ? "เปิดใช้งาน" : "ปิดใช้งาน"}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between rounded-2xl border border-slate-800 bg-slate-950/50 px-4 py-3">
+                        <span>บัญชีธนาคาร</span>
+                        <span className={cx(
+                          "rounded-full px-2.5 py-1 text-xs font-medium",
+                          settings.donation.channels.bank.enabled
+                            ? "bg-emerald-500/15 text-emerald-300"
+                            : "bg-slate-800 text-slate-400"
+                        )}>
+                          {settings.donation.channels.bank.enabled ? "เปิดใช้งาน" : "ปิดใช้งาน"}
+                        </span>
+                      </div>
+                    </div>
+
+                    <SectionSaveAction onSave={() => handleSaveSettings("draft")} {...sectionSaveActionProps} />
                   </div>
                 </div>
               </SectionCard>
-              {false && <SectionCard
-                id="donation"
-                title="โดเนท"
-                description="ตั้งค่าฟอร์มโดเนท จำนวนเงิน QR Code และข้อความ"
-                icon={Heart}
-              >
-                <div className="grid gap-4 md:grid-cols-2">
-                  <Field label="หัวข้อฟอร์มโดเนท">
-                    <GlassInput
-                      value={settings.donation.pageTitle}
-                      onChange={(e) => updateDonation("pageTitle", e.target.value)}
-                    />
-                  </Field>
-
-                  <Field label={`ยอดโดเนทขั้นต่ำ ฿${settings.donation.minAmount}`}>
-                    <Slider
-                      value={[settings.donation.minAmount]}
-                      min={1}
-                      max={500}
-                      step={1}
-                      onValueChange={(value) => updateDonation("minAmount", value[0])}
-                    />
-                    <div className="flex justify-between text-xs text-slate-500">
-                      <span>฿1</span>
-                      <span>Max: ฿500</span>
-                    </div>
-                  </Field>
-
-                  <Field label="ข้อความต้อนรับ" className="md:col-span-2">
-                    <GlassTextarea
-                      value={settings.donation.welcomeMessage}
-                      onChange={(e) =>
-                        updateDonation("welcomeMessage", e.target.value)
-                      }
-                    />
-                  </Field>
-
-                  <Field label="ข้อความปุ่มโดเนท">
-                    <GlassInput
-                      value={settings.donation.buttonText}
-                      onChange={(e) => updateDonation("buttonText", e.target.value)}
-                    />
-                  </Field>
-
-                  <Field label="QR Code / PromptPay">
-                    <div className="flex gap-2">
-                      <GlassInput
-                        value={settings.donation.qrCodeUrl}
-                        placeholder="URL รูป QR Code หรือเว้นว่างไว้"
-                        onChange={(e) => updateDonation("qrCodeUrl", e.target.value)}
-                      />
-                      <Button
-                        variant="outline"
-                        className="border-slate-700 bg-slate-900/60 text-slate-300"
-                      >
-                        <Upload className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </Field>
-                </div>
-
-              </SectionCard>}
-
-              {false && <SectionCard
-                id="donation-channels"
-                title="Donation Channels"
-                description="Configure how supporters can send donations"
-                icon={Gift}
-              >
-                <div>
-                  <div className="mb-3">
-                    <p className="font-semibold text-white">Donation Channels</p>
-                    <p className="text-xs text-slate-500">
-                      Configure how supporters can send donations
-                    </p>
-                  </div>
-
-                  <div className="grid gap-4 lg:grid-cols-2">
-                    <DonationChannelCard
-                      title="PromptPay"
-                      subtitle="Receive donations via PromptPay instantly"
-                      badge="PP"
-                      enabled={donationChannels.promptpay.enabled}
-                      expanded={donationChannels.promptpay.expanded}
-                      onToggleEnabled={() =>
-                        updateDonationChannel(
-                          "promptpay",
-                          "enabled",
-                          !donationChannels.promptpay.enabled
-                        )
-                      }
-                      onToggleExpanded={() =>
-                        updateDonationChannel(
-                          "promptpay",
-                          "expanded",
-                          !donationChannels.promptpay.expanded
-                        )
-                      }
-                    >
-                      <Field label="PromptPay Type">
-                        <select
-                          value={donationChannels.promptpay.type}
-                          onChange={(e) =>
-                            updateDonationChannel(
-                              "promptpay",
-                              "type",
-                              e.target.value
-                            )
-                          }
-                          className="w-full rounded-lg border border-slate-700/80 bg-slate-950/50 px-3 py-2.5 text-sm text-white outline-none transition-all focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/15"
-                        >
-                          <option value="phone">Phone Number</option>
-                          <option value="national_id">National ID</option>
-                          <option value="account">Account Number</option>
-                        </select>
-                      </Field>
-
-                      <Field label="PromptPay Value">
-                        <GlassInput
-                          value={donationChannels.promptpay.value}
-                          placeholder="Enter PromptPay value"
-                          onChange={(e) =>
-                            updateDonationChannel(
-                              "promptpay",
-                              "value",
-                              e.target.value
-                            )
-                          }
-                        />
-                      </Field>
-                    </DonationChannelCard>
-
-                    <DonationChannelCard
-                      title="Bank Account"
-                      subtitle="Receive donations via direct bank transfer"
-                      badge="BK"
-                      enabled={donationChannels.bank.enabled}
-                      expanded={donationChannels.bank.expanded}
-                      onToggleEnabled={() =>
-                        updateDonationChannel(
-                          "bank",
-                          "enabled",
-                          !donationChannels.bank.enabled
-                        )
-                      }
-                      onToggleExpanded={() =>
-                        updateDonationChannel(
-                          "bank",
-                          "expanded",
-                          !donationChannels.bank.expanded
-                        )
-                      }
-                    >
-                      <Field label="Bank Name">
-                        <GlassInput
-                          value={donationChannels.bank.bankName}
-                          placeholder="Enter bank name"
-                          onChange={(e) =>
-                            updateDonationChannel("bank", "bankName", e.target.value)
-                          }
-                        />
-                      </Field>
-
-                      <Field label="Account Name">
-                        <GlassInput
-                          value={donationChannels.bank.accountName}
-                          placeholder="Enter account name"
-                          onChange={(e) =>
-                            updateDonationChannel(
-                              "bank",
-                              "accountName",
-                              e.target.value
-                            )
-                          }
-                        />
-                      </Field>
-
-                      <Field label="Account Number">
-                        <GlassInput
-                          value={donationChannels.bank.accountNumber}
-                          placeholder="Enter account number"
-                          onChange={(e) =>
-                            updateDonationChannel(
-                              "bank",
-                              "accountNumber",
-                              e.target.value
-                            )
-                          }
-                        />
-                      </Field>
-                    </DonationChannelCard>
-                  </div>
-                </div>
-              </SectionCard>}
-
-                {false && <div className="mt-5">
-                  <div className="mb-3 flex items-center justify-between">
-                    <div>
-                      <p className="font-semibold text-white">จำนวนเงินแนะนำ</p>
-                      <p className="text-xs text-slate-500">
-                        จำนวนเงินที่จะแสดงเป็นปุ่มลัดในฟอร์มโดเนท
-                      </p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={addQuickAmount}
-                      className="border-slate-700 bg-slate-900/60 text-slate-300"
-                    >
-                      <Plus className="mr-2 h-4 w-4" />
-                      เพิ่มจำนวน
-                    </Button>
-                  </div>
-
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    {settings.donation.quickAmounts.map((amount, index) => (
-                      <div
-                        key={`${amount}-${index}`}
-                        className="flex items-center gap-2 rounded-xl border border-slate-800 bg-slate-950/40 p-3"
-                      >
-                        <span className="text-sm text-slate-500">฿</span>
-                        <GlassInput
-                          type="number"
-                          value={amount}
-                          onChange={(e) => updateQuickAmount(index, e.target.value)}
-                        />
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => removeQuickAmount(index)}
-                          className="border-slate-700 bg-slate-900/60 text-slate-400"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>}
-
-                {false && <div className="mt-5 grid gap-3 md:grid-cols-2">
-                  <ToggleRow
-                    icon={ImageIcon}
-                    title="แสดง QR Code"
-                    description="ให้ผู้สนับสนุนสแกน QR ได้"
-                    checked={settings.donation.showQrCode}
-                    onChange={(value) => updateDonation("showQrCode", value)}
-                  />
-                  <ToggleRow
-                    icon={Gift}
-                    title="กำหนดจำนวนเงินเอง"
-                    description="ให้กรอกจำนวนเงินเองได้"
-                    checked={settings.donation.allowCustomAmount}
-                    onChange={(value) => updateDonation("allowCustomAmount", value)}
-                  />
-                  <ToggleRow
-                    icon={Users}
-                    title="อนุญาต Anonymous"
-                    description="ซ่อนชื่อผู้โดเนทได้"
-                    checked={settings.donation.allowAnonymous}
-                    onChange={(value) => updateDonation("allowAnonymous", value)}
-                  />
-                  <ToggleRow
-                    icon={MessageSquare}
-                    title="เปิดข้อความโดเนท"
-                    description="ให้ผู้โดเนทส่งข้อความได้"
-                    checked={settings.donation.showMessage}
-                    onChange={(value) => updateDonation("showMessage", value)}
-                  />
-                </div>}
               </>
               )}
 
@@ -2418,16 +2042,7 @@ export default function DonatePageSettings() {
                     </Field>
                   </div>
 
-                  <div className="mt-4 flex justify-end">
-                    <Button
-                      variant="outline"
-                      className="border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white"
-                      onClick={() => handleSaveSettings("draft")}
-                    >
-                      <Save className="mr-2 h-4 w-4" />
-                      บันทึกส่วนนี้
-                    </Button>
-                  </div>
+                  <SectionSaveAction onSave={() => handleSaveSettings("draft")} {...sectionSaveActionProps} />
                 </SectionCard>
 
               <SectionCard
@@ -2537,16 +2152,11 @@ export default function DonatePageSettings() {
                     </div>
                   ) : null}
 
-                  <div className="mt-6 flex justify-end">
-                    <Button
-                      variant="outline"
-                      className="border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white"
-                      onClick={() => handleSaveSettings("draft")}
-                    >
-                      <Save className="mr-2 h-4 w-4" />
-                      บันทึกส่วนนี้
-                    </Button>
-                  </div>
+                  <SectionSaveAction
+                    onSave={() => handleSaveSettings("draft")}
+                    className="mt-6"
+                    {...sectionSaveActionProps}
+                  />
                 </div>
               </SectionCard>
               </>
@@ -2678,84 +2288,7 @@ export default function DonatePageSettings() {
                   </div>
                 </div>
 
-                {false && <div className="grid gap-3 md:grid-cols-2">
-                  <ToggleRow
-                    icon={Music}
-                    title="เปิด Music Player"
-                    description="แสดงกล่องเพลงบนหน้าโดเนท"
-                    checked={settings.music.enabled}
-                    onChange={(value) => updateMusic("enabled", value)}
-                  />
-                  <ToggleRow
-                    icon={LinkIcon}
-                    title="รับเพลงจาก YouTube"
-                    description="ให้ผู้ใช้ส่งลิงก์เพลงได้"
-                    checked={settings.music.allowYoutubeRequest}
-                    onChange={(value) =>
-                      updateMusic("allowYoutubeRequest", value)
-                    }
-                  />
-                  <ToggleRow
-                    icon={Upload}
-                    title="เปิดอัปโหลดเพลง"
-                    description="อนุญาตอัปโหลดไฟล์เพลง"
-                    checked={settings.music.allowUpload}
-                    onChange={(value) => updateMusic("allowUpload", value)}
-                  />
-                  <ToggleRow
-                    icon={Headphones}
-                    title="แสดง Playlist"
-                    description="แสดงรายการเพลงถัดไป"
-                    checked={settings.music.showPlaylist}
-                    onChange={(value) => updateMusic("showPlaylist", value)}
-                  />
-                </div>}
-
-                {false && <div className="mt-5 grid gap-4 md:grid-cols-3">
-                  <Field label="ชื่อเพลงปัจจุบัน">
-                    <GlassInput
-                      value={settings.music.currentSong.title}
-                      onChange={(e) =>
-                        setSettings((prev) => ({
-                          ...prev,
-                          music: {
-                            ...prev.music,
-                            currentSong: {
-                              ...prev.music.currentSong,
-                              title: e.target.value,
-                            },
-                          },
-                        }))
-                      }
-                    />
-                  </Field>
-                  <Field label="ศิลปิน">
-                    <GlassInput
-                      value={settings.music.currentSong.artist}
-                      onChange={(e) =>
-                        setSettings((prev) => ({
-                          ...prev,
-                          music: {
-                            ...prev.music,
-                            currentSong: {
-                              ...prev.music.currentSong,
-                              artist: e.target.value,
-                            },
-                          },
-                        }))
-                      }
-                    />
-                  </Field>
-                  <Field label={`ระดับเสียง ${settings.music.volume}%`}>
-                    <Slider
-                      value={[settings.music.volume]}
-                      min={0}
-                      max={100}
-                      step={1}
-                      onValueChange={(value) => updateMusic("volume", value[0])}
-                    />
-                  </Field>
-                </div>}
+                <SectionSaveAction onSave={() => handleSaveSettings("draft")} {...sectionSaveActionProps} />
               </SectionCard>
               )}
 
@@ -2854,16 +2387,7 @@ export default function DonatePageSettings() {
                       ))}
                     </div>
 
-                    <div className="mt-4 flex justify-end">
-                      <Button
-                        variant="outline"
-                        className="border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white"
-                        onClick={() => handleSaveSettings("draft")}
-                      >
-                        <Save className="mr-2 h-4 w-4" />
-                        บันทึกส่วนนี้
-                      </Button>
-                    </div>
+                    <SectionSaveAction onSave={() => handleSaveSettings("draft")} {...sectionSaveActionProps} />
                   </div>
 
                   <div className="rounded-3xl border border-slate-800 bg-slate-950/40 p-5">
@@ -2985,16 +2509,7 @@ export default function DonatePageSettings() {
                       ))}
                     </div>
 
-                    <div className="mt-4 flex justify-end">
-                      <Button
-                        variant="outline"
-                        className="border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white"
-                        onClick={() => handleSaveSettings("draft")}
-                      >
-                        <Save className="mr-2 h-4 w-4" />
-                        บันทึกส่วนนี้
-                      </Button>
-                    </div>
+                    <SectionSaveAction onSave={() => handleSaveSettings("draft")} {...sectionSaveActionProps} />
                   </div>
                 </div>
               </SectionCard>
@@ -3099,6 +2614,7 @@ export default function DonatePageSettings() {
                     </div>
                   )}
                 </div>
+                <SectionSaveAction onSave={() => handleSaveSettings("draft")} {...sectionSaveActionProps} />
               </SectionCard>
               )}
 
@@ -3209,118 +2725,10 @@ export default function DonatePageSettings() {
                     );
                   })}
                 </div>
+                <SectionSaveAction onSave={() => handleSaveSettings("draft")} {...sectionSaveActionProps} />
               </SectionCard>
               )}
 
-              {false && activeTab === "products" && (
-              <SectionCard
-                id="products"
-                title="สินค้า / โปรโมชัน"
-                description="จัดการสินค้าหรือโปรโมชันที่แสดงบนหน้าโดเนท"
-                icon={ShoppingBag}
-              >
-                <div className="mb-4 flex items-center justify-between">
-                  <p className="text-sm text-slate-400">
-                    ใช้สำหรับขาย Merch หรือโปรโมตสินค้าให้แฟนคลับ
-                  </p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="border-slate-700 bg-slate-900/60 text-slate-300"
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    เพิ่มสินค้า
-                  </Button>
-                </div>
-
-                <div className="grid gap-4 lg:grid-cols-3">
-                  {settings.products.map((product) => (
-                    <div
-                      key={product.id}
-                      className="rounded-xl border border-slate-800 bg-slate-950/40 p-3"
-                    >
-                      <div
-                        className="mb-3 h-28 rounded-lg bg-cover bg-center"
-                        style={{ backgroundImage: `url(${product.image})` }}
-                      />
-                      <Field label="ชื่อสินค้า">
-                        <GlassInput
-                          value={product.name}
-                          onChange={(e) =>
-                            updateArrayItem(
-                              "products",
-                              product.id,
-                              "name",
-                              e.target.value
-                            )
-                          }
-                        />
-                      </Field>
-                      <Field label="ราคา" className="mt-3">
-                        <GlassInput
-                          type="number"
-                          value={product.price}
-                          onChange={(e) =>
-                            updateArrayItem(
-                              "products",
-                              product.id,
-                              "price",
-                              Number(e.target.value || 0)
-                            )
-                          }
-                        />
-                      </Field>
-                      <div className="mt-3 flex items-center justify-between">
-                        <span className="text-sm text-slate-400">แสดงสินค้า</span>
-                        <MiniSwitch
-                          checked={product.enabled}
-                          onCheckedChange={(value) =>
-                            updateArrayItem(
-                              "products",
-                              product.id,
-                              "enabled",
-                              value
-                            )
-                          }
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </SectionCard>
-              )}
-
-              <div className="sticky bottom-0 z-20 -mx-4 border-t border-slate-800 bg-slate-950/95 px-4 py-4 lg:-mx-6 lg:px-6">
-                <div className="flex flex-col gap-3 sm:flex-row sm:justify-end">
-                  {saveMessage ? (
-                    <div className="flex items-center text-sm text-emerald-300 sm:mr-auto">
-                      {saveMessage}
-                    </div>
-                  ) : null}
-                  <Button
-                    variant="outline"
-                    className="border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white"
-                    onClick={handleRestoreSaved}
-                  >
-                    ยกเลิก
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white"
-                    onClick={() => handleSaveSettings("draft")}
-                  >
-                    <Save className="mr-2 h-4 w-4" />
-                    บันทึกร่าง
-                  </Button>
-                  <Button
-                    className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white shadow-lg shadow-purple-500/20 hover:from-cyan-400 hover:to-purple-400"
-                    onClick={() => handleSaveSettings("publish")}
-                  >
-                    <Check className="mr-2 h-4 w-4" />
-                    บันทึก & เผยแพร่
-                  </Button>
-                </div>
-              </div>
             </div>
           </div>
         </main>
@@ -3396,347 +2804,6 @@ export default function DonatePageSettings() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
-  );
-}
-
-function LegacyLivePreview({ settings, selectedTheme }) {
-  return (
-    <div className="max-h-[calc(100vh-150px)] overflow-y-auto rounded-xl border border-slate-800 bg-[#06101d] p-3 scrollbar-thin scrollbar-track-slate-950 scrollbar-thumb-slate-700">
-      <div
-        className="relative overflow-hidden rounded-xl border border-slate-700 bg-cover bg-center"
-        style={{
-          backgroundImage: `url(${settings.profile.bannerUrl})`,
-        }}
-      >
-        <div className="absolute inset-0 bg-black/50" />
-        <div className="relative p-4 pt-16">
-          <div className="flex items-end gap-3">
-            <div
-              className={cx(
-                "flex h-20 w-20 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br text-3xl font-black text-white shadow-lg",
-                selectedTheme.accent
-              )}
-            >
-              {settings.profile.name.slice(0, 1).toUpperCase()}
-            </div>
-            <div className="min-w-0 pb-1">
-              <div className="flex items-center gap-2">
-                <h3 className="truncate text-2xl font-black text-white">
-                  {settings.profile.name}
-                </h3>
-                {settings.profile.verified && (
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-blue-500">
-                    <Check className="h-3 w-3 text-white" />
-                  </span>
-                )}
-                {settings.profile.isOnline && (
-                  <span className="rounded-full bg-green-500/20 px-2 py-1 text-[10px] font-bold text-green-300">
-                    ONLINE
-                  </span>
-                )}
-              </div>
-              <div className="mt-1 flex items-center gap-2 text-xs text-slate-300">
-                <span>{settings.profile.handle}</span>
-                <Copy className="h-3 w-3" />
-              </div>
-              <p className="mt-2 line-clamp-2 text-xs text-slate-200">
-                {settings.profile.bio}
-              </p>
-            </div>
-          </div>
-
-          <div className="mt-4 flex flex-wrap gap-2">
-            {settings.socials
-              .filter((item) => item.enabled)
-              .map((social) => (
-                <span
-                  key={social.id}
-                  className="rounded-full border border-white/15 bg-black/35 px-3 py-1.5 text-xs text-white"
-                >
-                  {social.label}
-                </span>
-              ))}
-          </div>
-        </div>
-      </div>
-
-      <div className="mt-3 grid gap-3">
-        {settings.display.showDonationForm && (
-          <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
-            <div className="mb-3 flex items-center gap-2">
-              <Heart className="h-4 w-4 text-purple-300" />
-              <h4 className="font-bold text-white">{settings.donation.pageTitle}</h4>
-            </div>
-
-            <p className="mb-3 text-xs text-slate-400">
-              {settings.donation.welcomeMessage}
-            </p>
-
-            <div className="grid grid-cols-[110px_1fr] gap-3">
-              {settings.donation.showQrCode && (
-                <div className="flex h-28 items-center justify-center rounded-lg bg-white text-xs font-bold text-slate-900">
-                  QR CODE
-                </div>
-              )}
-
-              <div className="space-y-3">
-                <div className="flex flex-wrap gap-2">
-                  {settings.donation.quickAmounts.map((amount, index) => (
-                    <span
-                      key={`${amount}-${index}`}
-                      className={cx(
-                        "rounded-lg border px-3 py-1.5 text-xs text-white",
-                        index === 1
-                          ? "border-purple-400 bg-purple-500/30"
-                          : "border-slate-700 bg-slate-950/60"
-                      )}
-                    >
-                      ฿{amount}
-                    </span>
-                  ))}
-                </div>
-
-                <div className="rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2 text-sm text-white">
-                  ฿ {settings.donation.minAmount}
-                </div>
-
-                {settings.donation.showMessage && (
-                  <div className="rounded-lg border border-slate-700 bg-slate-950/60 px-3 py-2 text-xs text-slate-400">
-                    ส่งข้อความกำลังใจให้สตรีมเมอร์...
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <button
-              className={cx(
-                "mt-4 w-full rounded-xl bg-gradient-to-r py-3 font-bold text-white shadow-lg",
-                selectedTheme.accent
-              )}
-            >
-              ♥ {settings.donation.buttonText}
-            </button>
-          </div>
-        )}
-
-        {settings.display.showMusicPanel && settings.music.enabled && (
-          <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
-            <div className="mb-3 flex items-center gap-2">
-              <Music className="h-4 w-4 text-cyan-300" />
-              <p className="text-xs font-bold uppercase tracking-wide text-slate-300">
-                Now Playing
-              </p>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <div
-                className={cx(
-                  "flex h-14 w-14 items-center justify-center rounded-lg bg-gradient-to-br",
-                  selectedTheme.accent
-                )}
-              >
-                <Music className="h-6 w-6 text-white" />
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="truncate font-semibold text-white">
-                  {settings.music.currentSong.title}
-                </p>
-                <p className="text-xs text-slate-400">
-                  {settings.music.currentSong.artist}
-                </p>
-                <div className="mt-2 h-1.5 rounded-full bg-slate-800">
-                  <div
-                    className={cx("h-full w-1/2 rounded-full bg-gradient-to-r", selectedTheme.accent)}
-                  />
-                </div>
-              </div>
-              <button
-                className={cx(
-                  "flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br",
-                  selectedTheme.accent
-                )}
-              >
-                <Play className="h-4 w-4 fill-white text-white" />
-              </button>
-            </div>
-
-            {settings.music.showPlaylist && (
-              <div className="mt-3 space-y-1">
-                {settings.music.playlist.slice(0, 3).map((song, index) => (
-                  <div
-                    key={song.id}
-                    className="flex items-center justify-between rounded-lg bg-slate-950/50 px-3 py-2 text-xs text-slate-300"
-                  >
-                    <span>
-                      {index + 1}. {song.title}
-                    </span>
-                    <span className="text-slate-500">{song.duration}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-        )}
-
-        {settings.display.showGallery && (
-          <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <ImageIcon className="h-4 w-4 text-cyan-300" />
-                <p className="font-bold text-white">แกลเลอรี</p>
-              </div>
-              <span className="text-xs text-purple-300">ดูทั้งหมด</span>
-            </div>
-
-            <div className="grid grid-cols-4 gap-2">
-              {settings.gallery
-                .filter((item) => item.enabled)
-                .slice(0, 4)
-                .map((item) => (
-                  <div
-                    key={item.id}
-                    className="h-16 rounded-lg bg-cover bg-center"
-                    style={{ backgroundImage: `url(${item.url})` }}
-                  />
-                ))}
-            </div>
-          </div>
-        )}
-
-        {settings.display.showVideoHighlights && (
-          <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
-            <div className="mb-3 flex items-center gap-2">
-              <Video className="h-4 w-4 text-cyan-300" />
-              <p className="font-bold text-white">ไฮไลท์วิดีโอ</p>
-            </div>
-
-            <div className="grid grid-cols-3 gap-2">
-              {settings.videos
-                .filter((item) => item.enabled)
-                .slice(0, 3)
-                .map((video) => (
-                  <div key={video.id}>
-                    <div
-                      className="relative h-16 rounded-lg bg-cover bg-center"
-                      style={{ backgroundImage: `url(${video.thumbnail})` }}
-                    >
-                      <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-black/30">
-                        <Play className="h-5 w-5 fill-white text-white" />
-                      </div>
-                    </div>
-                    <p className="mt-1 truncate text-[10px] text-white">
-                      {video.title}
-                    </p>
-                  </div>
-                ))}
-            </div>
-          </div>
-        )}
-
-        {settings.display.showSchedule && (
-          <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
-            <div className="mb-3 flex items-center gap-2">
-              <CalendarDays className="h-4 w-4 text-cyan-300" />
-              <p className="font-bold text-white">ตารางสตรีม</p>
-            </div>
-
-            <div className="space-y-2">
-              {settings.schedule
-                .filter((item) => item.enabled)
-                .slice(0, 5)
-                .map((item) => (
-                  <div
-                    key={item.id}
-                    className="grid grid-cols-[60px_1fr_1fr] gap-2 text-xs"
-                  >
-                    <span className="text-slate-400">{item.day}</span>
-                    <span className="flex items-center gap-1 text-slate-300">
-                      <Clock className="h-3 w-3" />
-                      {item.time}
-                    </span>
-                    <span className="text-right text-white">{item.title}</span>
-                  </div>
-                ))}
-            </div>
-          </div>
-        )}
-
-        {settings.display.showProducts && (
-          <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
-            <div className="mb-3 flex items-center gap-2">
-              <ShoppingBag className="h-4 w-4 text-cyan-300" />
-              <p className="font-bold text-white">สินค้า / โปรโมชัน</p>
-            </div>
-
-            <div className="grid grid-cols-3 gap-2">
-              {settings.products
-                .filter((item) => item.enabled)
-                .slice(0, 3)
-                .map((product) => (
-                  <div
-                    key={product.id}
-                    className="overflow-hidden rounded-lg border border-slate-800 bg-slate-950/50"
-                  >
-                    <div
-                      className="h-16 bg-cover bg-center"
-                      style={{ backgroundImage: `url(${product.image})` }}
-                    />
-                    <div className="p-2">
-                      <p className="truncate text-[10px] text-white">
-                        {product.name}
-                      </p>
-                      <p className="text-xs font-bold text-cyan-300">
-                        ฿{product.price}
-                      </p>
-                    </div>
-                  </div>
-                ))}
-            </div>
-          </div>
-        )}
-
-        {settings.display.showRecentDonations &&
-          settings.recentDonations.enabled && (
-            <div className="rounded-xl border border-slate-700 bg-slate-900/70 p-4">
-              <div className="mb-3 flex items-center gap-2">
-                <Gift className="h-4 w-4 text-cyan-300" />
-                <p className="font-bold text-white">ผู้สนับสนุนล่าสุด</p>
-              </div>
-
-              <div className="space-y-2">
-                {settings.recentDonations.items
-                  .slice(0, settings.recentDonations.maxItems)
-                  .map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-center justify-between gap-3 rounded-lg bg-slate-950/50 px-3 py-2"
-                    >
-                      <div>
-                        <p className="text-xs font-semibold text-white">
-                          {item.name}
-                        </p>
-                        <p className="text-[10px] text-slate-500">{item.message}</p>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-xs font-bold text-cyan-300">
-                          ฿{item.amount}
-                        </p>
-                        <p className="text-[10px] text-slate-500">{item.time}</p>
-                      </div>
-                    </div>
-                  ))}
-              </div>
-            </div>
-          )}
-      </div>
-
-      {settings.display.showFooter && (
-        <div className="mt-3 flex items-center justify-between text-[10px] text-slate-600">
-          <span>© 2024 DonateHUB</span>
-          <span>TrueMoney / PromptPay</span>
-        </div>
-      )}
     </div>
   );
 }
