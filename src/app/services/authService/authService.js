@@ -1,6 +1,7 @@
 // src/app/services/authService/authService.js
 
 const API_URL = process.env.NEXT_PUBLIC_AUTH_API_URL || "http://localhost:5000/api/auth"; // backend ของคุณ
+const USERS_API_URL = process.env.NEXT_PUBLIC_USERS_API_URL || "http://localhost:5000/api/users";
 
 // ============================
 // LOGIN
@@ -37,7 +38,7 @@ export async function loginService(email, password) {
 // ============================
 export const registerService = async (payload) => {
   try {
-    const response = await fetch(`${API_URL}/register`, {
+    const response = await fetch(`${USERS_API_URL}/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
