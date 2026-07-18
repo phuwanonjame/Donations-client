@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import {
   CalendarDays,
   Clapperboard,
@@ -13,6 +13,7 @@ import {
   Loader2,
   Music2,
   Play,
+  RefreshCw,
   ShieldCheck,
   ImageIcon,
   Upload,
@@ -26,6 +27,8 @@ const socialIcons = {
   facebook: Globe,
   tiktok: Music2,
 };
+
+const WIDGET_ONLINE_API_BASE = "http://localhost:8080/widget/online";
 
 const tabItems = [
   { id: "highlights", label: "ไฮไลต์ & คลิปเด็ด", icon: Play },
@@ -243,6 +246,48 @@ export default function PublicDonatePage({
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
+  const [isWidgetOnline, setIsWidgetOnline] = useState(
+    Boolean(settings.profile.isOnline)
+  );
+  const [isCheckingWidgetStatus, setIsCheckingWidgetStatus] = useState(false);
+  const widgetStatusRequestRef = useRef(false);
+
+  useEffect(() => {
+    setIsWidgetOnline(Boolean(settings.profile.isOnline));
+  }, [settings.profile.isOnline]);
+
+  const refreshWidgetStatus = async () => {
+    if (!donationTargetUserId || isCheckingWidgetStatus || widgetStatusRequestRef.current) {
+      return;
+    }
+
+    widgetStatusRequestRef.current = true;
+    setIsCheckingWidgetStatus(true);
+
+    try {
+      const res = await fetch(
+        `${WIDGET_ONLINE_API_BASE}/${encodeURIComponent(donationTargetUserId)}`,
+        {
+          method: "GET",
+          cache: "no-store",
+        }
+      );
+
+      if (!res.ok) {
+        setIsWidgetOnline(false);
+        return;
+      }
+
+      const payload = await res.json();
+      setIsWidgetOnline(Boolean(payload?.online));
+    } catch {
+      setIsWidgetOnline(false);
+    } finally {
+      widgetStatusRequestRef.current = false;
+      setIsCheckingWidgetStatus(false);
+    }
+  };
+
   const socials = useMemo(
     () =>
       (settings.socials || [])
@@ -287,6 +332,7 @@ export default function PublicDonatePage({
   const sectionDecorations = settings.design?.sectionDecorations || {};
   const bankChannel = settings.donation?.channels?.bank || {};
   const promptPayChannel = settings.donation?.channels?.promptpay || {};
+  const bankName = bankChannel.bankName || "";
   const promptPayValue = promptPayChannel.value || "0826589650";
   const promptPayQrAmount = customAmount || String(donationAmount);
   const promptPayQrUrl = `https://promptpay.io/${encodeURIComponent(
@@ -485,21 +531,44 @@ export default function PublicDonatePage({
                     )}
                   </div>
                 </div>
-                <span className="absolute bottom-5 right-3 h-6 w-6 rounded-full border-4 border-[#0a1233] bg-lime-400 shadow-[0_0_18px_rgba(132,204,22,0.75)] lg:bottom-6 lg:right-4" />
+                <span
+                  className={[
+                    "absolute bottom-5 right-3 h-6 w-6 rounded-full border-4 border-[#0a1233] lg:bottom-6 lg:right-4",
+                    isWidgetOnline
+                      ? "bg-lime-400 shadow-[0_0_18px_rgba(132,204,22,0.75)]"
+                      : "bg-slate-500 shadow-[0_0_16px_rgba(100,116,139,0.35)]",
+                  ].join(" ")}
+                />
               </div>
 
               <div className="max-w-3xl">
                 <div className="mb-3 flex flex-wrap items-center gap-2">
-                  {settings.profile.isOnline ? (
-                    <>
-                      <span className="rounded-full bg-red-500 px-3 py-1 text-xs font-bold text-white">
-                        LIVE
-                      </span>
-                      <span className="rounded-full border border-lime-400/25 bg-lime-400/10 px-3 py-1 text-xs font-medium text-lime-300">
-                        ออนไลน์
-                      </span>
-                    </>
-                  ) : null}
+                  <button
+                    type="button"
+                    onClick={() => void refreshWidgetStatus()}
+                    disabled={!donationTargetUserId || isCheckingWidgetStatus}
+                    className={[
+                      "inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-xs font-semibold transition duration-200 focus:outline-none focus:ring-2 focus:ring-cyan-300/70 focus:ring-offset-2 focus:ring-offset-[#09122f]",
+                      isWidgetOnline
+                        ? "border-lime-400/35 bg-lime-400/15 text-lime-200 shadow-[0_10px_24px_rgba(132,204,22,0.18)] hover:-translate-y-0.5 hover:bg-lime-400/22 hover:shadow-[0_14px_30px_rgba(132,204,22,0.22)] active:translate-y-0"
+                        : "border-slate-300/25 bg-slate-300/12 text-slate-200 shadow-[0_10px_24px_rgba(15,23,42,0.24)] hover:-translate-y-0.5 hover:bg-slate-300/18 hover:shadow-[0_14px_30px_rgba(15,23,42,0.3)] active:translate-y-0",
+                      !donationTargetUserId || isCheckingWidgetStatus
+                        ? "cursor-not-allowed opacity-80 pointer-events-none"
+                        : "",
+                    ].join(" ")}
+                  >
+                    <RefreshCw
+                      className={[
+                        "h-3 w-3",
+                        isCheckingWidgetStatus ? "animate-spin" : "",
+                      ].join(" ")}
+                    />
+                    {isCheckingWidgetStatus
+                      ? "checking..."
+                      : isWidgetOnline
+                        ? "widget online"
+                        : "widget offline"}
+                  </button>
                 </div>
 
                 <div className="flex flex-wrap items-center gap-3">
@@ -653,7 +722,7 @@ export default function PublicDonatePage({
                       />
                       <PaymentMethodCard
                         title="โอนธนาคาร"
-                        subtitle="ทุกธนาคาร"
+                        subtitle={bankName || "ทุกธนาคาร"}
                         logoSrc="/imgs/bank-logo.png"
                         active={selectedPayment === "bank"}
                         onClick={() => setSelectedPayment("bank")}
@@ -667,6 +736,12 @@ export default function PublicDonatePage({
                             ข้อมูลบัญชีสำหรับโอนเงิน
                           </p>
                           <div className="grid gap-3 rounded-[14px] border border-[#18285c] bg-[#07102f] p-4">
+                            <div className="rounded-[12px] border border-[#17275a] bg-[#050b26]/90 px-4 py-3">
+                              <p className="text-xs text-white/40">ธนาคาร</p>
+                              <p className="mt-1 text-base font-bold text-white">
+                                {bankName || "ยังไม่ได้ระบุชื่อธนาคาร"}
+                              </p>
+                            </div>
                             <div className="rounded-[12px] border border-[#17275a] bg-[#050b26]/90 px-4 py-3">
                               <p className="text-xs text-white/40">ชื่อบัญชี</p>
                               <p className="mt-1 text-base font-bold text-white">

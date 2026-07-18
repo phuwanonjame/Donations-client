@@ -98,8 +98,6 @@ export function buildDonatePageSettingsPatch(metadata) {
     },
     profile: {
       name: metadata?.profile?.name,
-      handle: metadata?.profile?.handle,
-      username: metadata?.profile?.username,
       bio: metadata?.profile?.bio,
       avatarUrl: metadata?.profile?.avatarUrl,
       bannerUrl: metadata?.profile?.bannerUrl,
