@@ -20,6 +20,7 @@ import { getDashboardCopy } from '../../i18n';
 import ColorInput from './ColorInput';
 import DropdownSelect from './DropdownSelect';
 import SectionWrapper from './SectionWrapper';
+import ShineStylePicker from './ShineStylePicker';
 import StringDropdownSelect from './StringDropdownSelect';
 import TemplateVariablesHint from './TemplateVariablesHint';
 import ThaiDateTimeInput from './ThaiDateTimeInput';
@@ -507,7 +508,22 @@ export default function GoalSettingsForm({
                 />
 
                 {settings.progressShine && (
-                  <DropdownSelect label="Shine style" value={settings.progressShineEffect ?? 'sweep'} options={progressShineEffects} onChange={(value) => update('progressShineEffect', value)} />
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between gap-3">
+                      <Label className="text-slate-300">Shine style</Label>
+                      <span className="text-[11px] uppercase tracking-[0.14em] text-slate-500">Live preview</span>
+                    </div>
+                    <ShineStylePicker
+                      value={settings.progressShineEffect ?? 'sweep'}
+                      onChange={(value) => update('progressShineEffect', value)}
+                      options={progressShineEffects}
+                      progressColor={settings.progressColor}
+                      progressSkin={settings.progressSkin ?? 'custom'}
+                      progressGradientFrom={settings.progressGradientFrom}
+                      progressGradientVia={settings.progressGradientVia}
+                      progressGradientTo={settings.progressGradientTo}
+                    />
+                  </div>
                 )}
               </div>
             </SectionWrapper>

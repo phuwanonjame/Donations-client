@@ -4,7 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 class Settings(BaseSettings):
     app_name: str = "Donation TTS Service"
-    api_prefix: str = ""
+    api_prefix: str = "/tts"
     default_voice: str = Field(default="th-TH-PremwadeeNeural")
     default_rate: str = Field(default="+0%")
     default_pitch: str = Field(default="+0Hz")
@@ -30,3 +30,4 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+

@@ -1,8 +1,54 @@
-import { getDefaultSettings } from '../constants/topDonateOptions';
+﻿import { getDefaultSettings } from '../constants/topDonateOptions';
+import { thaiGoogleFonts } from '../../DonateAlertSettings/components/utils/fontUtils';
+
+const FONT_WEIGHT_TO_API = {
+  normal: '400',
+  medium: '500',
+  bold: '700',
+  extrabold: '800',
+};
+
+const FONT_WEIGHT_FROM_API = {
+  '400': 'normal',
+  '500': 'medium',
+  '700': 'bold',
+  '800': 'extrabold',
+};
+
+const resolveFontName = (fontValue, fallback = 'IBM Plex Sans Thai') => {
+  if (!fontValue) return fallback;
+  const normalized = String(fontValue).trim().toLowerCase();
+  const matched = thaiGoogleFonts.find((font) =>
+    font.id.toLowerCase() === normalized || font.name.toLowerCase() === normalized,
+  );
+  return matched?.name || fontValue;
+};
+
+const resolveFontId = (fontValue, fallback = 'ibmplex') => {
+  if (!fontValue) return fallback;
+  const normalized = String(fontValue).trim().toLowerCase();
+  const matched = thaiGoogleFonts.find((font) =>
+    font.id.toLowerCase() === normalized || font.name.toLowerCase() === normalized,
+  );
+  return matched?.id || fallback;
+};
+
+const resolveWeightForApi = (weight, fallback = '700') => {
+  if (!weight) return fallback;
+  return FONT_WEIGHT_TO_API[weight] || String(weight);
+};
+
+const resolveWeightForSettings = (weight, fallback = 'bold') => {
+  if (!weight) return fallback;
+  const normalized = String(weight).trim().toLowerCase();
+  if (FONT_WEIGHT_FROM_API[normalized]) return FONT_WEIGHT_FROM_API[normalized];
+  if (['normal', 'medium', 'bold', 'extrabold'].includes(normalized)) return normalized;
+  return fallback;
+};
 
 export const DEFAULT_DONOR_DATA = {
   name: 'SuperFan123',
-  amount: '฿5,000',
+  amount: '5,000',
   message: 'Love your content! Keep it up!',
 };
 
@@ -47,14 +93,16 @@ const createTextStyle = (settings, prefix, fallbackSettings = {}) => ({
   color: settings[`${prefix}Color`] ?? fallbackSettings[`${prefix}Color`],
   fontSize: getFontSizeNumber(settings[`${prefix}FontSize`], getFontSizeNumber(fallbackSettings[`${prefix}FontSize`], 36)),
   alignment: settings[`${prefix}Alignment`] ?? fallbackSettings[`${prefix}Alignment`],
-  fontFamily: settings[`${prefix}FontFamily`] ?? fallbackSettings[`${prefix}FontFamily`],
-  fontWeight: settings[`${prefix}FontWeight`] ?? fallbackSettings[`${prefix}FontWeight`],
+  fontFamily: resolveFontName(settings[`${prefix}FontFamily`] ?? fallbackSettings[`${prefix}FontFamily`]),
+  fontWeight: resolveWeightForApi(settings[`${prefix}FontWeight`] ?? fallbackSettings[`${prefix}FontWeight`]),
   strokeColor: settings[`${prefix}StrokeColor`] ?? fallbackSettings[`${prefix}StrokeColor`],
   strokeWidth: getFontSizeNumber(settings[`${prefix}StrokeWidth`], getFontSizeNumber(fallbackSettings[`${prefix}StrokeWidth`], 0)),
 });
 
 const TOP_LEVEL_SETTING_KEYS = [
   'enabled',
+  'templateVariant',
+  'celebrationEffect',
   'title',
   'timeRange',
   'iconGlow',
@@ -117,25 +165,6 @@ const normalizeWidgetAlignment = (alignment, fallback = 'stack-center') => {
   return alignmentMap[alignment] || fallback;
 };
 
-const toApiWidgetAlignment = (alignment) => {
-  const normalized = normalizeWidgetAlignment(alignment, 'row-center');
-  const alignmentMap = {
-    'stack-center': 'flex-col',
-    'stack-left': 'flex-col',
-    'stack-right': 'flex-col',
-    'stack-reverse-center': 'flex-col-reverse',
-    'stack-reverse-left': 'flex-col-reverse',
-    'stack-reverse-right': 'flex-col-reverse',
-    'row-center': 'flex-row',
-    'row-left': 'flex-row',
-    'row-right': 'flex-row',
-    'row-reverse-center': 'flex-row-reverse',
-    'row-reverse-left': 'flex-row-reverse',
-    'row-reverse-right': 'flex-row-reverse',
-  };
-  return alignmentMap[normalized] || 'flex-row';
-};
-
 export const toMetadata = (settings) => {
   const defaults = getDefaultSettings();
 
@@ -143,6 +172,8 @@ export const toMetadata = (settings) => {
     type: 'TOP_DONATE',
     metadata: {
       enabled: settings.enabled ?? defaults.enabled,
+      templateVariant: settings.templateVariant ?? defaults.templateVariant,
+      celebrationEffect: settings.celebrationEffect ?? defaults.celebrationEffect,
       endAt: settings.isUseEndAt ? toTimestampOrNull(settings.endAt) : null,
       title: settings.title ?? defaults.title,
       timeRange: settings.timeRange ?? defaults.timeRange,
@@ -153,7 +184,7 @@ export const toMetadata = (settings) => {
       iconType: settings.iconType ?? defaults.iconType,
       showIcon: settings.showIcon ?? defaults.showIcon,
       showName: settings.showName ?? defaults.showName,
-      alignment: toApiWidgetAlignment(settings.alignment ?? defaults.alignment),
+      alignment: normalizeWidgetAlignment(settings.alignment ?? defaults.alignment, 'stack-center'),
       iconShape: settings.iconShape ?? defaults.iconShape,
       textColor: settings.textColor ?? defaults.textColor,
       iconBgMode: settings.iconBgMode ?? defaults.iconBgMode,
@@ -204,15 +235,15 @@ export const fromMetadata = (
       amountColor: amount.color ?? fallbackSettings.amountColor,
       amountFontSize: normalizeSliderValue(amount.fontSize, fallbackSettings.amountFontSize),
       amountAlignment: amount.alignment ?? fallbackSettings.amountAlignment,
-      amountFontFamily: amount.fontFamily ?? fallbackSettings.amountFontFamily,
-      amountFontWeight: amount.fontWeight ?? fallbackSettings.amountFontWeight,
+      amountFontFamily: resolveFontId(amount.fontFamily, fallbackSettings.amountFontFamily),
+      amountFontWeight: resolveWeightForSettings(amount.fontWeight, fallbackSettings.amountFontWeight),
       amountStrokeColor: amount.strokeColor ?? fallbackSettings.amountStrokeColor,
       amountStrokeWidth: normalizeSliderValue(amount.strokeWidth, fallbackSettings.amountStrokeWidth),
       topDonatorColor: topDonator.color ?? fallbackSettings.topDonatorColor,
       topDonatorFontSize: normalizeSliderValue(topDonator.fontSize, fallbackSettings.topDonatorFontSize),
       topDonatorAlignment: topDonator.alignment ?? fallbackSettings.topDonatorAlignment,
-      topDonatorFontFamily: topDonator.fontFamily ?? fallbackSettings.topDonatorFontFamily,
-      topDonatorFontWeight: topDonator.fontWeight ?? fallbackSettings.topDonatorFontWeight,
+      topDonatorFontFamily: resolveFontId(topDonator.fontFamily, fallbackSettings.topDonatorFontFamily),
+      topDonatorFontWeight: resolveWeightForSettings(topDonator.fontWeight, fallbackSettings.topDonatorFontWeight),
       topDonatorStrokeColor: topDonator.strokeColor ?? fallbackSettings.topDonatorStrokeColor,
       topDonatorStrokeWidth: normalizeSliderValue(topDonator.strokeWidth, fallbackSettings.topDonatorStrokeWidth),
       iconRadius: normalizeSliderValue(source.iconRadius, fallbackSettings.iconRadius),
@@ -229,3 +260,4 @@ export const fromMetadata = (
     },
   };
 };
+

@@ -1,7 +1,7 @@
 "use client";
 
 import { useSyncExternalStore } from "react";
-import DonatePageStructure from "@/components/donation/shared/DonatePageStructure";
+import PublicDonatePage from "@/components/donation/shared/PublicDonatePage";
 import { defaultDonatePageSettings } from "@/components/donation/shared/donatePageConfig";
 import { loadDonatePageSettings } from "@/components/donation/shared/donatePageStorage";
 
@@ -15,11 +15,11 @@ function buildPublicDonatePageSettings(source) {
       showMusicPanel: false,
       showVideoHighlights: true,
       showDailyContent: true,
-      showGallery: true,
+      showGallery: false,
       showSchedule: true,
       showProducts: false,
       showRecentDonations: false,
-      showFooter: false,
+      showFooter: true,
     },
   };
 }
@@ -38,6 +38,7 @@ function subscribe(onStoreChange) {
   const handleStorageChange = () => {
     onStoreChange();
   };
+
   window.addEventListener("storage", handleStorageChange);
 
   return () => {
@@ -64,5 +65,5 @@ export default function DonateProfile() {
     () => defaultPublicDonatePageSettings
   );
 
-  return <DonatePageStructure settings={settings} />;
+  return <PublicDonatePage settings={settings} />;
 }

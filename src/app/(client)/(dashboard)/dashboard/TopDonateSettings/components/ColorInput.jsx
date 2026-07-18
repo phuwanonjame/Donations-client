@@ -11,6 +11,7 @@ const COLOR_SWATCHES = [
 
 const normalizeHexColor = (value, fallback = '#FFFFFF') => {
   const raw = String(value || '').trim();
+  if (raw.toLowerCase() === 'transparent') return 'transparent';
   if (/^#[0-9A-Fa-f]{6}$/.test(raw)) return raw.toUpperCase();
   if (/^#[0-9A-Fa-f]{3}$/.test(raw)) {
     return '#' + raw.slice(1).split('').map((char) => char + char).join('').toUpperCase();
@@ -18,11 +19,24 @@ const normalizeHexColor = (value, fallback = '#FFFFFF') => {
   return fallback.toUpperCase();
 };
 
+const CHECKERBOARD_STYLE = {
+  backgroundColor: '#FFFFFF',
+  backgroundImage:
+    'linear-gradient(45deg, #CBD5E1 25%, transparent 25%), linear-gradient(-45deg, #CBD5E1 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #CBD5E1 75%), linear-gradient(-45deg, transparent 75%, #CBD5E1 75%)',
+  backgroundSize: '8px 8px',
+  backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px',
+};
+
+const getSwatchPreviewStyle = (color) =>
+  color === 'transparent' ? CHECKERBOARD_STYLE : { backgroundColor: color };
+
 const getReadableTextColor = (hexColor) => {
-  const normalized = normalizeHexColor(hexColor, '#000000').slice(1);
-  const r = parseInt(normalized.slice(0, 2), 16);
-  const g = parseInt(normalized.slice(2, 4), 16);
-  const b = parseInt(normalized.slice(4, 6), 16);
+  const normalized = normalizeHexColor(hexColor, '#000000');
+  if (normalized === 'transparent') return '#FFFFFF';
+  const stripped = normalized.slice(1);
+  const r = parseInt(stripped.slice(0, 2), 16);
+  const g = parseInt(stripped.slice(2, 4), 16);
+  const b = parseInt(stripped.slice(4, 6), 16);
   const luminance = (0.299 * r) + (0.587 * g) + (0.114 * b);
   return luminance > 186 ? '#000000' : '#FFFFFF';
 };
@@ -79,7 +93,7 @@ export default function ColorInput({ label, value, onChange }) {
           style={{ borderColor: normalizedValue }}
         >
           <div className="flex items-center gap-3">
-            <div className="h-6 w-6 rounded-full border border-white/20" style={{ backgroundColor: normalizedValue }} />
+            <div className="h-6 w-6 rounded-full border border-white/20" style={getSwatchPreviewStyle(normalizedValue)} />
             <span className="font-mono uppercase">{normalizedValue}</span>
           </div>
           <ChevronDown className={isOpen ? 'h-5 w-5 rotate-180 transition-transform duration-300' : 'h-5 w-5 transition-transform duration-300'} />
@@ -87,6 +101,17 @@ export default function ColorInput({ label, value, onChange }) {
 
         {isOpen && (
           <div className="absolute right-0 top-full z-50 mt-2 min-w-full w-[320px] max-w-[calc(100vw-2rem)] rounded-3xl border border-white/10 bg-black/40 p-4 backdrop-blur-sm shadow-2xl shadow-black/30">
+            <button
+              type="button"
+              onClick={() => applyColor('transparent')}
+              className={`mb-3 flex w-full items-center justify-center gap-2 rounded-xl border px-3 py-2 text-xs font-medium text-white transition-all hover:border-cyan-300/60 ${
+                normalizedValue === 'transparent' ? 'border-cyan-300/80 bg-cyan-300/10' : 'border-white/10 bg-black/30'
+              }`}
+            >
+              <span className="h-4 w-4 rounded-full border border-white/30" style={CHECKERBOARD_STYLE} />
+              ไม่ใช้พื้นหลัง (โปร่งใส)
+            </button>
+
             <div className="mb-3 grid grid-cols-5 gap-2">
               {COLOR_SWATCHES.map((swatch) => (
                 <button
@@ -94,14 +119,14 @@ export default function ColorInput({ label, value, onChange }) {
                   type="button"
                   onClick={() => applyColor(swatch)}
                   className="mx-auto h-8 w-8 rounded-full border border-white/20 transition-all hover:scale-110"
-                  style={{ backgroundColor: swatch }}
+                  style={getSwatchPreviewStyle(swatch)}
                 />
               ))}
             </div>
 
             <div
               className="mb-3 flex h-16 w-full items-center justify-center rounded-lg border border-white/10 font-mono text-sm uppercase"
-              style={{ backgroundColor: normalizedValue, color: getReadableTextColor(normalizedValue) }}
+              style={{ ...getSwatchPreviewStyle(normalizedValue), color: getReadableTextColor(normalizedValue) }}
             >
               {normalizedValue}
             </div>
@@ -110,7 +135,7 @@ export default function ColorInput({ label, value, onChange }) {
               <label className="relative flex-1 cursor-pointer">
                 <input
                   type="color"
-                  value={normalizedValue}
+                  value={normalizedValue === 'transparent' ? '#000000' : normalizedValue}
                   onChange={(e) => applyColor(e.target.value)}
                   className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
                 />

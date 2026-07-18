@@ -44,7 +44,7 @@ pip install -r requirements.txt
 ```powershell
 cd services/tts-python
 .venv\Scripts\Activate.ps1
-uvicorn app.main:app --reload --host 127.0.0.1 --port 8010
+uvicorn app.main:app --reload --host 127.0.0.1 --port 4000
 ```
 
 ## Endpoints
@@ -52,7 +52,7 @@ uvicorn app.main:app --reload --host 127.0.0.1 --port 8010
 ### Health check
 
 ```http
-GET /health
+GET /tts/health
 ```
 
 ### List voices
@@ -64,16 +64,16 @@ Optional query params:
 - `search`
 
 ```http
-GET /voices
-GET /voices?locale=th-TH
-GET /voices?locale=en-US&gender=Female
-GET /voices?search=Jenny
+GET /tts/voices
+GET /tts/voices?locale=th-TH
+GET /tts/voices?locale=en-US&gender=Female
+GET /tts/voices?search=Jenny
 ```
 
 ### Synthesize speech
 
 ```http
-POST /synthesize
+POST /tts/synthesize
 Content-Type: application/json
 ```
 
@@ -93,11 +93,12 @@ The response is streamed as `audio/mpeg`.
 
 ## Suggested frontend usage
 
-1. Call `GET /voices` once and cache the list.
+1. Call `GET /tts/voices` once and cache the list.
 2. Store the selected `voice` id in widget settings.
-3. When previewing or playing alerts, call `POST /synthesize`.
+3. When previewing or playing alerts, call `POST /tts/synthesize`.
 
 ## Notes
 
 - `edge-tts` uses Microsoft online voices, so the Python service needs internet access.
 - If you later want a fully offline version, create a second isolated service such as `services/tts-offline/` with Piper.
+

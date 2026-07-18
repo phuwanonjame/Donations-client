@@ -13,6 +13,7 @@ const COLOR_SWATCHES = [
 ];
 
 const POPUP_WIDTH = 320;
+const POPUP_HEIGHT_ESTIMATE = 300;
 
 const normalizeHexColor = (value, fallback = '#FFFFFF') => {
   const raw = String(value || '').trim();
@@ -57,13 +58,24 @@ export default function ColorInput({ label, value, onChange }) {
       if (!triggerRef.current) return;
       const rect = triggerRef.current.getBoundingClientRect();
       const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
       const availableWidth = Math.min(POPUP_WIDTH, viewportWidth - 16);
       const left = Math.max(8, Math.min(rect.left, viewportWidth - availableWidth - 8));
+
+      const spaceBelow = viewportHeight - rect.bottom - 16;
+      const spaceAbove = rect.top - 16;
+      const shouldFlipUp = spaceBelow < POPUP_HEIGHT_ESTIMATE && spaceAbove > spaceBelow;
+      const top = shouldFlipUp
+        ? Math.max(8, rect.top - POPUP_HEIGHT_ESTIMATE - 8)
+        : Math.min(rect.bottom + 8, viewportHeight - POPUP_HEIGHT_ESTIMATE - 8);
+
       setMenuStyle({
         position: 'fixed',
-        top: rect.bottom + 8,
+        top: Math.max(8, top),
         left,
         width: availableWidth,
+        maxHeight: viewportHeight - 16,
+        overflowY: 'auto',
         zIndex: 1000,
       });
     };

@@ -585,13 +585,13 @@ function WidgetCardPreview({ widgetId, preview }) {
 }
 
 function WidgetUrlCardField({ widgetId, preview }) {
+  const { user } = useAuth();
   const isDonatePage = widgetId === 'donate-page';
   const type = WIDGET_URL_TYPES[widgetId];
-  const resolvedWidgetId = preview?.widgetId || null;
   const widgetUrl = isDonatePage
     ? preview?.publicUrl || ''
-    : type ? createWidgetUrl(type, resolvedWidgetId || 'preview') : '';
-  const hasRealWidget = isDonatePage ? Boolean(preview?.publicUrl) : Boolean(type && resolvedWidgetId);
+    : type ? createWidgetUrl(type, user?.id, user?.widgetToken) : '';
+  const hasRealWidget = isDonatePage ? Boolean(preview?.publicUrl) : Boolean(widgetUrl);
 
   const handleCopy = async () => {
     if (!widgetUrl) return;

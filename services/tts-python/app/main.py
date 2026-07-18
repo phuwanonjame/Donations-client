@@ -1,9 +1,10 @@
 from io import BytesIO
+import json
 import shutil
 import subprocess
 
 import edge_tts
-from fastapi import FastAPI, HTTPException, Query
+from fastapi import APIRouter, FastAPI, HTTPException, Query, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse, StreamingResponse
 from gtts import gTTS
@@ -24,46 +25,47 @@ app.add_middleware(
 TTS_STYLES = [
     TtsStyleItem(
         id="soft_female",
-        name="ผู้หญิงนุ่มนวล",
-        description="น้ำเสียงสุภาพ ฟังง่าย เหมาะกับโดเนททั่วไป",
+        name="Soft Female",
+        description="Polite, easy-listening voice for regular donation alerts.",
         rate=0.95,
         pitch=1.05,
         recommended_voice="th-TH-PremwadeeNeural",
     ),
     TtsStyleItem(
         id="bright_kid",
-        name="เด็กสดใส",
-        description="พูดเร็วขึ้นและเสียงสูงขึ้น ให้ความรู้สึกสดใส",
+        name="Bright Kid",
+        description="Faster and brighter delivery for energetic moments.",
         rate=1.18,
         pitch=1.3,
         recommended_voice="th-TH-PremwadeeNeural",
     ),
     TtsStyleItem(
         id="teen_streamer",
-        name="วัยรุ่นสตรีมเมอร์",
-        description="จังหวะคล่องตัว สนุกขึ้นเล็กน้อย",
+        name="Teen Streamer",
+        description="Slightly faster and more playful for stream vibes.",
         rate=1.08,
         pitch=1.12,
         recommended_voice="th-TH-PremwadeeNeural",
     ),
     TtsStyleItem(
         id="deep_male",
-        name="ผู้ชายทุ้ม",
-        description="ช้าลงเล็กน้อยและโทนต่ำลง",
+        name="Deep Male",
+        description="Lower and calmer tone.",
         rate=0.9,
         pitch=0.78,
         recommended_voice="th-TH-NiwatNeural",
     ),
     TtsStyleItem(
         id="elder_male",
-        name="ผู้ชายสูงอายุ",
-        description="ชัดถ้อยชัดคำ ช้าลงและทุ้มขึ้นอีกระดับ",
+        name="Elder Male",
+        description="Clearer, slower, and deeper delivery.",
         rate=1.08,
         pitch=0.68,
         recommended_voice="th-TH-NiwatNeural",
     ),
 ]
 TTS_STYLE_MAP = {style.id: style for style in TTS_STYLES}
+router = APIRouter(prefix=settings.api_prefix)
 
 
 def _voice_to_gtts_lang(voice: str) -> str:
@@ -131,63 +133,80 @@ def _apply_ffmpeg_voice_style(
     return proc.stdout
 
 
-@app.get("/health")
-async def health() -> dict[str, str]:
-    return {"status": "ok"}
+def _coerce_tts_value(value, fallback=None):
+    if value is None:
+        return fallback
+    if isinstance(value, (int, float)):
+        return str(value)
+    return str(value).strip()
 
 
-@app.get("/voices")
-async def list_voices(
-    locale: str | None = Query(default=None),
-    gender: str | None = Query(default=None),
-    search: str | None = Query(default=None),
-) -> JSONResponse:
-    voices = await edge_tts.list_voices()
-    filtered: list[VoiceItem] = []
-
-    for voice in voices:
-        item = VoiceItem(
-            name=voice["Name"],
-            short_name=voice["ShortName"],
-            gender=voice["Gender"],
-            locale=voice["Locale"],
-            friendly_name=voice.get("FriendlyName"),
-        )
-
-        if locale and item.locale.lower() != locale.lower():
-            continue
-        if gender and item.gender.lower() != gender.lower():
-            continue
-        if search:
-            haystack = " ".join(
-                [
-                    item.name,
-                    item.short_name,
-                    item.locale,
-                    item.friendly_name or "",
-                ]
-            ).lower()
-            if search.lower() not in haystack:
-                continue
-
-        filtered.append(item)
-
-    filtered.sort(key=lambda item: (item.locale, item.short_name))
-    return JSONResponse([item.model_dump() for item in filtered])
+def _extract_payload_value(source, *keys):
+    for key in keys:
+        if key in source and source[key] is not None:
+            return source[key]
+    return None
 
 
-@app.get("/styles")
-async def list_styles() -> JSONResponse:
-    return JSONResponse([style.model_dump() for style in TTS_STYLES])
+def _resolve_payload_container(raw_payload):
+    if not isinstance(raw_payload, dict):
+        return {}
+
+    for key in ("payload", "data", "tts", "body", "request"):
+        nested = raw_payload.get(key)
+        if isinstance(nested, dict):
+            return {**raw_payload, **nested}
+
+    return raw_payload
 
 
-@app.post("/synthesize")
-async def synthesize(payload: SynthesizeRequest) -> StreamingResponse:
+async def _parse_synthesize_request(request: Request) -> SynthesizeRequest:
+    raw_payload = {}
+    content_type = (request.headers.get("content-type") or "").lower()
+
+    if "application/json" in content_type:
+        try:
+            raw_payload = await request.json()
+        except Exception:
+            body_text = (await request.body()).decode("utf-8", errors="ignore")
+            raw_payload = json.loads(body_text) if body_text else {}
+    elif "application/x-www-form-urlencoded" in content_type or "multipart/form-data" in content_type:
+        form = await request.form()
+        raw_payload = dict(form)
+    else:
+        body_text = (await request.body()).decode("utf-8", errors="ignore").strip()
+        if body_text:
+            try:
+                raw_payload = json.loads(body_text)
+            except Exception:
+                raw_payload = {"text": body_text}
+
+    payload_source = _resolve_payload_container(raw_payload)
+    text_value = _extract_payload_value(payload_source, "text", "message", "content", "input", "messageText", "ttsText")
+    voice_value = _extract_payload_value(payload_source, "voice", "voiceId", "ttsVoice")
+    style_value = _extract_payload_value(payload_source, "style_id", "styleId", "ttsStyleId")
+    rate_value = _extract_payload_value(payload_source, "rate", "ttsRate", "speed", "tempo")
+    pitch_value = _extract_payload_value(payload_source, "pitch", "ttsPitch")
+    volume_value = _extract_payload_value(payload_source, "volume", "ttsVolume")
+
+    return SynthesizeRequest.model_validate(
+        {
+            "text": _coerce_tts_value(text_value),
+            "voice": _coerce_tts_value(voice_value),
+            "style_id": _coerce_tts_value(style_value),
+            "rate": _coerce_tts_value(rate_value),
+            "pitch": _coerce_tts_value(pitch_value),
+            "volume": _coerce_tts_value(volume_value),
+        }
+    )
+
+
+async def _synthesize_from_payload(payload: SynthesizeRequest) -> StreamingResponse:
     style = TTS_STYLE_MAP.get(payload.style_id or "")
     voice = payload.voice or style.recommended_voice if style and not payload.voice else payload.voice
     voice = voice or settings.default_voice
-    rate = payload.rate or ( _style_to_edge_rate(style.rate) if style else settings.default_rate)
-    pitch = payload.pitch or ( _style_to_edge_pitch(style.pitch) if style else settings.default_pitch)
+    rate = payload.rate or (_style_to_edge_rate(style.rate) if style else settings.default_rate)
+    pitch = payload.pitch or (_style_to_edge_pitch(style.pitch) if style else settings.default_pitch)
     volume = payload.volume or settings.default_volume
 
     audio_buffer = BytesIO()
@@ -233,3 +252,69 @@ async def synthesize(payload: SynthesizeRequest) -> StreamingResponse:
     audio_buffer.seek(0)
     headers = {"Content-Disposition": f'inline; filename="{filename}"'}
     return StreamingResponse(audio_buffer, media_type=media_type, headers=headers)
+
+
+@router.get("/health")
+async def health() -> dict[str, str]:
+    return {"status": "ok"}
+
+
+@router.get("/voices")
+async def list_voices(
+    locale: str | None = Query(default=None),
+    gender: str | None = Query(default=None),
+    search: str | None = Query(default=None),
+) -> JSONResponse:
+    voices = await edge_tts.list_voices()
+    filtered: list[VoiceItem] = []
+
+    for voice in voices:
+        item = VoiceItem(
+            name=voice["Name"],
+            short_name=voice["ShortName"],
+            gender=voice["Gender"],
+            locale=voice["Locale"],
+            friendly_name=voice.get("FriendlyName"),
+        )
+
+        if locale and item.locale.lower() != locale.lower():
+            continue
+        if gender and item.gender.lower() != gender.lower():
+            continue
+        if search:
+            haystack = " ".join(
+                [
+                    item.name,
+                    item.short_name,
+                    item.locale,
+                    item.friendly_name or "",
+                ]
+            ).lower()
+            if search.lower() not in haystack:
+                continue
+
+        filtered.append(item)
+
+    filtered.sort(key=lambda item: (item.locale, item.short_name))
+    return JSONResponse([item.model_dump() for item in filtered])
+
+
+@router.get("/styles")
+async def list_styles() -> JSONResponse:
+    return JSONResponse([style.model_dump() for style in TTS_STYLES])
+
+
+@router.post("/synthesize")
+async def synthesize(request: Request) -> StreamingResponse:
+    payload = await _parse_synthesize_request(request)
+    return await _synthesize_from_payload(payload)
+
+
+@app.post("/tts")
+@app.post("/tts/")
+async def synthesize_provider(request: Request) -> StreamingResponse:
+    payload = await _parse_synthesize_request(request)
+    return await _synthesize_from_payload(payload)
+
+
+app.include_router(router)

@@ -386,7 +386,10 @@ export default function PreviewPanel({
               >
                 <AlertPreview
                   ref={alertPreviewRef}
-                  settings={settings}
+                  settings={{
+                    ...settings,
+                    messageText: testDonationMessage || settings.messageText,
+                  }}
                   isPlaying={isPlaying}
                   onPlayStateChange={setIsPlaying}
                   onAnimationStepChange={setAnimationStep}
@@ -565,3 +568,4 @@ export default function PreviewPanel({
     </div>
   );
 }
+

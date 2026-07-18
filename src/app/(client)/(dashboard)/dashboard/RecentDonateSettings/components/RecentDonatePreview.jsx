@@ -162,18 +162,8 @@ export default function RecentDonatePreview({ settings, donations, onReset, onSa
             padding,
           }}
         >
-          <div className="mb-4 flex items-center justify-between gap-3 border-b border-white/10 pb-3">
-            <div className="flex items-center gap-2 text-xs font-semibold text-white/90">
-              <span className="h-2 w-2 rounded-full bg-rose-500" />
-              LIVE
-            </div>
+          <div className="mb-4 flex items-center justify-end gap-3 border-b border-white/10 pb-3">
             <span className="truncate text-right" style={buildTitleStyle(settings)}>{settings.title}</span>
-          </div>
-
-          <div className="grid grid-cols-[64px_1fr_132px] gap-3 border-b border-white/10 px-1 pb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-slate-500">
-            <span>Rank</span>
-            <span>Supporter</span>
-            <span className="text-right">Amount</span>
           </div>
 
           <div className="mt-3 flex flex-col" style={{ gap: itemSpacing }}>

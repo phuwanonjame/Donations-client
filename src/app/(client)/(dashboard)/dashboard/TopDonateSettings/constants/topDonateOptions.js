@@ -1,4 +1,8 @@
 import { createWidgetUrl } from "@/utils/widgetUrls";
+import {
+  thaiGoogleFonts,
+  fontWeights as alertFontWeights,
+} from '../../DonateAlertSettings/components/utils/fontUtils';
 
 export const timeRanges = [
   { id: 'today',  name: 'Today' },
@@ -35,34 +39,39 @@ export const textAlignments = [
   { id: 'right', name: 'Right' },
 ];
 
-export const fontFamilies = [
-  { id: 'IBM Plex Sans Thai', name: 'IBM Plex Sans Thai' },
-  { id: 'Kanit', name: 'Kanit' },
-  { id: 'Prompt', name: 'Prompt' },
-  { id: 'Sarabun', name: 'Sarabun' },
-  { id: 'Noto Sans Thai', name: 'Noto Sans Thai' },
-  { id: 'Inter', name: 'Inter' },
-  { id: 'Poppins', name: 'Poppins' },
-  { id: 'Montserrat', name: 'Montserrat' },
-];
-
-export const fontWeights = [
-  { id: '400', name: '400' },
-  { id: '500', name: '500' },
-  { id: '600', name: '600' },
-  { id: '700', name: '700' },
-  { id: '800', name: '800' },
-  { id: '900', name: '900' },
-];
+export const fontFamilies = thaiGoogleFonts.map((font) => ({ id: font.id, name: font.name }));
+export const fontWeights = alertFontWeights.map((weight) => ({
+  id: weight,
+  name: weight.charAt(0).toUpperCase() + weight.slice(1),
+}));
 
 export function generateWidgetUrl(widgetId = 'preview') {
   return createWidgetUrl('top', widgetId);
 }
 
+export const celebrationEffects = [
+  { id: 'burst', name: 'Burst' },
+  { id: 'confetti', name: 'Confetti' },
+  { id: 'shake', name: 'Shake' },
+  { id: 'none', name: 'None' },
+];
+
+export const templateVariants = [
+  { id: 'classic',          name: 'Classic' },
+  { id: 'hero-center',      name: 'Hero Center Card' },
+  { id: 'neon-glass',       name: 'Neon Glass Spotlight' },
+  { id: 'minimal-banner',   name: 'Minimal Premium Banner' },
+  { id: 'trophy-podium',    name: 'Trophy Podium Style' },
+  { id: 'circular-profile', name: 'Circular Profile Focus' },
+  { id: 'compact-strip',    name: 'Compact Overlay Strip' },
+];
+
 export function getDefaultSettings() {
   return {
     // ── Widget toggle ──
     enabled:          true,
+    templateVariant:  'classic',      // one of templateVariants ids
+    celebrationEffect: 'burst',       // one of celebrationEffects ids
 
     // ── Configuration ──
     title:            'Top Donation',
@@ -101,7 +110,7 @@ export function getDefaultSettings() {
 
     // ── Appearance ──
     accentColor:      '#a855f7',
-    backgroundColor:  '#1e293b',
+    backgroundColor:  'transparent',
     textColor:        '#ffffff',
     fontSize:         [18],           // px (12–32)
     titleFontSize:    [14],
@@ -115,16 +124,16 @@ export function getDefaultSettings() {
     amountColor: '#FFFFFF',
     amountFontSize: [36],
     amountAlignment: 'center',
-    amountFontFamily: 'IBM Plex Sans Thai',
-    amountFontWeight: '700',
+    amountFontFamily: 'ibmplex',
+    amountFontWeight: 'bold',
     amountStrokeColor: '#000000',
     amountStrokeWidth: [2.5],
 
     topDonatorColor: '#FFFFFF',
     topDonatorFontSize: [36],
     topDonatorAlignment: 'center',
-    topDonatorFontFamily: 'IBM Plex Sans Thai',
-    topDonatorFontWeight: '700',
+    topDonatorFontFamily: 'ibmplex',
+    topDonatorFontWeight: 'bold',
     topDonatorStrokeColor: '#000000',
     topDonatorStrokeWidth: [2.5],
 

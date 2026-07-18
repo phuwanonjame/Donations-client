@@ -6,16 +6,20 @@ import { Copy, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { createWidgetUrl } from "@/utils/widgetUrls";
+import { useAuth } from "@/contexts/AuthContext";
 
 export default function WidgetUrlHeaderField({ type, widgetId, accentClass = "text-cyan-300" }) {
-  const widgetUrl = createWidgetUrl(type, widgetId || "preview");
-  const hasRealWidget = Boolean(widgetId);
+  const { user } = useAuth();
+  const widgetUrl = createWidgetUrl(type, user?.id, user?.widgetToken);
+  const hasRealWidget = Boolean(widgetId) && Boolean(widgetUrl);
 
   const handleCopy = () => {
+    if (!widgetUrl) return;
     navigator.clipboard?.writeText(widgetUrl);
   };
 
   const handleOpen = () => {
+    if (!widgetUrl) return;
     window.open(widgetUrl, "_blank", "noopener,noreferrer");
   };
 
@@ -43,7 +47,7 @@ export default function WidgetUrlHeaderField({ type, widgetId, accentClass = "te
             </Button>
           </div>
           {!hasRealWidget && (
-            <p className="text-xs text-slate-500">Preview URL shown until this widget finishes loading.</p>
+            <p className="text-xs text-slate-500">Widget URL will appear once your account finishes loading.</p>
           )}
         </div>
         <Button

@@ -1,5 +1,5 @@
 const TTS_SERVICE_URL =
-  process.env.NEXT_PUBLIC_TTS_SERVICE_URL || "http://127.0.0.1:8010";
+  process.env.NEXT_PUBLIC_TTS_SERVICE_URL || "http://127.0.0.1:4000/tts";
 
 const LEGACY_VOICE_ALIASES = {
   female: "th-TH-PremwadeeNeural",
@@ -153,3 +153,4 @@ export function getReadableVoiceLabel(voiceId) {
   }
   return resolvedId;
 }
+

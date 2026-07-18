@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Rocket, Upload, Download, X, Check } from "lucide-react";
 import { createDonation } from "@/actions/Donationsapi/donationHistoryApi";
+import { useAuth } from "@/contexts/AuthContext";
+
 
 const PAYMENT_METHODS = [
   { id: "promptpay", label: "พร้อมเพย์", description: "สแกน QR ทุกธนาคาร", color: "#009688", tag: "PromptPay" },
@@ -10,7 +12,6 @@ const PAYMENT_METHODS = [
 ];
 
 const QUICK_AMOUNTS = [10, 20, 50, 100, 200, 500];
-const DONATION_USER_ID = "244bad71-4990-4a79-9a19-9ff983a55442";
 
 const defaultTheme = {
   primary: "186, 230, 253",
@@ -54,6 +55,8 @@ export default function DonationForm({
   decorations = defaultDecorations,
   visualTheme = defaultTheme,
 }) {
+  const { user, isLoading: isAuthLoading } = useAuth();
+  const userId = user?.id;
   const [donorName, setDonorName] = useState("");
   const [message, setMessage] = useState("");
   const [amount, setAmount] = useState(10);
@@ -117,6 +120,15 @@ export default function DonationForm({
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (isAuthLoading) {
+      return;
+    }
+
+    if (!userId) {
+      setSubmitError("Please sign in before donating.");
+      return;
+    }
+
     if (!donorName || !slipFile) {
       setSubmitError("กรุณากรอกชื่อและแนบสลิปก่อนส่งโดเนท");
       return;
@@ -127,7 +139,7 @@ export default function DonationForm({
       setSubmitError("");
 
       const formData = new FormData();
-      formData.append("userId", DONATION_USER_ID);
+      formData.append("userId", userId);
       formData.append("donorName", donorName);
       formData.append("donorMessage", message);
       formData.append("amount", String(totalAmount));
@@ -485,20 +497,20 @@ export default function DonationForm({
 
         <motion.button
           type="submit"
-          disabled={isSubmitting || !donorName || !slipFile}
+          disabled={isSubmitting || isAuthLoading || !userId || !donorName || !slipFile}
           whileHover={{ scale: 1.02 }}
           whileTap={{ scale: 0.98 }}
           style={{
             marginTop: 16, width: "100%",
             display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
-            background: isSubmitting || !donorName || !slipFile
+            background: isSubmitting || isAuthLoading || !userId || !donorName || !slipFile
               ? rgba(theme.primary, 0.22)
               : theme.buttonBackground,
-            color: isSubmitting || !donorName || !slipFile ? "rgba(255,255,255,0.3)" : `rgb(${theme.buttonText})`,
+            color: isSubmitting || isAuthLoading || !userId || !donorName || !slipFile ? "rgba(255,255,255,0.3)" : `rgb(${theme.buttonText})`,
             fontWeight: 500, fontSize: 14,
             padding: "14px 24px", borderRadius: 99, border: "none",
-            cursor: isSubmitting || !donorName || !slipFile ? "not-allowed" : "pointer",
-            boxShadow: isSubmitting || !donorName || !slipFile
+            cursor: isSubmitting || isAuthLoading || !userId || !donorName || !slipFile ? "not-allowed" : "pointer",
+            boxShadow: isSubmitting || isAuthLoading || !userId || !donorName || !slipFile
               ? "none"
               : `0 0 16px rgba(${theme.primary},0.6), 0 0 32px rgba(${theme.primary},0.3)`,
             transition: "all .2s",
@@ -629,3 +641,7 @@ function InputField({ label, required, theme, ...props }) {
     </div>
   );
 }
+
+
+
+

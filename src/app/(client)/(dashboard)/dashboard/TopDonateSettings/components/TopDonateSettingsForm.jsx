@@ -1,11 +1,12 @@
 ﻿// TopDonateSettingsForm.tsx
 "use client";
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import {
   Settings, Palette, Sparkles,
   Crown, Star, Heart, Zap, Trophy, Flame, Diamond,
   Upload, X, Link, ImageIcon, ChevronDown, SlidersHorizontal,
+  LayoutTemplate, Check,
 } from 'lucide-react';
 import { Input }    from '@/components/ui/input';
 import { Label }    from '@/components/ui/label';
@@ -16,12 +17,15 @@ import { Textarea } from '@/components/ui/textarea';
 import DropdownSelect from './DropdownSelect';
 import ThaiDateTimeInput from './ThaiDateTimeInput';
 import {
+  celebrationEffects,
   fontFamilies,
   fontWeights,
   layoutAlignments,
+  templateVariants,
   textAlignments,
 } from '../constants/topDonateOptions';
 import { useTopDonateSettings } from './context/TopDonateSettingsProvider';
+import TopDonatePreview from './TopDonatePreview';
 
 export const ICON_OPTIONS = [
   { id: 'sparkles', label: 'Sparkles', icon: Sparkles },
@@ -76,11 +80,57 @@ const PLACEHOLDERS = [
 ];
 
 const TOP_DONATE_TABS = [
+  { id: 'template', label: 'Template', icon: LayoutTemplate, color: 'from-emerald-500 to-teal-500' },
   { id: 'settings', label: 'Settings', icon: Settings, color: 'from-purple-500 to-pink-500' },
   { id: 'icon', label: 'Icon', icon: Sparkles, color: 'from-fuchsia-500 to-violet-500' },
   { id: 'appearance', label: 'Appearance', icon: Palette, color: 'from-cyan-500 to-blue-500' },
   { id: 'advanced', label: 'Advanced', icon: SlidersHorizontal, color: 'from-violet-500 to-indigo-500' },
 ];
+
+const THUMBNAIL_HEIGHT = 150;
+
+// การ์ดทุกใบต้องสูงเท่ากันเสมอ แต่แต่ละเทมเพลตมีสัดส่วนเนื้อหาต่างกันมาก
+// (Compact Strip เตี้ยและกว้าง, Trophy Podium สูง) จึง render เนื้อหาจริงเต็มขนาด
+// แล้ววัด natural size จริงด้วย ResizeObserver จากนั้นคำนวณ scale ให้พอดีกรอบเสมอ
+// วิธีนี้ไม่มีการตัดเนื้อหาทิ้ง (ต่างจาก overflow:hidden + fixed scale แบบเดิม)
+function TemplateThumbnail({ settings, donorData, templateVariant }) {
+  const outerRef = useRef(null);
+  const innerRef = useRef(null);
+  const [scale, setScale] = useState(0.001);
+
+  useLayoutEffect(() => {
+    const outer = outerRef.current;
+    const inner = innerRef.current;
+    if (!outer || !inner) return undefined;
+
+    const measure = () => {
+      const outerRect = outer.getBoundingClientRect();
+      const naturalW = inner.scrollWidth;
+      const naturalH = inner.scrollHeight;
+      if (!naturalW || !naturalH || !outerRect.width || !outerRect.height) return;
+      const nextScale = Math.min(outerRect.width / naturalW, outerRect.height / naturalH, 1);
+      setScale(nextScale > 0 ? nextScale : 0.001);
+    };
+
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(outer);
+    ro.observe(inner);
+    return () => ro.disconnect();
+  }, [settings, templateVariant, donorData]);
+
+  return (
+    <div
+      ref={outerRef}
+      className="relative overflow-hidden rounded-lg bg-slate-950/40 flex items-center justify-center"
+      style={{ height: THUMBNAIL_HEIGHT }}
+    >
+      <div ref={innerRef} style={{ transform: `scale(${scale})`, transformOrigin: 'center center' }}>
+        <TopDonatePreview settings={{ ...settings, templateVariant }} donorData={donorData} />
+      </div>
+    </div>
+  );
+}
 
 function TopDonateTabNav({ activeTab, onSelect, tabs }) {
   return (
@@ -204,7 +254,7 @@ export default function TopDonateSettingsForm({
     visible: { opacity: 1, x: 0, transition: { duration: 0.22 } },
     exit: { opacity: 0, x: 16, transition: { duration: 0.18 } },
   };
-  const visibleTabs = showAdvanced ? TOP_DONATE_TABS : TOP_DONATE_TABS.slice(0, 3);
+  const visibleTabs = showAdvanced ? TOP_DONATE_TABS : TOP_DONATE_TABS.slice(0, 4);
 
   useEffect(() => {
     if (!showAdvanced && activeTab === 'advanced') {
@@ -241,6 +291,48 @@ export default function TopDonateSettingsForm({
           exit="exit"
           className="min-w-0 space-y-5 sm:space-y-6"
         >
+
+{/* â”€â”€ Template â”€â”€ */}
+      {activeTab === 'template' && (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.05 }}
+        className="rounded-2xl bg-gradient-to-br from-slate-800/50 to-slate-900/50 border border-slate-700/50 backdrop-blur-xl p-6"
+      >
+        <h3 className="text-lg font-semibold text-white mb-1 flex items-center gap-2">
+          <LayoutTemplate className="w-5 h-5 text-emerald-400" />
+          Template
+        </h3>
+        <p className="text-xs text-slate-400 mb-4">เลือกรูปแบบดีไซน์ของ widget สีและฟอนต์ที่ตั้งค่าไว้จะใช้ร่วมกับทุกเทมเพลต</p>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {templateVariants.map(({ id, name }) => {
+            const isActive = (settings.templateVariant ?? 'classic') === id;
+            return (
+              <button
+                key={id}
+                type="button"
+                onClick={() => updateSetting('templateVariant', id)}
+                className={`relative min-w-0 rounded-xl border p-3 text-left transition-all duration-150 ${
+                  isActive ? 'border-purple-500 bg-purple-500/10' : 'border-slate-700 bg-slate-800/40 hover:border-slate-500'
+                }`}
+              >
+                {isActive && (
+                  <div className="absolute top-2 right-2 z-10 rounded-full bg-purple-500 p-1">
+                    <Check className="w-3 h-3 text-white" />
+                  </div>
+                )}
+                <div className="pointer-events-none mb-2 min-w-0">
+                  <TemplateThumbnail settings={settings} donorData={donorData} templateVariant={id} />
+                </div>
+                <p className="text-sm font-medium text-white">{name}</p>
+              </button>
+            );
+          })}
+        </div>
+      </motion.div>
+      )}
 
 {/* â”€â”€ Configuration â”€â”€ */}
       {activeTab === 'settings' && (
@@ -332,6 +424,29 @@ export default function TopDonateSettingsForm({
               />
             </div>
           ))}
+        </div>
+
+        <div className="space-y-3 mt-6 pt-4 border-t border-slate-700/60">
+          <div>
+            <Label className="text-slate-300">Celebration Effect</Label>
+            <p className="text-xs text-slate-500 mt-0.5">เอฟเฟกต์ที่เล่นตอนมีคนบริจาคแซงขึ้นอันดับ 1 คนใหม่</p>
+          </div>
+          <div className="grid grid-cols-4 gap-2">
+            {celebrationEffects.map(({ id, name }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => updateSetting('celebrationEffect', id)}
+                className={`py-2 rounded-xl border text-xs transition-all ${
+                  (settings.celebrationEffect ?? 'burst') === id
+                    ? 'border-purple-500 bg-purple-500/20 text-purple-300'
+                    : 'border-slate-700 bg-slate-800/60 text-slate-400 hover:border-slate-500 hover:text-white'
+                }`}
+              >
+                {name}
+              </button>
+            ))}
+          </div>
         </div>
       </motion.div>
       )}
