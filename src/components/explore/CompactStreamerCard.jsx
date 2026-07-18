@@ -1,27 +1,22 @@
 "use client";
 
 import Link from "next/link";
-import { BadgeCheck, Users } from "lucide-react";
 
 function WidgetStatusChip({ streamer, dark = false }) {
+  if (!streamer.isWidgetOnline) {
+    return null;
+  }
+
   return (
     <span
       className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold ${
-        streamer.isWidgetOnline
-          ? dark
-            ? "bg-black/35 text-lime-100 ring-1 ring-lime-300/30"
-            : "bg-lime-400/15 text-lime-100 ring-1 ring-lime-300/30"
-          : dark
-            ? "bg-black/25 text-slate-100 ring-1 ring-white/10"
-            : "bg-slate-900/45 text-slate-200 ring-1 ring-white/10"
+        dark
+          ? "bg-red-600/85 text-white ring-1 ring-red-200/45"
+          : "bg-red-500/90 text-white ring-1 ring-red-200/45"
       }`}
     >
-      <span
-        className={`h-2 w-2 rounded-full ${
-          streamer.isWidgetOnline ? "bg-lime-300 animate-pulse" : "bg-slate-400"
-        }`}
-      />
-      {streamer.isWidgetOnline ? "Widget Online" : "Widget Offline"}
+      <span className="h-2 w-2 animate-pulse rounded-full bg-white" />
+      Live
     </span>
   );
 }
@@ -33,28 +28,46 @@ export default function CompactStreamerCard({
   footerIcon = null,
   darkStatus = false,
 }) {
+  const bannerUrl = streamer?.bannerUrl || "";
+  const categoryLabel = footerValue || streamer.category;
+
   return (
     <Link
       href={`/${streamer.slug}`}
-      className="group block overflow-hidden rounded-[1.6rem] border border-white/10 bg-white/5 backdrop-blur-xl transition hover:-translate-y-1 hover:border-cyan-300/25"
+      className="group relative block overflow-hidden rounded-2xl border border-white/20 bg-black/40 transition duration-300 hover:scale-[1.02] hover:border-cyan-300/40"
     >
-      <div className={`relative h-40 bg-gradient-to-br ${streamer.accent}`}>
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.36),transparent_38%),linear-gradient(180deg,transparent,rgba(7,19,31,0.88))]" />
-        <div className="absolute left-4 top-4 flex items-center gap-2 rounded-full bg-black/30 px-3 py-1 text-[11px] text-white backdrop-blur-md">
-          {streamer.verified ? (
-            <>
-              <BadgeCheck className="h-3.5 w-3.5 text-cyan-200" />
-              Verified
-            </>
-          ) : (
-            <>Profile</>
-          )}
-        </div>
-        <div className="absolute right-4 top-4">
-          <WidgetStatusChip streamer={streamer} dark={darkStatus} />
-        </div>
-        <div className="absolute bottom-0 left-0 right-0 flex items-end gap-3 p-4">
-          <div className="h-20 w-20 overflow-hidden rounded-3xl border-2 border-white/20 bg-[#08111d] shadow-[0_14px_30px_rgba(3,7,24,0.38)]">
+      <span className="absolute inset-0 z-10 h-full w-full bg-gradient-to-tl from-cyan-300/0 via-cyan-300/0 to-cyan-300/20 opacity-10 transition duration-300 group-hover:opacity-40" />
+
+      {bannerUrl ? (
+        <img
+          src={bannerUrl}
+          alt=""
+          aria-hidden="true"
+          className="aspect-[128/40] w-full object-cover object-center transition duration-300 group-hover:scale-105"
+          style={{
+            maskImage: "linear-gradient(rgb(0, 0, 0) 50%, rgba(0, 0, 0, 0) 100%)",
+            WebkitMaskImage:
+              "linear-gradient(rgb(0, 0, 0) 50%, rgba(0, 0, 0, 0) 100%)",
+          }}
+        />
+      ) : (
+        <div
+          className={`aspect-[128/40] w-full bg-gradient-to-br ${streamer.accent}`}
+          style={{
+            maskImage: "linear-gradient(rgb(0, 0, 0) 50%, rgba(0, 0, 0, 0) 100%)",
+            WebkitMaskImage:
+              "linear-gradient(rgb(0, 0, 0) 50%, rgba(0, 0, 0, 0) 100%)",
+          }}
+        />
+      )}
+
+      <div className="absolute right-4 top-4 z-20">
+        <WidgetStatusChip streamer={streamer} dark={darkStatus} />
+      </div>
+
+      <div className="relative z-20 -mt-10 p-5">
+        <div className="flex items-center gap-3">
+          <div className="h-14 w-14 shrink-0 overflow-hidden rounded-full bg-[#08111d]">
             {streamer.avatarUrl ? (
               <img
                 src={streamer.avatarUrl}
@@ -67,25 +80,26 @@ export default function CompactStreamerCard({
               </div>
             )}
           </div>
-          <div className="min-w-0 pb-1">
-            <h3 className="truncate font-['Chakra_Petch'] text-xl font-bold text-white">
+          <div className="w-full max-w-[70%] min-w-0">
+            <h3 className="truncate font-['Chakra_Petch'] text-xl font-bold tracking-tight text-white">
               {streamer.name}
             </h3>
-            <p className="truncate text-sm text-white/75">@{streamer.handle}</p>
+            <p className="-mt-0.5 truncate text-sm text-white/60">
+              streamflow.app/{streamer.handle}
+            </p>
           </div>
         </div>
-      </div>
 
-      <div className="flex items-center justify-between gap-3 p-4">
-        <div className="min-w-0">
-          <p className="text-[11px] uppercase tracking-[0.22em] text-slate-500">{footerLabel}</p>
-          <div className="flex items-center gap-2 pt-1">
-            {footerIcon === "users" ? <Users className="h-4 w-4 text-cyan-300" /> : null}
-            <p className="truncate font-semibold text-white">{footerValue || streamer.category}</p>
-          </div>
-        </div>
-        <div className="rounded-full border border-white/10 bg-black/20 px-3 py-1.5 text-xs font-medium text-slate-200 transition group-hover:border-cyan-300/20 group-hover:text-cyan-100">
-          View Profile
+        <p className="mt-3 line-clamp-2 min-h-10 text-sm leading-5 text-white/60">
+          {streamer.bio}
+        </p>
+        <div className="mt-3 flex flex-wrap items-center gap-1">
+          <span className="inline-flex items-center rounded-full border border-white/20 px-2.5 py-0.5 text-xs font-semibold text-white transition duration-300 group-hover:scale-105">
+            {categoryLabel || footerLabel}
+          </span>
+          {footerIcon === "users" ? (
+            <span className="text-xs text-white/50">{footerLabel}</span>
+          ) : null}
         </div>
       </div>
     </Link>

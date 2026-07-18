@@ -2,9 +2,8 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowRight, Flame, Gamepad2, Search, Sparkles, Video } from "lucide-react";
+import { ArrowRight, Gamepad2, Search, Sparkles, Users, Video } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
 import CompactStreamerCard from "@/components/explore/CompactStreamerCard";
 import {
   buildCategorySummaries,
@@ -13,17 +12,24 @@ import {
   profileCategoryOptions,
 } from "@/lib/exploreData";
 
-const categoryChipNames = ["ทั้งหมด", ...profileCategoryOptions.map((item) => item.name)];
-const liveGradients = [
-  "from-fuchsia-500 to-pink-400",
-  "from-sky-500 to-cyan-400",
-  "from-emerald-500 to-teal-400",
-  "from-orange-500 to-amber-400",
+const ALL_CATEGORY_LABEL = "ทั้งหมด";
+const categoryChipNames = [
+  ALL_CATEGORY_LABEL,
+  ...profileCategoryOptions.map((item) => item.name),
+];
+
+const categoryAccents = [
+  "from-cyan-400 to-blue-500",
+  "from-rose-500 to-orange-400",
+  "from-emerald-400 to-teal-500",
+  "from-violet-500 to-fuchsia-500",
+  "from-amber-400 to-yellow-500",
+  "from-sky-400 to-indigo-500",
 ];
 
 export default function ExplorePage() {
   const [query, setQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState("ทั้งหมด");
+  const [activeCategory, setActiveCategory] = useState(ALL_CATEGORY_LABEL);
   const [streamers, setStreamers] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -52,7 +58,7 @@ export default function ExplorePage() {
 
     return streamers.filter((streamer) => {
       const matchesCategory =
-        activeCategory === "ทั้งหมด" ||
+        activeCategory === ALL_CATEGORY_LABEL ||
         streamer.category === activeCategory ||
         streamer.profileCategories.some(
           (categoryId) => mapCategoryIdToName(categoryId) === activeCategory
@@ -69,291 +75,266 @@ export default function ExplorePage() {
   }, [activeCategory, query, streamers]);
 
   const categories = useMemo(() => buildCategorySummaries(streamers), [streamers]);
-  const featuredStreamers = filteredStreamers.slice(0, 6);
-  const featuredCategories = categories.slice(0, 4);
-  const liveNow = filteredStreamers.slice(0, 4);
+  const featuredStreamers = filteredStreamers.slice(0, 10);
+  const featuredCategories = categories.slice(0, 8);
+  const liveNow = filteredStreamers.filter((streamer) => streamer.isWidgetOnline).slice(0, 10);
 
   return (
-    <div className="min-h-screen overflow-hidden bg-[#07131f] text-white">
-      <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(34,211,238,0.18),transparent_30%),radial-gradient(circle_at_top_right,rgba(244,114,182,0.16),transparent_28%),linear-gradient(180deg,#08111b_0%,#0b1725_42%,#08111b_100%)]" />
-      <div className="absolute left-1/2 top-44 h-80 w-80 -translate-x-1/2 rounded-full bg-cyan-400/10 blur-3xl" />
+    <div className="relative min-h-screen overflow-hidden bg-[#050315] text-white">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_15%_12%,rgba(45,212,191,0.2),transparent_28%),radial-gradient(circle_at_85%_8%,rgba(244,63,94,0.16),transparent_26%),linear-gradient(180deg,#07041d_0%,#050315_42%,#03020c_100%)]" />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[520px] bg-[linear-gradient(115deg,rgba(34,211,238,0.08),transparent_35%,rgba(248,113,113,0.1))]" />
 
-      <section className="relative px-4 pb-16 pt-32 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:items-end">
-            <div className="space-y-6">
-              <div className="inline-flex items-center gap-2 rounded-full border border-cyan-400/20 bg-cyan-400/10 px-4 py-2 text-sm text-cyan-100">
-                <Sparkles className="h-4 w-4" />
-                Streamer Discovery
-              </div>
-
-              <div className="space-y-4">
-                <p className="text-sm font-medium uppercase tracking-[0.35em] text-cyan-300/80">
-                  Explore creators
-                </p>
-                <h1 className="max-w-3xl font-['Chakra_Petch'] text-4xl font-bold leading-tight sm:text-5xl lg:text-6xl">
-                  สำรวจสตรีมเมอร์
-                  <span className="bg-gradient-to-r from-cyan-300 via-white to-pink-300 bg-clip-text text-transparent">
-                    {" "}และหมวดหมู่ทั้งหมดในระบบ
-                  </span>
-                </h1>
-                <p className="max-w-2xl text-base leading-8 text-slate-300 sm:text-lg">
-                  เข้าหน้า streamers เพื่อดูโปรไฟล์ทั้งหมด หรือเข้าหน้า categories
-                  เพื่อดูหมวดหมู่ทั้งหมดและจำนวนสมาชิกในแต่ละหมวดได้ทันที
-                </p>
-              </div>
-
-              <div className="flex flex-col gap-3 sm:flex-row">
-                <Link href="/explore/streamers">
-                  <Button className="h-12 rounded-full bg-cyan-400 px-6 text-[#07131f] hover:bg-cyan-300">
-                    ดูสตรีมเมอร์ทั้งหมด
-                    <ArrowRight className="h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link href="/explore/categories">
-                  <Button
-                    variant="outline"
-                    className="h-12 rounded-full border-white/15 bg-white/5 px-6 text-white hover:bg-white/10"
-                  >
-                    ดูหมวดหมู่ทั้งหมด
-                  </Button>
-                </Link>
-              </div>
-            </div>
-
-            <div className="relative">
-              <div className="absolute -inset-6 rounded-[2rem] bg-gradient-to-br from-cyan-400/10 via-transparent to-pink-400/10 blur-2xl" />
-              <div className="relative overflow-hidden rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-xs uppercase tracking-[0.3em] text-slate-400">
-                      Discovery snapshot
-                    </p>
-                    <h2 className="mt-2 font-['Chakra_Petch'] text-2xl font-bold">
-                      Explore Overview
-                    </h2>
-                  </div>
-                  <div className="rounded-2xl bg-emerald-400/10 px-3 py-2 text-sm text-emerald-300">
-                    {isLoading ? "Loading" : "Ready"}
-                  </div>
-                </div>
-
-                <div className="mt-6 space-y-3">
-                  <StatRow label="สตรีมเมอร์ทั้งหมดในระบบ" value={`${streamers.length}`} />
-                  <StatRow label="หมวดหมู่ทั้งหมดของระบบ" value={`${categories.length}`} />
-                  <StatRow label="ผลลัพธ์ที่ตรงกับการค้นหา" value={`${filteredStreamers.length}`} />
-                </div>
-
-                <div className="mt-6 rounded-3xl border border-white/10 bg-gradient-to-r from-white/8 to-white/4 p-5">
-                  <div className="flex items-center gap-3">
-                    <div className="rounded-2xl bg-pink-400/15 p-3 text-pink-300">
-                      <Flame className="h-5 w-5" />
-                    </div>
-                    <div>
-                      <p className="text-sm text-slate-400">หมวดที่ระบบรองรับ</p>
-                      <p className="font-semibold text-white">
-                        {profileCategoryOptions.map((item) => item.name).join(" · ")}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+      <section className="relative px-4 pb-24 pt-28 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl text-center">
+          <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/5 px-5 py-2 text-sm font-medium text-cyan-100">
+            <Sparkles className="h-4 w-4 text-cyan-300" />
+            Streamflow Discovery
           </div>
 
-          <div className="mt-10 rounded-[2rem] border border-white/10 bg-white/5 p-4 shadow-2xl shadow-cyan-950/20 backdrop-blur-xl sm:p-5">
-            <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-              <div className="flex flex-1 items-center gap-3 rounded-full border border-white/10 bg-[#091521] px-4 py-3">
-                <Search className="h-5 w-5 text-slate-400" />
-                <input
-                  value={query}
-                  onChange={(event) => setQuery(event.target.value)}
-                  placeholder="ค้นหาชื่อสตรีมเมอร์, username หรือแท็ก"
-                  className="w-full bg-transparent text-sm text-white outline-none placeholder:text-slate-500"
-                />
-              </div>
+          <h1 className="mx-auto mt-6 max-w-4xl font-['Chakra_Petch'] text-4xl font-black leading-tight tracking-tight sm:text-6xl">
+            ค้นพบสตรีมเมอร์ใหม่ๆ
+            <span className="block bg-gradient-to-r from-cyan-200 via-white to-rose-200 bg-clip-text text-transparent">
+              ที่พร้อมรับแรงสนับสนุนจากคุณ
+            </span>
+          </h1>
 
-              <div className="flex flex-wrap gap-2">
-                {categoryChipNames.map((chip) => {
-                  const isActive = chip === activeCategory;
+          <p className="mx-auto mt-5 max-w-2xl text-base leading-8 text-white/60 sm:text-lg">
+            รวมหน้าโดเนทของครีเอเตอร์ในระบบ ค้นหาตามชื่อ หมวดหมู่ หรือดูว่าใครกำลัง Live อยู่ตอนนี้
+          </p>
 
-                  return (
-                    <button
-                      key={chip}
-                      type="button"
-                      onClick={() => setActiveCategory(chip)}
-                      className={`rounded-full px-4 py-2 text-sm font-medium transition ${
-                        isActive
-                          ? "bg-cyan-400 text-[#07131f]"
-                          : "border border-white/10 bg-white/5 text-slate-300 hover:bg-white/10"
-                      }`}
-                    >
-                      {chip}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+          <div className="mt-8 flex flex-wrap justify-center gap-3">
+            <MetricPill label="Streamers" value={streamers.length} />
+            <MetricPill label="Categories" value={categories.length} />
+            <MetricPill label="Live Now" value={streamers.filter((item) => item.isWidgetOnline).length} live />
           </div>
         </div>
       </section>
 
-      <section className="relative px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-7xl">
-          <SectionHeader
-            eyebrow="Featured Streamers"
-            title="ตัวอย่างสตรีมเมอร์ในระบบ"
-            actionHref="/explore/streamers"
-            actionLabel="ดูทั้งหมด"
-          />
-
-          {isLoading ? (
-            <EmptyPanel text="กำลังโหลดรายชื่อสตรีมเมอร์จากระบบ..." />
-          ) : (
-            <div className="grid gap-6 lg:grid-cols-3">
-              {featuredStreamers.map((streamer) => (
-                <StreamerCard key={streamer.id} streamer={streamer} />
-              ))}
+      <main className="relative -mt-14 px-4 pb-20 sm:px-6 lg:px-8">
+        <div className="mx-auto max-w-7xl space-y-12">
+          <div className="mx-auto max-w-2xl rounded-full border border-white/20 bg-white/5 px-5 py-3">
+            <div className="flex items-center gap-3">
+              <Search className="h-5 w-5 text-white/50" />
+              <input
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
+                placeholder="ค้นหาสตรีมเมอร์..."
+                className="w-full bg-transparent p-1 text-sm text-white outline-none placeholder:text-white/35"
+              />
             </div>
-          )}
-        </div>
-      </section>
+          </div>
 
-      <section className="relative px-4 py-8 sm:px-6 lg:px-8">
-        <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[0.9fr_1.1fr]">
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
+          <div className="flex flex-wrap justify-center gap-2">
+            {categoryChipNames.map((chip) => {
+              const isActive = chip === activeCategory;
+
+              return (
+                <button
+                  key={chip}
+                  type="button"
+                  onClick={() => setActiveCategory(chip)}
+                  className={`rounded-full border px-4 py-2 text-sm font-semibold transition duration-300 ${
+                    isActive
+                      ? "border-cyan-300/60 bg-cyan-300 text-[#040316]"
+                      : "border-white/15 bg-black/25 text-white/65 hover:border-white/30 hover:text-white"
+                  }`}
+                >
+                  {chip}
+                </button>
+              );
+            })}
+          </div>
+
+          <section>
             <SectionHeader
-              eyebrow="Categories"
-              title="หมวดหมู่ทั้งหมด"
-              actionHref="/explore/categories"
+              icon={Sparkles}
+              title="สตรีมเมอร์แนะนำวันนี้"
+              subtitle="Featured Streamers"
+              actionHref="/explore/streamers"
               actionLabel="ดูทั้งหมด"
-              compact
+              accent="from-cyan-400 to-blue-500"
             />
 
-            <div className="space-y-4">
-              {featuredCategories.map((category) => (
-                <Link
+            {isLoading ? (
+              <EmptyPanel text="กำลังโหลดรายชื่อสตรีมเมอร์จากระบบ..." />
+            ) : featuredStreamers.length > 0 ? (
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+                {featuredStreamers.map((streamer) => (
+                  <StreamerCard key={streamer.id} streamer={streamer} />
+                ))}
+              </div>
+            ) : (
+              <EmptyPanel text="ยังไม่พบสตรีมเมอร์ที่ตรงกับการค้นหา" />
+            )}
+          </section>
+
+          <section>
+            <SectionHeader
+              icon={Gamepad2}
+              title="หมวดหมู่ยอดนิยม"
+              subtitle="Categories"
+              actionHref="/explore/categories"
+              actionLabel="ดูทั้งหมด"
+              accent="from-rose-500 to-orange-400"
+            />
+
+            <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+              {featuredCategories.map((category, index) => (
+                <CategoryCard
                   key={category.id}
-                  href={`/explore/categories/${category.id}`}
-                  className="block rounded-[1.5rem] border border-white/10 bg-gradient-to-r from-white/10 to-white/5 p-5 transition hover:border-cyan-300/20"
-                >
-                  <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-4">
-                      <div className="rounded-2xl bg-cyan-400/10 p-3 text-cyan-300">
-                        <Gamepad2 className="h-5 w-5" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-white">{category.name}</h3>
-                        <p className="mt-1 text-sm text-slate-300">
-                          มีสมาชิก {category.memberCount} คน
-                        </p>
-                      </div>
-                    </div>
-                    <ArrowRight className="h-5 w-5 text-white/70" />
-                  </div>
-                </Link>
+                  category={category}
+                  accent={categoryAccents[index % categoryAccents.length]}
+                />
               ))}
             </div>
-          </div>
+          </section>
 
-          <div className="rounded-[2rem] border border-white/10 bg-white/5 p-6 backdrop-blur-xl">
-            <div className="mb-6 flex items-center gap-3">
-              <div className="rounded-2xl bg-rose-400/10 p-3 text-rose-300">
-                <Video className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm uppercase tracking-[0.24em] text-slate-400">Profiles</p>
-                <h2 className="font-['Chakra_Petch'] text-2xl font-bold">โปรไฟล์ที่น่าสนใจ</h2>
-              </div>
-            </div>
+          {liveNow.length > 0 ? (
+            <section>
+              <SectionHeader
+                icon={Video}
+                title="กำลัง Live อยู่"
+                subtitle="Currently Live"
+                actionHref="/explore/streamers"
+                actionLabel="ดูทั้งหมด"
+                accent="from-red-600 to-red-400"
+                ping
+              />
 
-            <div className="grid gap-4 sm:grid-cols-2">
-              {liveNow.map((streamer, index) => (
-                <Link
-                  key={streamer.id}
-                  href={`/${streamer.slug}`}
-                  className="group rounded-[1.5rem] border border-white/10 bg-[#091521] p-4 transition hover:border-cyan-300/20"
-                >
-                  <div
-                    className={`mb-4 h-32 rounded-[1.25rem] bg-gradient-to-br ${
-                      liveGradients[index % liveGradients.length]
-                    } p-4`}
-                  >
-                    <div className="flex items-start justify-between">
-                      <span className="rounded-full bg-black/30 px-3 py-1 text-xs text-white">
-                        PROFILE
-                      </span>
-                      <span className="text-sm font-medium text-white/90">{streamer.viewers}</span>
-                    </div>
-                    <div className="mt-4">
-                      <span
-                        className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-[11px] font-semibold ${
-                          streamer.isWidgetOnline
-                            ? "bg-black/35 text-lime-100 ring-1 ring-lime-300/30"
-                            : "bg-black/25 text-slate-100 ring-1 ring-white/10"
-                        }`}
-                      >
-                        <span
-                          className={`h-2 w-2 rounded-full ${
-                            streamer.isWidgetOnline ? "bg-lime-300 animate-pulse" : "bg-slate-300"
-                          }`}
-                        />
-                        {streamer.isWidgetOnline ? "Widget Online" : "Widget Offline"}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="font-semibold text-white">{streamer.name}</h3>
-                      <span className="rounded-full border border-white/10 px-2 py-0.5 text-[11px] text-slate-300">
-                        {streamer.category}
-                      </span>
-                    </div>
-                    <p className="line-clamp-2 text-sm text-slate-400">{streamer.bio}</p>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
+              <div className="grid grid-cols-1 gap-5 md:grid-cols-2 xl:grid-cols-3">
+                {liveNow.map((streamer) => (
+                  <StreamerCard key={streamer.id} streamer={streamer} />
+                ))}
+              </div>
+            </section>
+          ) : null}
         </div>
-      </section>
+      </main>
     </div>
   );
 }
 
-function SectionHeader({ eyebrow, title, actionHref, actionLabel, compact = false }) {
+function SectionHeader({
+  icon: Icon,
+  title,
+  subtitle,
+  actionHref,
+  actionLabel,
+  accent,
+  ping = false,
+}) {
   return (
-    <div className={`mb-6 flex items-center justify-between gap-4 ${compact ? "" : ""}`}>
-      <div>
-        <p className="text-sm uppercase tracking-[0.28em] text-cyan-300/75">{eyebrow}</p>
-        <h2 className="mt-2 font-['Chakra_Petch'] text-3xl font-bold">{title}</h2>
+    <div className="mb-6 flex items-center justify-between gap-4">
+      <div className="flex items-center gap-4 md:gap-5">
+        <div
+          className={`relative flex aspect-square w-14 items-center justify-center rounded-2xl bg-gradient-to-r ${accent} sm:w-16`}
+        >
+          {ping ? <div className="absolute inset-0 animate-ping rounded-2xl bg-red-500/35" /> : null}
+          <Icon className="relative h-7 w-7" />
+        </div>
+        <div>
+          <h2 className="font-['Chakra_Petch'] text-2xl font-bold md:text-3xl">{title}</h2>
+          <p className="text-base font-medium text-white/55 md:text-xl">{subtitle}</p>
+        </div>
       </div>
+
       {actionHref ? (
-        <Link href={actionHref}>
-          <Button
-            variant="ghost"
-            className="rounded-full text-cyan-300 hover:bg-cyan-400/10 hover:text-cyan-200"
-          >
-            {actionLabel}
-          </Button>
+        <Link
+          href={actionHref}
+          className="flex items-center gap-2 rounded-full border border-white/20 p-3 text-sm font-semibold text-white/80 transition duration-300 hover:scale-95 hover:bg-white/5 sm:px-4 sm:py-2"
+        >
+          <ArrowRight className="h-5 w-5" />
+          <span className="hidden sm:block">{actionLabel}</span>
         </Link>
       ) : null}
     </div>
   );
 }
 
-function StatRow({ label, value }) {
+function CategoryCard({ category, accent }) {
+  const previewMembers = category.members.slice(0, 3);
+
   return (
-    <div className="flex items-center justify-between rounded-2xl border border-white/8 bg-black/20 px-4 py-4">
-      <span className="text-sm text-slate-300">{label}</span>
-      <span className="font-['Chakra_Petch'] text-2xl font-bold text-cyan-300">{value}</span>
+    <Link
+      href={`/explore/categories/${category.id}`}
+      className="group relative overflow-hidden rounded-2xl border border-white/20 bg-black/40 p-5 transition duration-300 hover:scale-[1.02] hover:border-cyan-300/40"
+    >
+      <div
+        className={`absolute inset-0 bg-gradient-to-bl ${accent} opacity-20 transition duration-300 group-hover:opacity-40`}
+      />
+      <ArrowRight className="absolute right-6 top-6 z-10 h-6 w-6 text-white/20 transition duration-300 group-hover:text-white/70" />
+
+      <div className="relative flex items-center gap-4">
+        {category.image ? (
+          <img
+            src={category.image}
+            alt={category.name}
+            className="aspect-square h-14 rounded-xl object-cover"
+          />
+        ) : (
+          <div className={`flex aspect-square h-14 items-center justify-center rounded-xl bg-gradient-to-br ${accent}`}>
+            <Gamepad2 className="h-6 w-6" />
+          </div>
+        )}
+
+        <div className="min-w-0">
+          <h3 className="truncate font-['Chakra_Petch'] text-xl font-bold tracking-tight">
+            {category.name}
+          </h3>
+          <div className="mt-1 flex items-center gap-1 text-white/55">
+            <Users className="h-3.5 w-3.5" />
+            <p className="text-sm">{category.memberCount} streamers</p>
+          </div>
+        </div>
+      </div>
+
+      {previewMembers.length > 0 ? (
+        <div className="relative mt-6 flex flex-wrap items-center gap-1.5">
+          {previewMembers.map((member) => (
+            <div
+              key={member.id}
+              className="flex w-fit items-center gap-1 rounded-full border border-white/20 p-0.5 pr-2"
+            >
+              <StreamerAvatar streamer={member} sizeClass="h-5 w-5" />
+              <p className="max-w-[90px] truncate text-sm text-white/80">{member.name}</p>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="relative mt-6 text-sm text-white/45">ยังไม่มี streamer ในหมวดนี้</p>
+      )}
+    </Link>
+  );
+}
+
+function StreamerAvatar({ streamer, sizeClass }) {
+  return streamer.avatarUrl ? (
+    <img
+      src={streamer.avatarUrl}
+      alt={streamer.name}
+      className={`${sizeClass} rounded-full object-cover`}
+    />
+  ) : (
+    <span
+      className={`${sizeClass} flex items-center justify-center rounded-full bg-cyan-300 text-[10px] font-bold text-[#040316]`}
+    >
+      {streamer.name?.slice(0, 1)?.toUpperCase() || "S"}
+    </span>
+  );
+}
+
+function MetricPill({ label, value, live = false }) {
+  return (
+    <div className="rounded-full border border-white/15 bg-black/25 px-4 py-2 text-sm text-white/65">
+      <span className={live ? "text-red-300" : "text-cyan-200"}>{value}</span>
+      <span className="ml-2">{label}</span>
     </div>
   );
 }
 
 function EmptyPanel({ text }) {
   return (
-    <div className="rounded-[2rem] border border-white/10 bg-white/5 px-6 py-14 text-center text-slate-300">
+    <div className="rounded-2xl border border-white/20 bg-black/40 px-6 py-14 text-center text-white/55">
       {text}
     </div>
   );
@@ -362,5 +343,3 @@ function EmptyPanel({ text }) {
 function StreamerCard({ streamer }) {
   return <CompactStreamerCard streamer={streamer} darkStatus />;
 }
-
-

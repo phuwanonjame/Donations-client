@@ -53,6 +53,50 @@ export const mapCategoryNameToId = (categoryName) =>
 const toViewerCount = (index) => `${(index + 1) * 1.7}K`;
 const toSupportAmount = (index) => `฿${(index + 4) * 12}K`;
 
+const parseJsonObject = (value) => {
+  if (!value) {
+    return null;
+  }
+
+  if (typeof value === "string") {
+    try {
+      const parsed = JSON.parse(value);
+      return parsed && typeof parsed === "object" ? parsed : null;
+    } catch {
+      return null;
+    }
+  }
+
+  return typeof value === "object" ? value : null;
+};
+
+const resolveDonatePageMetadata = (setting, user) =>
+  parseJsonObject(setting?.metadata) ||
+  parseJsonObject(setting?.donatePageSetting?.metadata) ||
+  parseJsonObject(user?.donatePageSetting?.metadata) ||
+  parseJsonObject(user?.DonatePageSetting?.metadata) ||
+  parseJsonObject(user?.metadata) ||
+  parseJsonObject(setting) ||
+  null;
+
+const resolveProfileImageUrl = (metadata, user, key) => {
+  const profile = metadata?.profile || {};
+
+  if (key === "banner") {
+    return (
+      profile.bannerUrl ||
+      profile.backgroundUrl ||
+      metadata?.bannerUrl ||
+      metadata?.backgroundUrl ||
+      user?.bannerUrl ||
+      user?.backgroundUrl ||
+      ""
+    );
+  }
+
+  return profile.avatarUrl || metadata?.avatarUrl || user?.avatarUrl || "";
+};
+
 const fetchWidgetOnlineStatus = async (userId) => {
   if (!userId) {
     return {
@@ -98,8 +142,10 @@ export const fetchExploreStreamers = async () => {
         fetchPublicDonatePageSettings(user.username),
         fetchWidgetOnlineStatus(user.id),
       ]);
-      const selectedCategories = Array.isArray(setting?.metadata?.profileCategories)
-        ? setting.metadata.profileCategories
+      const metadata = resolveDonatePageMetadata(setting, user);
+      const profile = metadata?.profile || {};
+      const selectedCategories = Array.isArray(metadata?.profileCategories)
+        ? metadata.profileCategories
         : [];
       const primaryCategoryId = selectedCategories[0] || null;
       const resolvedUsername = user.username || "";
@@ -108,14 +154,14 @@ export const fetchExploreStreamers = async () => {
         id: user.id,
         slug: resolvedUsername,
         name:
-          setting?.metadata?.profile?.name ||
+          profile.name ||
           resolvedUsername,
         handle: resolvedUsername,
         bio:
-          setting?.metadata?.profile?.bio ||
+          profile.bio ||
           "พร้อมเปิดรับการสนับสนุนและต้อนรับผู้ชมใหม่ผ่านหน้าโดเนทของตัวเอง",
-        avatarUrl: setting?.metadata?.profile?.avatarUrl || "",
-        bannerUrl: setting?.metadata?.profile?.bannerUrl || "",
+        avatarUrl: resolveProfileImageUrl(metadata, user, "avatar"),
+        bannerUrl: resolveProfileImageUrl(metadata, user, "banner"),
         profileCategories: selectedCategories,
         category: mapCategoryIdToName(primaryCategoryId || "ทั่วไป"),
         categoryId: primaryCategoryId,
