@@ -1722,40 +1722,52 @@ export default function DonatePageSettings() {
                 description="จัดการข้อมูลโปรไฟล์ รูปปก รูปโปรไฟล์ และช่องทางติดต่อ"
                 icon={User}
               >
-                <div className="space-y-5">
-                  <div className="rounded-3xl border border-slate-800 bg-slate-950/40 p-5">
-                    <div className="mb-5">
-                      <p className="text-sm font-semibold text-white">รูปภาพโปรไฟล์</p>
-                      <p className="text-xs text-slate-500">
-                        อัปโหลดรูปโปรไฟล์และรูปปกสำหรับหน้าโดเนท
-                      </p>
-                    </div>
-
-                    <div className="grid gap-4 xl:grid-cols-2">
-                      <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
-                        <p className="mb-3 text-sm font-medium text-slate-300">
-                          รูปโปรไฟล์
-                        </p>
-                        <div className="mx-auto h-56 w-56 overflow-hidden rounded-full border-4 border-slate-800 shadow-xl shadow-purple-500/20">
-                          {settings.profile.avatarUrl ? (
-                            <img
-                              src={settings.profile.avatarUrl}
-                              alt={settings.profile.name}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple-500 to-blue-500 text-6xl font-bold text-white">
-                              {settings.profile.name.slice(0, 1).toUpperCase()}
-                            </div>
-                          )}
+                <div className="grid gap-5 xl:grid-cols-[460px_minmax(0,1fr)]">
+                  <div className="space-y-5">
+                    <div className="rounded-3xl border border-slate-800 bg-slate-950/40 p-5">
+                      <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-white">รูปภาพโปรไฟล์</p>
+                          <p className="text-xs text-slate-500">
+                            อัปโหลดรูปให้ครบครั้งเดียว หน้าโดเนทจะดูพร้อมใช้งานทันที
+                          </p>
                         </div>
+                        <div className="rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1 text-[11px] font-medium text-cyan-200">
+                          Avatar 1:1
+                        </div>
+                      </div>
+
+                      <div className="rounded-2xl border border-slate-800 bg-gradient-to-b from-slate-900/80 to-slate-950/80 p-4">
+                        <div className="flex items-start justify-between gap-3">
+                          <div>
+                            <p className="text-sm font-medium text-white">รูปโปรไฟล์</p>
+                            <p className="text-xs text-slate-500">แสดงบนหัวโปรไฟล์และรายการโดเนท</p>
+                          </div>
+                        </div>
+
+                        <div className="mt-4 flex justify-center rounded-2xl border border-slate-800 bg-slate-950/70 p-6">
+                          <div className="h-36 w-36 shrink-0 overflow-hidden rounded-full border border-slate-700 bg-slate-900 shadow-lg shadow-black/20">
+                            {settings.profile.avatarUrl ? (
+                              <img
+                                src={settings.profile.avatarUrl}
+                                alt={settings.profile.name}
+                                className="h-full w-full object-cover"
+                              />
+                            ) : (
+                              <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-cyan-500 via-blue-500 to-indigo-500 text-3xl font-bold text-white">
+                                {(settings.profile.name || "S").slice(0, 1).toUpperCase()}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+
                         <Button
                           variant="outline"
                           className="mt-4 w-full border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white"
                           onClick={() => avatarFileInputRef.current?.click()}
                         >
                           <Upload className="mr-2 h-4 w-4" />
-                          เปลี่ยนรูป
+                          อัปโหลดรูปโปรไฟล์
                         </Button>
                         <input
                           ref={avatarFileInputRef}
@@ -1767,22 +1779,38 @@ export default function DonatePageSettings() {
                           }
                         />
                       </div>
+                    </div>
 
-                      <div className="rounded-2xl border border-slate-800 bg-slate-900/60 p-4">
-                        <p className="mb-3 text-sm font-medium text-slate-300">
-                          รูปปก Banner
-                        </p>
-                        <div
-                          className="aspect-[16/6] w-full overflow-hidden rounded-2xl border border-slate-800 bg-cover bg-center shadow-lg shadow-black/20"
-                          style={{ backgroundImage: `url(${settings.profile.bannerUrl})` }}
-                        />
+                    <div className="rounded-3xl border border-slate-800 bg-slate-950/40 p-5">
+                      <div className="mb-5 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+                        <div>
+                          <p className="text-sm font-semibold text-white">รูปปก Banner</p>
+                          <p className="text-xs text-slate-500">ภาพพื้นหลังส่วนหัวของหน้าโดเนท</p>
+                        </div>
+                        <div className="rounded-full border border-cyan-500/20 bg-cyan-500/10 px-3 py-1 text-[11px] font-medium text-cyan-200">
+                          Banner 16:6
+                        </div>
+                      </div>
+
+                        <div className="rounded-2xl border border-slate-800 bg-gradient-to-b from-slate-900/80 to-slate-950/80 p-4">
+                          <div className="overflow-hidden rounded-3xl border border-slate-800 bg-slate-950/70">
+                          <div
+                            className="relative aspect-[16/6] w-full bg-cover bg-center"
+                            style={{ backgroundImage: settings.profile.bannerUrl ? `url(${settings.profile.bannerUrl})` : "none" }}
+                          >
+                            {!settings.profile.bannerUrl ? (
+                              <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(34,211,238,0.18),_transparent_38%),linear-gradient(135deg,rgba(15,23,42,1),rgba(30,41,59,0.92),rgba(17,24,39,1))]" />
+                            ) : null}
+                          </div>
+                        </div>
+
                         <Button
                           variant="outline"
                           className="mt-4 w-full border-slate-700 bg-slate-900/60 text-slate-300 hover:bg-slate-800 hover:text-white"
                           onClick={() => bannerFileInputRef.current?.click()}
                         >
                           <Upload className="mr-2 h-4 w-4" />
-                          เปลี่ยนรูปปก
+                          อัปโหลดรูปปก
                         </Button>
                         <input
                           ref={bannerFileInputRef}
@@ -1794,43 +1822,16 @@ export default function DonatePageSettings() {
                           }
                         />
                       </div>
-
                     </div>
-
                   </div>
 
-                  <div className="rounded-3xl border border-slate-800 bg-slate-950/40 p-5">
-                    <div className="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
-                      <div>
-                        <p className="text-sm font-semibold text-white">ข้อมูลโปรไฟล์</p>
-                        <p className="text-xs text-slate-500">
-                          ตั้งชื่อ ช่องทาง และคำอธิบายที่จะแสดงบนหน้าโดเนท
-                        </p>
-                      </div>
-
-                      <div className="flex items-center gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 px-4 py-3">
-                        <div className="h-28 w-28 overflow-hidden rounded-full border-4 border-slate-800 shadow-xl shadow-purple-500/20">
-                          {settings.profile.avatarUrl ? (
-                            <img
-                              src={settings.profile.avatarUrl}
-                              alt={settings.profile.name}
-                              className="h-full w-full object-cover"
-                            />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-purple-500 to-blue-500 text-[2.25rem] font-bold text-white">
-                              {settings.profile.name.slice(0, 1).toUpperCase()}
-                            </div>
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="truncate font-semibold text-white">
-                            {settings.profile.name || "ชื่อสตรีมเมอร์"}
-                          </p>
-                          <p className="truncate text-sm text-slate-400">
-                            {settings.profile.handle || "ลิงก์ / Username"}
-                          </p>
-                        </div>
-                      </div>
+                  <div className="space-y-5">
+                    <div className="rounded-3xl border border-slate-800 bg-slate-950/40 p-5">
+                    <div className="mb-5">
+                      <p className="text-sm font-semibold text-white">ข้อมูลโปรไฟล์</p>
+                      <p className="text-xs text-slate-500">
+                        ตั้งชื่อ ช่องทาง และคำอธิบายที่จะแสดงบนหน้าโดเนท
+                      </p>
                     </div>
 
                     <div className="grid gap-4 md:grid-cols-2">
@@ -1976,6 +1977,7 @@ export default function DonatePageSettings() {
                     <SectionSaveAction onSave={() => handleSaveSettings("draft")} {...sectionSaveActionProps} />
                   </div>
                 </div>
+                </div>
               </SectionCard>
               )}
 
@@ -2115,7 +2117,7 @@ export default function DonatePageSettings() {
 
                     <SectionSaveAction onSave={() => handleSaveSettings("draft")} {...sectionSaveActionProps} />
                   </div>
-                </div>
+                  </div>
               </SectionCard>
               </>
               )}
