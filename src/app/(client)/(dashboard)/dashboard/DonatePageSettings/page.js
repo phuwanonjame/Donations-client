@@ -77,6 +77,7 @@ const MAX_HIGHLIGHT_VIDEOS = 4;
 const MAX_PROFILE_CATEGORIES = 5;
 const STREAMFLOW_DOMAIN = "streamflow";
 const USERNAME_PATTERN = /^[a-z0-9]+$/;
+const MIN_DONATION_AMOUNT = 10;
 const RESERVED_USERNAMES = new Set([
   "about",
   "account",
@@ -301,7 +302,7 @@ const defaultSettings = {
 
   donation: {
     pageTitle: "",
-    minAmount: 20,
+    minAmount: 10,
     quickAmounts: [10, 20, 50, 100, 200, 500],
     qrCodeUrl: "",
     showQrCode: true,
@@ -1000,7 +1001,7 @@ export default function DonatePageSettings() {
       ...prev,
       donation: {
         ...prev.donation,
-        [key]: value,
+        [key]: key === "minAmount" ? Math.max(MIN_DONATION_AMOUNT, Number(value || 0)) : value,
       },
     }));
   };
@@ -2139,10 +2140,10 @@ export default function DonatePageSettings() {
                     <Field label="ยอดโดเนทขั้นต่ำ">
                       <GlassInput
                         type="number"
-                        min="0"
+                        min={MIN_DONATION_AMOUNT}
                         value={settings.donation.minAmount}
                         onChange={(e) =>
-                          updateDonation("minAmount", Number(e.target.value || 0))
+                          updateDonation("minAmount", Number(e.target.value || MIN_DONATION_AMOUNT))
                         }
                       />
                     </Field>

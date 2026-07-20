@@ -1,5 +1,7 @@
 import { donationDecorationPresets } from "@/components/donation/shared/donatePageConfig";
 
+const MIN_DONATION_AMOUNT = 10;
+
 function cloneDecorations(decorations = {}) {
   return Object.fromEntries(
     Object.entries(decorations).map(([key, value]) => [key, { ...value }])
@@ -31,7 +33,7 @@ export function buildDonatePageMetadata(settings) {
     })),
     donation: {
       pageTitle: settings.donation?.pageTitle || "",
-      minAmount: Number(settings.donation?.minAmount || 0),
+      minAmount: Math.max(MIN_DONATION_AMOUNT, Number(settings.donation?.minAmount || 0)),
       welcomeMessage: settings.donation?.welcomeMessage || "",
       buttonText: settings.donation?.buttonText || "",
       channels: {
@@ -106,7 +108,7 @@ export function buildDonatePageSettingsPatch(metadata) {
     socials: metadata?.socials,
     donation: {
       pageTitle: metadata?.donation?.pageTitle,
-      minAmount: metadata?.donation?.minAmount,
+      minAmount: Math.max(MIN_DONATION_AMOUNT, Number(metadata?.donation?.minAmount || 0)),
       welcomeMessage: metadata?.donation?.welcomeMessage,
       buttonText: metadata?.donation?.buttonText,
       channels: {

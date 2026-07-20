@@ -392,7 +392,7 @@ export default function PublicDonatePage({
     }
 
     const nextErrors = {};
-    const minAmount = Number(settings.donation?.minAmount) || 1;
+    const minAmount = Math.max(10, Number(settings.donation?.minAmount) || 0);
     const parsedAmount = Number.parseFloat(customAmount);
 
     if (!donorName.trim()) {
